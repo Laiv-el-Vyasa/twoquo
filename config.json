@@ -1,0 +1,313 @@
+{
+  "set_numpy_printoptions": true,
+  "log_level": 4,
+  "kafka": {
+    "enabled": false,
+    "hostname": "141.84.220.4"
+  },
+  "interceptor": {
+    "use_multi_proc": false,
+    "solver_performance_metric": "average",
+    "wrong_energy_check": false
+  },
+  "success_inference_tool": {
+    "data_pipeline_cfg_id": "success_inference_demo",
+    "db_name": "success_inference_demo",
+    "solver_name": "dialectic_search",
+    "param_ranges": {
+      "decomposer_size": [6, 20, 2],
+      "max_iter": [5, 15, 5],
+      "max_tries": [5, 15, 5]
+    }
+  },
+  "parameter_optimization": {
+    "data_pipeline_cfg_id": "parameter_optimization_test",
+    "solver_name": "simulated_annealing",
+    "search_space_strategy": "quniform",
+    "n_trials": 2000,
+    "param_ranges": {
+      "num_reads": ["int", 1, 10],
+      "num_sweeps": ["int", 100, 3000]
+    },
+    "verbose": false
+  },
+  "solvers": {
+    "qbsolv_exakt_solver": {
+      "enabled": false,
+      "mod": "solver.qbsolv_exakt_solver",
+      "type": "classical",
+      "max_vars": 0,
+      "max_connectivity": 0,
+      "kwargs": {
+      },
+      "repeats": 1
+    },"qbsolv_tabu_search": {
+      "enabled": false,
+      "mod": "solver.qbsolv_tabu_search",
+      "type": "classical",
+      "max_vars": 0,
+      "max_connectivity": 0,
+      "kwargs": {
+        "num_repeats": 100
+      },
+      "repeats": 1
+    },
+    "qbsolv_simulated_annealing": {
+      "enabled": true,
+      "mod": "solver.qbsolv_simulated_annealing",
+      "type": "classical",
+      "max_vars": 0,
+      "max_connectivity": 0,
+      "kwargs": {
+        "num_reads": 6,
+        "num_repeats": 1,
+        "num_sweeps": 1011
+      },
+      "repeats": 1
+    }
+  },
+  "pipeline": {
+    "1": {
+      "dataset_id": "1",
+      "problems": {
+        "n_problems": 100,
+        "qubo_size": 64,
+        "NP": {
+          "size": 64
+        },
+        "MC": {
+          "size": [64, 90]
+        },
+        "MVC": {
+          "size": [64, 90]
+        },
+        "SP": {
+          "size": [40, 64]
+        },
+        "M2SAT": {
+          "size": [64, 90]
+        },
+        "SPP": {
+          "size": [40, 64]
+        },
+        "GC": {
+          "size": [16, 20],
+          "n_colors": 4
+        },
+        "QA": {
+          "size": 8
+        },
+        "QK": {
+          "size": 58,
+          "constraint": 40
+        },
+        "M3SAT": {
+          "size": [20, 44]
+        },
+        "TSP": {
+          "size": 8
+        },
+        "GI": {
+          "size": [8, 10]
+        },
+        "SGI": {
+          "size1": [4, 4],
+          "size2": [16, 20]
+        },
+        "MCQ": {
+          "size": [64, 90]
+        },
+        "EC": {
+          "size": [40, 64]
+        },
+        "BIP": {
+          "size": [40, 64]
+        },
+        "MIS": {
+          "size": [64, 90]
+        },
+        "MMM": {
+          "size": [40, 64]
+        },
+        "SC": {
+          "size": [7, 8]
+        },
+        "KIW": {
+          "size": [40, 24]
+        },
+        "JSS": {
+          "n_jobs": 2,
+          "n_machines": 1,
+          "max_duration": 4,
+          "operations_per_job": [2,2],
+          "T": 16
+        },
+        "LP": {
+          "size": [8, 10],
+          "weight_range": []
+        },
+        "problems": [
+          "NP", "MC", "MVC", "SP", "M2SAT", "SPP", "GC", "QA", "QK",
+          "M3SAT", "TSP", "GI", "SGI", "MCQ", "EC", "BIP", "MIS",
+          "MMM", "SC", "KIW", "JSS", "LP"
+        ]
+      },
+      "model": {
+        "class_weights": [],
+        "activation": "ReLU",
+        "norm_div_max": true,
+        "shuffle_data": true,
+        "network": "FC",
+        "n_epochs": 20,
+        "batch_size": 100,
+        "optimizer": "sgd",
+        "optimizer_sgd_momentum": 0.9,
+        "lr": 0.002,
+        "fc_sizes": [50, 9],
+        "train_eval_split": 0.9,
+
+        "flatten_data_field": true,
+        "data_field": "Q",
+        "label_field": "best_solver_idx",
+        "separate_net_per_data_field": true,
+
+        "ewc_lambda": 100,
+        "ewc_alpha": 0.9,
+        "ewc_fisher_update_after": 10
+      }
+    },
+    "test": {
+      "base_cfg": "1",
+      "dataset_id": "test",
+      "problems": {
+        "qubo_size": 64,
+        "n_problems": 1,
+        "NP": {
+          "size": 96
+        },
+        "MC": {
+          "size": [96, 160]
+        },
+        "EC": {
+          "size": [5, 5]
+        },
+        "QA": {
+          "size": 3
+        },
+        "KIW": {
+          "size": [5, 5]
+        },
+        "M2SAT": {
+          "size": [96, 160]
+        },
+        "problems": [
+          "NP"
+        ]
+      }
+    },
+    "test_1": {
+      "base_cfg": "1",
+      "dataset_id": "test_1",
+      "problems": {
+        "qubo_size": 64,
+        "n_problems": 100,
+        "NP": {
+          "size": 64
+        },
+        "problems": [
+          "NP"
+        ]
+      }
+    },
+    "2": {
+      "base_cfg": "1",
+      "dataset_id": "2",
+      "problems": {
+        "n_problems": 1,
+        "problems": [
+          "NP", "MC", "MVC", "SP", "M2SAT", "SPP", "GC", "QA", "QK",
+          "M3SAT", "TSP", "GI", "SGI", "MCQ", "EC", "BIP", "MIS",
+          "MMM", "SC", "KIW", "JSS"
+        ]
+      }
+    },
+    "3": {
+      "base_cfg": "1",
+      "dataset_id": "2",
+      "problems": {
+        "n_problems": 100
+      },
+      "model": {
+        "flatten_data_field": true,
+        "data_field": "Q",
+        "label_field": "best_solver_idx",
+        "n_epochs": 10
+      }
+    }
+  },
+  "learners": {
+    "test": {
+      "cfg_id": "test",
+      "enabled": false,
+      "type": "classification",
+      "mod": "tooquo.learner.models.ClassificationOptimizerEWCPP",
+      "mode": "active",
+      "update_active_learning_after_steps": 10,
+      "use_learner_name_as_model_name": true
+    },
+    "solver_recommendation": {
+      "cfg_id": "poc_5",
+      "enabled": true,
+      "type": "classification",
+      "mod": "tooquo.learner.models.ClassificationOptimizerEWCPP",
+      "mode": "active",
+      "update_active_learning_after_steps": 100,
+      "use_learner_name_as_model_name": false
+    },
+    "solver_recommendation_poc": {
+      "cfg_id": "poc_1",
+      "enabled": true,
+      "type": "classification",
+      "mod": "tooquo.learner.models.SolverOptimizer",
+      "mode": "active",
+      "update_active_learning_after_steps": 100,
+      "use_learner_name_as_model_name": true
+    },
+    "cluster_solver": {
+      "cfg_id": "cluster1_np",
+      "enabled": true,
+      "type": "classification",
+      "mod": "tooquo.learner.models.ClassificationOptimizer",
+      "mode": "active",
+      "update_active_learning_after_steps": 100,
+      "use_learner_name_as_model_name": true
+    },
+    "success_inference": {
+      "cfg_id": "success_inference",
+      "enabled": true,
+      "type": "regression",
+      "mod": "tooquo.learner.models.RegressionOptimizer",
+      "mode": "active",
+      "update_active_learning_after_steps": 100,
+      "use_learner_name_as_model_name": false
+    },
+    "solver_recommendation_2c": {
+      "cfg_id": "cluster2_combined",
+      "enabled": true,
+      "type": "classification",
+      "mod": "tooquo.learner.models.ClassificationOptimizer",
+      "mode": "active",
+      "update_active_learning_after_steps": 100,
+      "use_learner_name_as_model_name": false
+    },
+    "solver_recommendation_2r": {
+      "cfg_id": "cluster2_combined_regression",
+      "enabled": true,
+      "type": "regression",
+      "mod": "tooquo.learner.models.RegressionOptimizer",
+      "mode": "active",
+      "update_active_learning_after_steps": 100,
+      "use_learner_name_as_model_name": false
+    }
+  }
+}
