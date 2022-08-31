@@ -8,6 +8,7 @@ color_dict = {
     "M2SAT": "red"
 }
 
+
 def qubo_heatmap(qubo_matrix):
     fig, ax = pyplot.subplots()
     mesh = ax.pcolormesh(qubo_matrix, cmap="plasma")
@@ -30,7 +31,7 @@ def approx_quality_graphs(overall_data, approx_fixed_number, include_zero=False)
     approximation_steps.extend(percentage_steps)
     legend_lines = []
     for key in overall_data:
-        if key != 'approximation_steps':
+        if key != 'approximation_steps' and key != 'solver':
             mean_energy_list, mean_score_list = aggregate_problem_data(overall_data[key], include_zero)
             print(mean_energy_list)
             print(approximation_steps)
@@ -47,6 +48,7 @@ def approx_quality_graphs(overall_data, approx_fixed_number, include_zero=False)
     else:
         label_string = 'values'
     ax.set_xlabel(f'approximated {label_string} in percent')
+    ax.set_title('Solver: ' + overall_data['solver'])
     pyplot.show()
 
 

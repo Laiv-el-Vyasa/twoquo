@@ -68,11 +68,13 @@ def get_qubo_position_value(dict):
 def get_max_from_qubodict(qubodict):
     return qubodict[len(qubodict) - 1]
 
+
 def get_min_position(qubo):
     map(lambda x: np.absolute(x), qubo)
     min_value = get_min_value(qubo)
     pos = np.where(qubo==min_value)
     return pos
+
 
 def get_min_value(qubo):
     flat_qubo = map(lambda x: np.absolute(x), np.reshape(qubo, -1))

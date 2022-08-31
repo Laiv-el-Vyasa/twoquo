@@ -154,7 +154,7 @@ class RecommendationEngine:
                 metadata.energies[solver_name].append(energy)
 
         #self.monitor.save(metadata)
-        return metadata, sol, energy
+        return metadata
 
 
     def save_metadata(self, metadata):

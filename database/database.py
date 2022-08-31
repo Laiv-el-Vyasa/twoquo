@@ -94,7 +94,7 @@ class Metadata:
         self.approx_strategy = None
         self.approx_percent = None
         self.solutions = {}
-        self.average_solution_quality = None
+        self.solution_quality = {}
         self.energies = {}
         self.runtimes = {}
         self.qubo_type = None
@@ -150,9 +150,9 @@ class Metadata:
                 self.qubo_size,
                 self.approx,
                 self.approx_strategy,
-                self.approx_steps,
+                self.approx_percent,
                 self.solutions,
-                self.average_solution_quality,
+                self.solution_quality,
                 self.energies,
                 self.runtimes,
                 self.qubo_type,

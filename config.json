@@ -181,12 +181,12 @@
       "dataset_id": "test",
       "problems": {
         "qubo_size": 64,
-        "n_problems": 1,
+        "n_problems": 100,
         "NP": {
-          "size": 96
+          "size": 64
         },
         "MC": {
-          "size": [96, 160]
+          "size": [64, 90]
         },
         "EC": {
           "size": [5, 5]
@@ -198,10 +198,10 @@
           "size": [5, 5]
         },
         "M2SAT": {
-          "size": [96, 160]
+          "size": [64, 90]
         },
         "problems": [
-          "NP"
+          "NP", "MC", "M2SAT"
         ]
       }
     },

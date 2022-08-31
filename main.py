@@ -112,14 +112,14 @@ if __name__ == '__main__':
         #eng.save_metadata(metadata)
 
         one_solution = solutions[0]
-        print('Solution: ' + str(one_solution))
+        #print('Solution: ' + str(one_solution))
         reverse_energy_sol = one_solution.dot(qubo.dot(one_solution))
-        print('Reverse Energy: ' + str(reverse_energy_sol))
+        #print('Reverse Energy: ' + str(reverse_energy_sol))
 
         worst_solution, worst_energy_inverse = get_worst_solution_energy(qubo, eng)
         worst_energy = worst_solution.dot(qubo.dot(worst_solution))
-        print(worst_solution)
-        print('Worst Energy: ' + str(worst_energy))
+        #print(worst_solution)
+        #print('Worst Energy: ' + str(worst_energy))
 
 
         solution_score = get_problem_score(problem_name, problem, one_solution)
