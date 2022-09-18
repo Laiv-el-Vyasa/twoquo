@@ -88,13 +88,11 @@ class Metadata:
     def __init__(self):
         self.Q = None
         self.Q_prime = None
-        self.Q_initial = None
         self.qubo_size = None
-        self.approx = None
+        self.approx_steps = None
         self.approx_strategy = None
-        self.approx_percent = None
         self.solutions = {}
-        self.solution_quality = {}
+        self.approx_solution_quality = {} #Dict of approximation step with dict of solver and solution quality
         self.energies = {}
         self.runtimes = {}
         self.qubo_type = None
@@ -146,13 +144,11 @@ class Metadata:
             str(x) for x in [
                 self.Q,
                 self.Q_prime,
-                self.Q_initial,
                 self.qubo_size,
-                self.approx,
+                self.approx_steps,
                 self.approx_strategy,
-                self.approx_percent,
                 self.solutions,
-                self.solution_quality,
+                self.approx_solution_quality,
                 self.energies,
                 self.runtimes,
                 self.qubo_type,
