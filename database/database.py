@@ -93,6 +93,7 @@ class Metadata:
         self.approx_strategy = None
         self.solutions = {}
         self.approx_solution_quality = {} #Dict of approximation step with dict of solver and solution quality
+        self.problem = None
         self.energies = {}
         self.runtimes = {}
         self.qubo_type = None
@@ -149,6 +150,7 @@ class Metadata:
                 self.approx_strategy,
                 self.solutions,
                 self.approx_solution_quality,
+                self.problem,
                 self.energies,
                 self.runtimes,
                 self.qubo_type,

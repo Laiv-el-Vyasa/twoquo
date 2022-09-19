@@ -1,5 +1,6 @@
 import os
 import collections
+import random
 
 from typing import List
 
@@ -123,6 +124,8 @@ if __name__ == '__main__':
     gen = QUBOGenerator(cfg)
 
     qubos, labels, problems = gen.generate()
+    qubo_problem_list = list(zip(qubos, labels, problems))
+    random.shuffle(qubo_problem_list)
     problem_names = cfg['pipeline']['problems']['problems']
     #solver_name = 'qbsolv_simulated_annealing'
 
@@ -130,11 +133,13 @@ if __name__ == '__main__':
     percentage_steps = [(x + 1) / (approximation_steps + 1) for x in range(approximation_steps)]
     overall_data = {'approximation_steps': percentage_steps}
 
-    for qubo, label, problem in zip(qubos, labels, problems):
+    for count, (qubo, label, problem) in enumerate(qubo_problem_list):
+        print(f"Calculating problem {count + 1}:")
         problem_name = problem_names[label]
         if not problem_name in overall_data.keys():
             overall_data[problem_name] = []
         metadata = eng.recommend(qubo)
+        metadata.problem = label
         metadata.approx = approximation_steps
         metadata.approx_strategy = approx_fixed_number
 
@@ -167,11 +172,12 @@ if __name__ == '__main__':
 
             #metadata.approx = approx_step
             #metadata.approx_strategy = approx_fixed_number
-
+            solution_quality_dict = {}
             for solver in approx_metadata.solutions:
-                metadata.approx_solution_quality[str(approx_step)][solver] = \
+                solution_quality_dict[solver] = \
                     get_max_solution_quality(approx_metadata.solutions[solver],
                                              qubo, best_energy_solver_dict[solver], worst_energy)
+            metadata.approx_solution_quality[approx_step] = solution_quality_dict
             #if save_bool:
             #    eng.save_metadata(metadata)
 
@@ -184,7 +190,8 @@ if __name__ == '__main__':
                       ' Approximations, ' + str(percentage_approxed) + ' of total')
                 print(str(approx_step) + '. Approx: Approx solution: ' +
                       str(approx_metadata.solutions[list(approx_metadata.solutions.keys())[0]][0][0]))
-                print(str(approx_step) + '. Approx: Reverse Energy approx: ' + str(approx_metadata.energies[list(approx_metadata.energies.keys())[0]][0][0]))
+                print(str(approx_step) + '. Approx: Reverse Energy approx: ' +
+                      str(approx_metadata.energies[list(approx_metadata.energies.keys())[0]][0][0]))
                 print(str(approx_step) + '. Approx: Approximation quality: ' + str(reverse_energy_appr))
 
                 print(str(approx_step) + '. Approx: Approximation score: ' + str(approx_solution_score))
