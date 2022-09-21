@@ -1,12 +1,16 @@
 from matplotlib import pyplot
 import matplotlib.lines as lines
 import numpy as np
+from config import load_cfg
 
 color_dict = {
     'NP': 'green',
     "MC": "blue",
     "M2SAT": "red"
 }
+
+cfg = load_cfg(cfg_id='test')
+problem_name_array = cfg['pipeline']['problems']['problems']
 
 
 def qubo_heatmap(qubo_matrix):
@@ -21,7 +25,7 @@ def qubo_heatmap(qubo_matrix):
     pyplot.show()
 
 
-def approx_quality_graphs(overall_data, approx_fixed_number, include_zero=False):
+def approx_quality_score_graphs_problems(overall_data, approx_fixed_number, include_zero=False):
     fig, ax = pyplot.subplots()
     percentage_steps = overall_data['approximation_steps']
     if include_zero:
@@ -70,3 +74,25 @@ def aggregate_problem_data(problem_data_list, include_zero):
     #print(energy_list)
     return np.mean(energy_list, axis=0), np.mean(score_list, axis=0)
 
+
+def approx_quality_graphs_problems_ml(aggregated_approx_data, percent_data, learned_data_points, approx_fixed_number, solver):
+    fig, ax = pyplot.subplots()
+    legend_lines = []
+    for problem_number, problem_approx_data in enumerate(aggregated_approx_data):
+        color = color_dict[problem_name_array[problem_number]]
+        ax.plot(percent_data, problem_approx_data, color=color, markersize=8)
+        legend_lines.append(lines.Line2D([], [], color=color,
+                                             markersize=8, label=f'{problem_name_array[problem_number]} solution quality'))
+        ax.plot(learned_data_points[problem_number][0], learned_data_points[problem_number][1],
+                color=color, marker='x', markersize=12)
+        legend_lines.append(lines.Line2D([], [], color=color, linestyle='dashed',
+                                             markersize=12, marker='x', label=f'{problem_name_array[problem_number]} learned approximation'))
+    ax.legend(handles=legend_lines)
+    ax.set_ylabel('solution quality')
+    if approx_fixed_number:
+        label_string = 'entries'
+    else:
+        label_string = 'values'
+    ax.set_xlabel(f'approximated {label_string} in percent')
+    ax.set_title('Solver: ' + solver)
+    pyplot.show()

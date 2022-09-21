@@ -9,7 +9,7 @@ from approximation import get_approximated_qubos
 from pipeline_util import QUBOGenerator
 from recommendation import RecommendationEngine
 import numpy as np
-from visualisation import qubo_heatmap, approx_quality_graphs
+from visualisation import qubo_heatmap, approx_quality_score_graphs_problems
 from operator import add
 
 
@@ -119,7 +119,7 @@ if __name__ == '__main__':
     approximation_steps = 200
     approx_fixed_number = True
     print_bool = False
-    save_bool = True
+    save_bool = False
     cfg = load_cfg(cfg_id='test')
     gen = QUBOGenerator(cfg)
 
@@ -206,13 +206,14 @@ if __name__ == '__main__':
 
         if save_bool:
             eng.save_metadata(metadata)
+        print(metadata.approx_solution_quality)
 
         overall_data[problem_name].append(specific_problem)
         overall_data['solver'] = list(metadata.solutions.keys())[0]
 
 
     #print(overall_data)
-    approx_quality_graphs(overall_data, approx_fixed_number)
+    approx_quality_score_graphs_problems(overall_data, approx_fixed_number)
 
 
 def save_metadata():
