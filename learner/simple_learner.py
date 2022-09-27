@@ -2,25 +2,32 @@ import torch
 import torch.nn as nn
 import numpy as np
 from torch.utils.data import DataLoader
+
+from config import load_cfg
 from dataset_setup import DatabaseSetup, Data
 from sklearn.model_selection import train_test_split
 
 solver = 'qbsolv_simulated_annealing'
-lower_bound = 0.95
+min_solution_quality = 0.999
+learning_rate = .001
+epochs = 200
 batch_size = 4
-problem_number = 3
+cfg = load_cfg(cfg_id='test_small')
+problem_number = len(cfg['pipeline']['problems']['problems'])
 
-db_setup = DatabaseSetup(3, solver)
-X, Y = db_setup.get_data_for_simple_learning(lower_bound)
+db_setup = DatabaseSetup(cfg, problem_number, solver, min_solution_quality)
+X, Y = db_setup.get_data_for_simple_learning()
 
 x_train, x_test, y_train, y_test = train_test_split(X, Y, test_size=.33)
 
 dataset = Data(x_train, y_train)
 dataloader = DataLoader(dataset, batch_size, shuffle=True)
 
+print(dataset[:5])
+
 #Model
 input_dim = 3
-hidden_dim = 10
+hidden_dim = 2
 output_dim = 1
 
 
@@ -39,9 +46,9 @@ class Network(nn.Module):
 network = Network()
 
 loss_function = nn.MSELoss()
-optimizer = torch.optim.SGD(network.parameters(), lr=.01)
+optimizer = torch.optim.SGD(network.parameters(), lr=learning_rate)
 
-epochs = 20
+
 for epoch in range(epochs):
     running_loss = 0.0
     for i, data in enumerate(dataloader, 0):

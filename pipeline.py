@@ -116,11 +116,11 @@ def get_solution_quality(energy, best_energy, worst_energy):
 
 
 if __name__ == '__main__':
-    approximation_steps = 200
+    approximation_steps = 4
     approx_fixed_number = True
     print_bool = False
-    save_bool = False
-    cfg = load_cfg(cfg_id='test')
+    save_bool = True
+    cfg = load_cfg(cfg_id='test_small')
     gen = QUBOGenerator(cfg)
 
     qubos, labels, problems = gen.generate()
@@ -129,7 +129,7 @@ if __name__ == '__main__':
     problem_names = cfg['pipeline']['problems']['problems']
     #solver_name = 'qbsolv_simulated_annealing'
 
-    eng = RecommendationEngine()
+    eng = RecommendationEngine(cfg=cfg)
     percentage_steps = [(x + 1) / (approximation_steps + 1) for x in range(approximation_steps)]
     overall_data = {'approximation_steps': percentage_steps}
 
@@ -196,7 +196,7 @@ if __name__ == '__main__':
 
                 print(str(approx_step) + '. Approx: Approximation score: ' + str(approx_solution_score))
                 print(str(approx_step) + '. Approx: Approximation score quality: ' +
-                  str(1 - ((approx_solution_score - solution_score) / (worst_score - solution_score))))
+                      str(1 - ((approx_solution_score - solution_score) / (worst_score - solution_score))))
 
             approx_data['solution'] = approx_metadata.solutions[list(approx_metadata.solutions.keys())[0]][0]
             approx_data['rel_energy'] = reverse_energy_appr

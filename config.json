@@ -181,7 +181,36 @@
       "dataset_id": "test",
       "problems": {
         "qubo_size": 64,
-        "n_problems": 100,
+        "n_problems": 1,
+        "NP": {
+          "size": 64
+        },
+        "MC": {
+          "size": [64, 90]
+        },
+        "EC": {
+          "size": [5, 5]
+        },
+        "QA": {
+          "size": 3
+        },
+        "KIW": {
+          "size": [5, 5]
+        },
+        "M2SAT": {
+          "size": [64, 90]
+        },
+        "problems": [
+          "NP", "MC", "M2SAT"
+        ]
+      }
+    },
+    "test_small": {
+      "base_cfg": "2",
+      "dataset_id": "test_small",
+      "problems": {
+        "qubo_size": 64,
+        "n_problems": 1000,
         "NP": {
           "size": 64
         },

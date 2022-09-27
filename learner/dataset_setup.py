@@ -8,7 +8,7 @@ from visualisation import approx_quality_graphs_problems_ml
 from recommendation import RecommendationEngine
 
 
-def get_optimal_approx_percent(approx_dict, approx_steps, solver, lower_bound):
+def get_optimal_approx(approx_dict, approx_steps, solver, lower_bound, percent_bool: bool):
     optimization_array = np.ones(approx_steps)
     for i in range(approx_steps):
         step = i + 1
@@ -16,16 +16,29 @@ def get_optimal_approx_percent(approx_dict, approx_steps, solver, lower_bound):
         percent = step / (approx_steps + 1)
         if quality > lower_bound:
             optimization_array[i] = (1 - quality) + (1 - percent)
-    return (np.max(np.argmin(optimization_array)) + 1) / approx_steps
+    optimal_approx = np.max(np.argmin(optimization_array))
+    if percent_bool:
+        optimal_approx = (optimal_approx + 1) / approx_steps
+    return optimal_approx
+
+
+def get_step_for_approx_percent(perfect_percent: float, percent_array: list):
+    print(perfect_percent)
+    nearest_step = np.argmin([abs(percent_array_value - perfect_percent) for percent_array_value in percent_array])
+    if perfect_percent < percent_array[nearest_step]:
+        nearest_step -= 1
+    return nearest_step
 
 
 class DatabaseSetup:
-    def __init__(self, problem_number, solver):
+    def __init__(self, config, problem_number, solver, min_solution_quality):
+        #self.db = RecommendationEngine(cfg=config).get_database()
         self.db = RecommendationEngine().get_database()
         self.problem_number = problem_number
         self.solver = solver
+        self.min_solution_quality = min_solution_quality
 
-    def get_data_for_simple_learning(self, lower_bound):
+    def get_data_for_simple_learning(self):
         X_classes = []
         Y_target = []
         for _, metadata in self.db.iter_metadata():
@@ -34,12 +47,37 @@ class DatabaseSetup:
             problem_one_hot[metadata.problem] = 1
             X_classes.append(problem_one_hot)
             target_percent = np.zeros(1)
-            target_percent[0] = get_optimal_approx_percent(metadata.approx_solution_quality, metadata.approx, self.solver, lower_bound)
+            target_percent[0] = get_optimal_approx(metadata.approx_solution_quality, metadata.approx,
+                                                   self.solver, self.min_solution_quality, True)
             Y_target.append(target_percent)
-            #Y_target.append(
+            # Y_target.append(
             #    get_optimal_approx_percent(metadata.approx_solution_quality, metadata.approx, solver, lower_bound))
-        #print(np.array(Y_target))
+        # print(np.array(Y_target))
         return np.array(X_classes), np.array(Y_target)
+
+    def get_data_for_simple_classification(self):
+        X_classes = []
+        Y_classes = []
+        approx_steps = 0
+        step_dict = {}
+        for _, metadata in self.db.iter_metadata():
+            approx_steps = metadata.approx
+            problem_one_hot = np.zeros(self.problem_number)
+            problem_one_hot[metadata.problem] = 1
+            X_classes.append(problem_one_hot)
+            # target_one_hot = np.zeros(len(metadata.approx_solution_quality))
+            # target_one_hot[get_optimal_approx(metadata.approx_solution_quality, metadata.approx,
+            #                                  self.solver, self.min_solution_quality, False)] = 1
+            optimal_approx = get_optimal_approx(metadata.approx_solution_quality, metadata.approx,
+                                                self.solver, self.min_solution_quality, False)
+            if metadata.problem == 0:
+                if not optimal_approx in step_dict.keys():
+                    step_dict[optimal_approx] = 1
+                else:
+                    step_dict[optimal_approx] += 1
+            Y_classes.append(optimal_approx)
+        print(dict(sorted(step_dict.items())))
+        return np.array(X_classes), np.array(Y_classes), approx_steps
 
     def aggregate_saved_problem_data(self, solver):
         global approx_steps
@@ -56,7 +94,8 @@ class DatabaseSetup:
                 else:
                     quality = metadata.approx_solution_quality[str(step)][solver]
                 aggregation_array[metadata.problem][step].append(quality)
-        return np.mean(aggregation_array, axis=2), [n / (approx_steps + 1) for n in range(approx_steps + 1)], approx_strategy
+        return np.mean(aggregation_array, axis=2), [n / (approx_steps + 1) for n in
+                                                    range(approx_steps + 1)], approx_strategy
 
     def prepare_aggregation_array(self, approx_steps):
         aggregation_array = []
@@ -67,8 +106,9 @@ class DatabaseSetup:
             aggregation_array.append(step_quality_array)
         return aggregation_array
 
-    def get_network_solution_for_problem(self, network: nn.Module):
-        problem_best_approx_percent_array = []
+    def get_network_solution_for_problem(self, network: nn.Module, precent_array, classification: bool):
+        problem_best_approx_step_array = []
+        softmax = nn.Softmax(dim=0)
         for problem in range(self.problem_number):
             one_hot_problem = np.zeros(self.problem_number)
             one_hot_problem[problem] = 1
@@ -76,30 +116,38 @@ class DatabaseSetup:
             tensor_input = torch.from_numpy(one_hot_problem.astype(np.float32))
             tensor_output = network.forward(tensor_input)
 
-            problem_best_approx_percent_array.append(tensor_output.detach().numpy()[0])
-        return problem_best_approx_percent_array
+            if classification:
+                print(tensor_output)
+                tensor_output = softmax(tensor_output)
 
-    def visualize_results(self, network: nn.Module):
+            detached_output = tensor_output.detach().numpy()
+
+            if classification:
+                problem_best_approx_step_array.append(np.argmax(detached_output) + 1)  # step_array starts with 0
+            else:
+                problem_best_approx_step_array.append(get_step_for_approx_percent(detached_output[0], precent_array))
+        return problem_best_approx_step_array
+
+    def visualize_results(self, network: nn.Module, classification=False):
         aggregation_array, percent_array, approx_strategy = self.aggregate_saved_problem_data(self.solver)
-        best_approx = self.get_network_solution_for_problem(network)
-        solved_approx_quality_array = self.get_approx_quality_pair_array(aggregation_array, percent_array, best_approx)
-        approx_quality_graphs_problems_ml(aggregation_array, percent_array, solved_approx_quality_array, approx_strategy, self.solver)
+        best_approx_steps = self.get_network_solution_for_problem(network, percent_array, classification)
+        solved_approx_quality_array = self.get_approx_quality_pair_array(aggregation_array, percent_array,
+                                                                         best_approx_steps)
+        approx_quality_graphs_problems_ml(aggregation_array, percent_array, solved_approx_quality_array,
+                                          approx_strategy,
+                                          self.solver, self.min_solution_quality, classification)
 
-
-    def get_approx_quality_pair_array(self, aggregation_array: list, percent_array: list,  best_approx: list):
+    def get_approx_quality_pair_array(self, aggregation_array: list, percent_array: list, best_approx_steps: list):
         best_approx_pairs_array = []
         for problem in range(self.problem_number):
-            problem_percent_quality = [best_approx[problem], aggregation_array[problem][
-                self.get_step_for_approx_percent(best_approx[problem], percent_array)]]
+            problem_percent_quality = [percent_array[best_approx_steps[problem]], aggregation_array[problem][
+                best_approx_steps[problem]]]
             best_approx_pairs_array.append(problem_percent_quality)
         return best_approx_pairs_array
 
-    def get_step_for_approx_percent(self, perfect_percent: float, percent_array: list):
-        return np.argmin([abs(percent_array_value - perfect_percent) for percent_array_value in percent_array])
-
 
 class Data(Dataset):
-    def __init__(self, X_train, y_train):
+    def __init__(self, X_train, y_train, classification=False):
         self.X = torch.from_numpy(X_train.astype(np.float32))
         self.y = torch.from_numpy(y_train.astype(np.float32))
         self.len = self.X.shape[0]
