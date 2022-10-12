@@ -116,7 +116,7 @@ def get_solution_quality(energy, best_energy, worst_energy):
 
 
 if __name__ == '__main__':
-    approximation_steps = 4
+    approximation_steps = 29
     approx_fixed_number = True
     print_bool = False
     save_bool = True
@@ -130,7 +130,7 @@ if __name__ == '__main__':
     #solver_name = 'qbsolv_simulated_annealing'
 
     eng = RecommendationEngine(cfg=cfg)
-    percentage_steps = [(x + 1) / (approximation_steps + 1) for x in range(approximation_steps)]
+    percentage_steps = [((x + 1) / (approximation_steps + 1)) for x in range(approximation_steps)]
     overall_data = {'approximation_steps': percentage_steps}
 
     for count, (qubo, label, problem) in enumerate(qubo_problem_list):
@@ -140,36 +140,46 @@ if __name__ == '__main__':
             overall_data[problem_name] = []
         metadata = eng.recommend(qubo)
         metadata.problem = label
-        metadata.approx = approximation_steps
+        metadata.approx = approximation_steps + 1
         metadata.approx_strategy = approx_fixed_number
 
+        #qubo_heatmap(qubo)
+
         worst_energy = get_worst_energy(qubo, eng)
+        metadata.worst_energy = worst_energy
         best_energy_solver_dict = {}
         for solver in metadata.energies:
             best_energy_solver_dict[solver] = np.min(metadata.energies[solver])
+            metadata.best_energies[solver] = np.min(metadata.energies[solver])
         metadata.solution_quality = {solv: 1 for solv in metadata.solutions}
 
-
-
-        solution_score = get_best_score(problem_name, problem, metadata.solutions[list(metadata.solutions.keys())[0]])
-        worst_score = get_problem_score(problem_name, problem)
+        #solution_score = get_best_score(problem_name, problem, metadata.solutions[list(metadata.solutions.keys())[0]])
+        #worst_score = get_problem_score(problem_name, problem)
         specific_problem = {
             'qubo': qubo,
             'solution': metadata.solutions[list(metadata.solutions.keys())[0]][0],
             'solution_energy': metadata.energies[list(metadata.solutions.keys())[0]][0],
-            'best_score': solution_score,
-            'worst_score': worst_score,
+            #'best_score': solution_score,
+            #'worst_score': worst_score,
             'approximation': []
         }
+
+        solution_quality_dict = {}
+        for solver in metadata.solutions:
+            solution_quality_dict[solver] = 1.
+        metadata.approx_solution_quality['0'] = solution_quality_dict
 
         approx_qubos = get_approximated_qubos(qubo, approx_fixed_number, percentage_steps)
         percentage_approxed = 0
         for approx_step in approx_qubos:
             approx_data = approx_qubos[approx_step]
 
+
             approx_qubo = approx_data['qubo']
             approx_metadata = eng.recommend(approx_qubo)
 
+            if approx_step == "1800":
+                qubo_heatmap(approx_qubo)
             #metadata.approx = approx_step
             #metadata.approx_strategy = approx_fixed_number
             solution_quality_dict = {}
@@ -183,7 +193,7 @@ if __name__ == '__main__':
 
             reverse_energy_appr = get_max_solution_quality(approx_metadata.solutions[list(approx_metadata.solutions.keys())[0]],
                                                            qubo, best_energy_solver_dict[list(best_energy_solver_dict.keys())[0]], worst_energy)
-            approx_solution_score = get_best_score(problem_name, problem, approx_metadata.solutions[list(approx_metadata.solutions.keys())[0]])
+            #approx_solution_score = get_best_score(problem_name, problem, approx_metadata.solutions[list(approx_metadata.solutions.keys())[0]])
             if print_bool:
                 percentage_approxed += (approx_data["approximations"] / approx_data['size'])
                 print(str(approx_step) + '. Approx: ' + str(approx_data["approximations"]) +
@@ -194,13 +204,13 @@ if __name__ == '__main__':
                       str(approx_metadata.energies[list(approx_metadata.energies.keys())[0]][0][0]))
                 print(str(approx_step) + '. Approx: Approximation quality: ' + str(reverse_energy_appr))
 
-                print(str(approx_step) + '. Approx: Approximation score: ' + str(approx_solution_score))
-                print(str(approx_step) + '. Approx: Approximation score quality: ' +
-                      str(1 - ((approx_solution_score - solution_score) / (worst_score - solution_score))))
+                #print(str(approx_step) + '. Approx: Approximation score: ' + str(approx_solution_score))
+                #print(str(approx_step) + '. Approx: Approximation score quality: ' +
+                #  str(1 - ((approx_solution_score - solution_score) / (worst_score - solution_score))))
 
             approx_data['solution'] = approx_metadata.solutions[list(approx_metadata.solutions.keys())[0]][0]
             approx_data['rel_energy'] = reverse_energy_appr
-            approx_data['rel_score'] = 1 - ((approx_solution_score - solution_score) / (worst_score - solution_score))
+            #approx_data['rel_score'] = 1 - ((approx_solution_score - solution_score) / (worst_score - solution_score))
 
             specific_problem['approximation'].append(approx_data)
 
@@ -213,7 +223,7 @@ if __name__ == '__main__':
 
 
     #print(overall_data)
-    approx_quality_score_graphs_problems(overall_data, approx_fixed_number)
+    approx_quality_score_graphs_problems(overall_data, approx_fixed_number, include_zero=True)
 
 
 def save_metadata():

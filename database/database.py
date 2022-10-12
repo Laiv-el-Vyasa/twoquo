@@ -95,6 +95,8 @@ class Metadata:
         self.approx_solution_quality = {} #Dict of approximation step with dict of solver and solution quality
         self.problem = None
         self.energies = {}
+        self.best_energies = {}
+        self.worst_energy = None
         self.runtimes = {}
         self.qubo_type = None
         self.recommendations = []
@@ -152,6 +154,8 @@ class Metadata:
                 self.approx_solution_quality,
                 self.problem,
                 self.energies,
+                self.best_energies,
+                self.worst_energy,
                 self.runtimes,
                 self.qubo_type,
                 self.recommendations

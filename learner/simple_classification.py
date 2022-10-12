@@ -8,9 +8,9 @@ from dataset_setup import DatabaseSetup, Data
 from sklearn.model_selection import train_test_split
 
 solver = 'qbsolv_simulated_annealing'
-min_solution_quality = 0.999
-learning_rate = .001
-epochs = 100
+min_solution_quality = 0.95
+learning_rate = .01
+epochs = 200
 batch_size = 4
 cfg = load_cfg(cfg_id='test_small')
 problem_number = len(cfg['pipeline']['problems']['problems'])
@@ -79,6 +79,6 @@ print(f'Test result: {Y_test_result[0].detach().numpy()}')
 result_error = loss_function(log_softmax(Y_test_result), Y_test.type(torch.LongTensor))
 print(f'Result error: {result_error}')
 
-db_setup.visualize_results(network, True)
+db_setup.visualize_results(network, 'classification')
 
 #print(db_setup.aggregate_saved_problem_data(3, solver))

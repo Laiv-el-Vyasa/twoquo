@@ -6,7 +6,14 @@ from config import load_cfg
 color_dict = {
     'NP': 'green',
     "MC": "blue",
-    "M2SAT": "red"
+    "M2SAT": "red",
+    "M3SAT": "yellow",
+    "MVC": "grey",
+    "JSS": "orange",
+    "MIS": "brown",
+    "SPP": "black",
+    "GC": "pink",
+    "MMM": "purple"
 }
 
 cfg = load_cfg(cfg_id='test')
@@ -37,14 +44,14 @@ def approx_quality_score_graphs_problems(overall_data, approx_fixed_number, incl
     for key in overall_data:
         if key != 'approximation_steps' and key != 'solver':
             mean_energy_list, mean_score_list = aggregate_problem_data(overall_data[key], include_zero)
-            print(mean_energy_list)
-            print(approximation_steps)
+            #print(mean_energy_list)
+            #print(approximation_steps)
             ax.plot(approximation_steps, mean_energy_list, color=color_dict[key], markersize=8)
             legend_lines.append(lines.Line2D([], [], color=color_dict[key],
                                      markersize=8, label=f'{key} energy'))
-            ax.plot(approximation_steps, mean_score_list, color=color_dict[key], linestyle='dashed')
-            legend_lines.append(lines.Line2D([], [], color=color_dict[key], linestyle='dashed',
-                                     markersize=8, label=f'{key} score'))
+            #ax.plot(approximation_steps, mean_score_list, color=color_dict[key], linestyle='dashed')
+            #legend_lines.append(lines.Line2D([], [], color=color_dict[key], linestyle='dashed',
+            #                         markersize=8, label=f'{key} score'))
     ax.legend(handles=legend_lines)
     ax.set_ylabel('quality')
     if approx_fixed_number:
@@ -60,29 +67,30 @@ def aggregate_problem_data(problem_data_list, include_zero):
     score_list = []
     energy_list = []
     for problem_data_dict in problem_data_list:
-        score = []
-        if include_zero:
-            score.append(1)
+        #score = []
+        #if include_zero:
+        #    score.append(1)
         energy = []
         if include_zero:
             energy.append(1)
         for approx_step_data in problem_data_dict['approximation']:
             energy.append(approx_step_data['rel_energy'])
-            score.append(approx_step_data['rel_score'])
-        score_list.append(score)
+            #score.append(approx_step_data['rel_score'])
+        #score_list.append(score)
         energy_list.append(energy)
     #print(energy_list)
-    return np.mean(energy_list, axis=0), np.mean(score_list, axis=0)
+    return np.mean(energy_list, axis=0), []#, np.mean(score_list, axis=0)
 
 
-def approx_quality_graphs_problems_ml(aggregated_approx_data, percent_data, learned_data_points, approx_fixed_number, solver):
+def approx_quality_graphs_problems_ml(aggregated_approx_data, percent_data, learned_data_points, approx_fixed_number,
+                                      solver, min_solution_quality, learner_type):
     fig, ax = pyplot.subplots()
     legend_lines = []
     for problem_number, problem_approx_data in enumerate(aggregated_approx_data):
         color = color_dict[problem_name_array[problem_number]]
         ax.plot(percent_data, problem_approx_data, color=color, markersize=8)
-        legend_lines.append(lines.Line2D([], [], color=color,
-                                             markersize=8, label=f'{problem_name_array[problem_number]} solution quality'))
+        #legend_lines.append(lines.Line2D([], [], color=color,
+        #                                     markersize=8, label=f'{problem_name_array[problem_number]} solution quality'))
         ax.plot(learned_data_points[problem_number][0], learned_data_points[problem_number][1],
                 color=color, marker='x', markersize=12)
         legend_lines.append(lines.Line2D([], [], color=color, linestyle='dashed',
@@ -94,5 +102,5 @@ def approx_quality_graphs_problems_ml(aggregated_approx_data, percent_data, lear
     else:
         label_string = 'values'
     ax.set_xlabel(f'approximated {label_string} in percent')
-    ax.set_title('Solver: ' + solver)
+    ax.set_title(f'Solver: {solver}, min solution quality: {min_solution_quality}, {learner_type}', fontsize=12)
     pyplot.show()

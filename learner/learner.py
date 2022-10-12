@@ -8,27 +8,27 @@ from dataset_setup import DatabaseSetup, Data
 from sklearn.model_selection import train_test_split
 
 solver = 'qbsolv_simulated_annealing'
-min_solution_quality = 0.95
-learning_rate = .005
+min_solution_quality = 0.999
+learning_rate = .01
 epochs = 200
 batch_size = 4
 cfg = load_cfg(cfg_id='test_small')
 problem_number = len(cfg['pipeline']['problems']['problems'])
 
 db_setup = DatabaseSetup(cfg, problem_number, solver, min_solution_quality)
-X, Y = db_setup.get_data_for_simple_learning()
+X, Y, approx_steps = db_setup.get_data_for_learning()
 
 x_train, x_test, y_train, y_test = train_test_split(X, Y, test_size=.33)
 
 dataset = Data(x_train, y_train)
 dataloader = DataLoader(dataset, batch_size, shuffle=True)
 
-print(dataset[:5])
+#print(dataset[:5])
 
 #Model
 input_dim = problem_number
-hidden_dim = problem_number - 1
-output_dim = 1
+hidden_dim = approx_steps
+output_dim = approx_steps
 
 
 class Network(nn.Module):
@@ -56,8 +56,8 @@ for epoch in range(epochs):
         optimizer.zero_grad()
         outputs = network.forward(x)
         #if i == 0:
-        #    print(x, y)
-        #    print(outputs)
+            #print(x, y)
+            #print(outputs)
         loss = loss_function(outputs, y)
         loss.backward()
         optimizer.step()
@@ -71,10 +71,10 @@ X_test = torch.from_numpy(x_test.astype(np.float32))
 Y_test = torch.from_numpy(y_test.astype(np.float32))
 print(f'Test: {x_test[0:5]}')
 Y_test_result = network.forward(X_test)
-print(f'Test result: {Y_test_result[0].detach().numpy()}')
+print(f'Test result: {Y_test_result[0:5].detach().numpy()}')
 result_error = loss_function(Y_test_result, Y_test)
 print(f'Result error: {result_error}')
 
-db_setup.visualize_results(network, 'simple_learner')
+db_setup.visualize_results(network, 'learner')
 
 #print(db_setup.aggregate_saved_problem_data(3, solver))

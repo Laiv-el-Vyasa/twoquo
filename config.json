@@ -181,27 +181,59 @@
       "dataset_id": "test",
       "problems": {
         "qubo_size": 64,
-        "n_problems": 1,
+        "n_problems": 30,
         "NP": {
           "size": 64
         },
         "MC": {
           "size": [64, 90]
         },
-        "EC": {
-          "size": [5, 5]
-        },
-        "QA": {
-          "size": 3
-        },
-        "KIW": {
-          "size": [5, 5]
-        },
         "M2SAT": {
           "size": [64, 90]
         },
+        "M3SAT": {
+          "size": [20, 44]
+        },
+        "TSP": {
+          "size": [8, 10]
+        },
+        "GI": {
+          "size": [8, 10]
+        },
+        "KIW": {
+          "size": [40, 24]
+        },
+        "SPP": {
+          "size": [40, 64]
+        },
+        "GC": {
+          "size": [16, 20],
+          "n_colors": 4
+        },
+        "SC": {
+          "size": [7, 8]
+        },
+        "MVC": {
+          "size": [64, 90]
+        },
+        "MMM": {
+          "size": [40, 64]
+        },
+        "MIS": {
+          "size": [64, 90]
+        },
+        "BIP": {
+          "size": [40, 64]
+        },
+        "JSS": {
+          "n_jobs": 2,
+          "n_machines": 1,
+          "max_duration": 4,
+          "operations_per_job": [2,2],
+          "T": 16
+        },
         "problems": [
-          "NP", "MC", "M2SAT"
+          "JSS","NP", "MC", "M2SAT", "M3SAT", "SPP", "GC", "MMM", "MIS", "MVC", "JSS"
         ]
       }
     },
@@ -209,28 +241,45 @@
       "base_cfg": "2",
       "dataset_id": "test_small",
       "problems": {
-        "qubo_size": 64,
+        "qubo_size": 8,
         "n_problems": 1000,
         "NP": {
-          "size": 64
+          "size": 8
         },
         "MC": {
-          "size": [64, 90]
-        },
-        "EC": {
-          "size": [5, 5]
-        },
-        "QA": {
-          "size": 3
-        },
-        "KIW": {
-          "size": [5, 5]
+          "size": [8, 12]
         },
         "M2SAT": {
-          "size": [64, 90]
+          "size": [8, 12]
+        },
+        "M3SAT": {
+          "size": [3, 5]
+        },
+        "SPP": {
+          "size": [5, 8]
+        },
+        "GC": {
+          "size": [16, 20],
+          "n_colors": 4
+        },
+        "MVC": {
+          "size": [8, 12]
+        },
+        "MMM": {
+          "size": [5, 8]
+        },
+        "MIS": {
+          "size": [8, 12]
+        },
+        "JSS": {
+          "n_jobs": 2,
+          "n_machines": 1,
+          "max_duration": 4,
+          "operations_per_job": [2,2],
+          "T": 16
         },
         "problems": [
-          "NP", "MC", "M2SAT"
+          "NP", "MC", "M2SAT", "M3SAT", "SPP", "MMM", "MIS", "MVC"
         ]
       }
     },

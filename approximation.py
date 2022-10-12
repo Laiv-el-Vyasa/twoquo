@@ -2,20 +2,23 @@ import copy
 import numpy as np
 
 
-def get_approximated_qubos(qubo, fixed,  approximation_steps):
+def get_approximated_qubos(qubo, fixed, approximation_steps):
     approx_qubos = {}
     qubodict = get_sorted_qubodict(qubo)
     #print(qubodict)
     size = len(qubodict)
-    print('Size: ' + str(size))
+    #print('Size: ' + str(size))
     last_approx_number = 0
     for i, percentage_bound in enumerate(approximation_steps):
         if fixed:
-            new_qubo, last_approx_number, number_of_approx = approx_fixed_number(copy.deepcopy(qubo), percentage_bound, last_approx_number, size, qubodict)
+            new_qubo, last_approx_number, number_of_approx = approx_fixed_number(copy.deepcopy(qubo), percentage_bound,
+                                                                                 last_approx_number, size, qubodict)
         else:
-            new_qubo, last_approx_number, number_of_approx = approx_fixed_values(copy.deepcopy(qubo), percentage_bound, last_approx_number, size, qubodict)
+            new_qubo, last_approx_number, number_of_approx = approx_fixed_values(copy.deepcopy(qubo), percentage_bound,
+                                                                                 last_approx_number, size, qubodict)
 
-        approx_qubos[str(i + 1)] = {'qubo': new_qubo, 'approximations': number_of_approx, 'percentage_bound': percentage_bound, 'size': size}
+        approx_qubos[str(i + 1)] = {'qubo': new_qubo, 'approximations': number_of_approx,
+                                    'percentage_bound': percentage_bound, 'size': size}
         #print(new_qubo)
         qubo = new_qubo
 
