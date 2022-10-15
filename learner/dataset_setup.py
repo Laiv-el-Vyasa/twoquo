@@ -4,6 +4,7 @@ from torch.utils.data import Dataset, DataLoader
 import numpy as np
 import scipy.stats as st
 from visualisation import approx_quality_graphs_problems_ml
+from pipeline import get_max_solution_quality
 
 from recommendation import RecommendationEngine
 
@@ -32,9 +33,15 @@ def get_step_for_approx_percent(perfect_percent: float, percent_array: list):
     return nearest_step
 
 
+def get_approx_percent(approx_qubo):
+    result = np.where(approx_qubo == 0)
+    return result[0].size / (len(approx_qubo) * len(approx_qubo[0]))
+
+
 class DatabaseSetup:
     def __init__(self, config, problem_number, solver, min_solution_quality):
-        self.db = RecommendationEngine(cfg=config).get_database()
+        self.eng = RecommendationEngine(cfg=config)
+        self.db = self.eng.get_database()
         #self.db = RecommendationEngine().get_database()
         self.problem_number = problem_number
         self.solver = solver
@@ -93,9 +100,6 @@ class DatabaseSetup:
             problem_one_hot = np.zeros(self.problem_number)
             problem_one_hot[metadata.problem] = 1
             X_classes.append(problem_one_hot)
-            # target_one_hot = np.zeros(len(metadata.approx_solution_quality))
-            # target_one_hot[get_optimal_approx(metadata.approx_solution_quality, metadata.approx,
-            #                                  self.solver, self.min_solution_quality, False)] = 1
             optimal_approx = get_optimal_approx(metadata.approx_solution_quality, metadata.approx,
                                                 self.solver, self.min_solution_quality, False)
             if not optimal_approx in step_problem_array[metadata.problem].keys():
@@ -107,6 +111,18 @@ class DatabaseSetup:
             print(f'Problem {i}:', dict(sorted(step_problem_array[i].items())))
 
         return np.array(X_classes), np.array(Y_classes), approx_steps
+
+    def get_data_for_enc_dec(self):
+        X_qubos = []
+        Y_energies = []
+        for _, metadata in self.db.iter_metadata():
+            X_qubos.append(metadata.Q)
+            Y_energies.append((metadata.best_energies[self.solver], metadata.worst_energy))
+        return X_qubos, Y_energies
+
+    def get_solution_quality_of_approxed(self, original_qubo, approx_qubo, best_energy, worst_energy):
+        approx_metadata = self.eng.recommend(approx_qubo)
+        return get_max_solution_quality(approx_metadata.solutions, original_qubo, best_energy, worst_energy)
 
     def aggregate_saved_problem_data(self, solver):
         global approx_steps
@@ -192,9 +208,13 @@ class DatabaseSetup:
 
 
 class Data(Dataset):
-    def __init__(self, X_train, y_train, classification=False):
-        self.X = torch.from_numpy(X_train.astype(np.float32))
-        self.y = torch.from_numpy(y_train.astype(np.float32))
+    def __init__(self, X_train, y_train, enc_dec=False):
+        if not enc_dec:
+            self.X = torch.from_numpy(X_train.astype(np.float32))
+            self.y = torch.from_numpy(y_train.astype(np.float32))
+        else:
+            self.X = torch.tensor(X_train)
+            self.y = y_train
         self.len = self.X.shape[0]
 
     def __getitem__(self, index):

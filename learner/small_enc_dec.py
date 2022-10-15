@@ -7,34 +7,34 @@ from config import load_cfg
 from dataset_setup import DatabaseSetup, Data
 from sklearn.model_selection import train_test_split
 
-
 solver = 'qbsolv_simulated_annealing'
 min_solution_quality = 0.999
 learning_rate = .01
-epochs = 200
+epochs = 2
 batch_size = 4
 cfg = load_cfg(cfg_id='test_small')
 problem_number = len(cfg['pipeline']['problems']['problems'])
 
 db_setup = DatabaseSetup(cfg, problem_number, solver, min_solution_quality)
-X, Y, approx_steps = db_setup.get_data_for_learning()
+X, Y = db_setup.get_data_for_enc_dec()
 
 x_train, x_test, y_train, y_test = train_test_split(X, Y, test_size=.33)
 
-dataset = Data(x_train, y_train)
+dataset = Data(x_train, y_train, enc_dec=True)
 dataloader = DataLoader(dataset, batch_size, shuffle=True)
 
-#print(dataset[:5])
+print(dataset[:2])
 
 #Model
 input_dim = problem_number
-hidden_dim = approx_steps
-output_dim = approx_steps
+hidden_dim = 2
+output_dim = 2
 
 
 class Network(nn.Module):
     def __init__(self):
         super(Network, self).__init__()
+        self.conv1 = nn.Conv2d()
         self.linear1 = nn.Linear(input_dim, hidden_dim)
         self.linear2 = nn.Linear(hidden_dim, output_dim)
 
@@ -57,8 +57,8 @@ for epoch in range(epochs):
         optimizer.zero_grad()
         outputs = network.forward(x)
         #if i == 0:
-            #print(x, y)
-            #print(outputs)
+        #print(x, y)
+        #print(outputs)
         loss = loss_function(outputs, y)
         loss.backward()
         optimizer.step()
