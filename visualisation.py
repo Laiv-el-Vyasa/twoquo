@@ -44,9 +44,11 @@ def approx_quality_score_graphs_problems(overall_data, approx_fixed_number, incl
     for key in overall_data:
         if key != 'approximation_steps' and key != 'solver':
             mean_energy_list, mean_score_list = aggregate_problem_data(overall_data[key], include_zero)
+            print(mean_energy_list)
             #print(mean_energy_list)
             #print(approximation_steps)
-            ax.plot(approximation_steps, mean_energy_list, color=color_dict[key], markersize=8)
+            shortend_approx_steps = approximation_steps[0:len(mean_energy_list)]
+            ax.plot(shortend_approx_steps, mean_energy_list, color=color_dict[key], markersize=8)
             legend_lines.append(lines.Line2D([], [], color=color_dict[key],
                                      markersize=8, label=f'{key} energy'))
             #ax.plot(approximation_steps, mean_score_list, color=color_dict[key], linestyle='dashed')
@@ -72,14 +74,29 @@ def aggregate_problem_data(problem_data_list, include_zero):
         #    score.append(1)
         energy = []
         if include_zero:
-            energy.append(1)
+            energy.append(1.)
         for approx_step_data in problem_data_dict['approximation']:
             energy.append(approx_step_data['rel_energy'])
             #score.append(approx_step_data['rel_score'])
         #score_list.append(score)
         energy_list.append(energy)
     #print(energy_list)
-    return np.mean(energy_list, axis=0), []#, np.mean(score_list, axis=0)
+    print(energy_list)
+    return get_mean_rotated_axis(energy_list), []
+    #return np.mean(energy_list, axis=0), []#, np.mean(score_list, axis=0)
+
+def get_max_length(list_of_lists: list):
+    return np.max([len(list_) for list_ in list_of_lists])
+
+def get_mean_rotated_axis(list_of_lists: list):
+    mean_list = []
+    for i in range(get_max_length(list_of_lists)):
+        values_at_index_list = []
+        for list in list_of_lists:
+            if i < len(list):
+                values_at_index_list.append(list[i])
+        mean_list.append(np.mean(values_at_index_list))
+    return mean_list
 
 
 def approx_quality_graphs_problems_ml(aggregated_approx_data, percent_data, learned_data_points, approx_fixed_number,

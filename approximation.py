@@ -1,18 +1,31 @@
 import copy
+import random
+
 import numpy as np
 
 
-def get_approximated_qubos(qubo, fixed, approximation_steps):
+def get_approximated_qubos(qubo, single_entry_approx, fixed, approximation_steps):
     approx_qubos = {}
-    qubodict = get_sorted_qubodict(qubo)
+    qubodict = get_sorted_qubodict(qubo, single_entry_approx)
     #print(qubodict)
     size = len(qubodict)
+    if single_entry_approx:
+        size = np.int(len(qubo) * (len(qubo) + 1) / 2)
+        percentage_steps = [(x + 1) / size for x in range(size)]
+    else:
+        percentage_steps = [((x + 1) / (approximation_steps + 1)) for x in range(approximation_steps)]
     #print('Size: ' + str(size))
+    #print(percentage_steps)
     last_approx_number = 0
-    for i, percentage_bound in enumerate(approximation_steps):
+    for i, percentage_bound in enumerate(percentage_steps):
         if fixed:
-            new_qubo, last_approx_number, number_of_approx = approx_fixed_number(copy.deepcopy(qubo), percentage_bound,
-                                                                                 last_approx_number, size, qubodict)
+            if not single_entry_approx or i < len(qubodict):
+                new_qubo, last_approx_number, number_of_approx = approx_fixed_number(copy.deepcopy(qubo),
+                                                                                     percentage_bound,
+                                                                                     last_approx_number, size,
+                                                                                     qubodict)
+            else:
+                break #end of possible approximations reached
         else:
             new_qubo, last_approx_number, number_of_approx = approx_fixed_values(copy.deepcopy(qubo), percentage_bound,
                                                                                  last_approx_number, size, qubodict)
@@ -22,7 +35,7 @@ def get_approximated_qubos(qubo, fixed, approximation_steps):
         #print(new_qubo)
         qubo = new_qubo
 
-    return approx_qubos
+    return approx_qubos, percentage_steps
 
 
 def approx_fixed_number(qubo, percentage_bound, last_approx_number, size, qubodict):
@@ -55,12 +68,14 @@ def approx_fixed_values(qubo, percentage_bound, last_approx_number, size, qubodi
     return qubo, last_approx_number, number_of_approx
 
 
-def get_sorted_qubodict(qubo):
+def get_sorted_qubodict(qubo, single_entry_approx):
     dict_list = []
     shape = len(qubo)
     for i in range(shape):
         for j in range(i + 1):
-            dict_list.append((np.absolute(qubo[i][j]), (i, j)))
+            if not single_entry_approx or not qubo[i][j] == 0:
+                dict_list.append((np.absolute(qubo[i][j]), (i, j)))
+    random.shuffle(dict_list)
     return sorted(dict_list, key=get_qubo_position_value)
 
 
@@ -75,10 +90,10 @@ def get_max_from_qubodict(qubodict):
 def get_min_position(qubo):
     map(lambda x: np.absolute(x), qubo)
     min_value = get_min_value(qubo)
-    pos = np.where(qubo==min_value)
+    pos = np.where(qubo == min_value)
     return pos
 
 
 def get_min_value(qubo):
     flat_qubo = map(lambda x: np.absolute(x), np.reshape(qubo, -1))
-    return min(a for a in flat_qubo if a>0)
+    return min(a for a in flat_qubo if a > 0)

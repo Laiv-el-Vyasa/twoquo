@@ -233,7 +233,7 @@
           "T": 16
         },
         "problems": [
-          "JSS","NP", "MC", "M2SAT", "M3SAT", "SPP", "GC", "MMM", "MIS", "MVC", "JSS"
+          "JSS","NP", "MC", "M2SAT", "M3SAT", "SPP", "GC", "MMM", "MIS", "MVC"
         ]
       }
     },
@@ -242,7 +242,7 @@
       "dataset_id": "test_small",
       "problems": {
         "qubo_size": 8,
-        "n_problems": 1000,
+        "n_problems": 100,
         "NP": {
           "size": 8
         },
@@ -279,7 +279,7 @@
           "T": 16
         },
         "problems": [
-          "NP", "MC", "M2SAT", "M3SAT", "SPP", "MMM", "MIS", "MVC"
+          "M2SAT", "NP", "MC"
         ]
       }
     },

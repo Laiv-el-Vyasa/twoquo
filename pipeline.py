@@ -106,9 +106,10 @@ def get_worst_energy(qubo, engine):
 
 def get_max_solution_quality(solutions, qubo, best_energy, worst_energy):
     solution_quality_array = []
+    #print(solutions)
     for solution in solutions[0]:
         solution_quality_array.append(get_solution_quality(solution.dot(qubo.dot(solution)), best_energy, worst_energy))
-    return np.max(solution_quality_array)
+    return np.floor(np.max(solution_quality_array))
 
 
 def get_solution_quality(energy, best_energy, worst_energy):
@@ -118,9 +119,10 @@ def get_solution_quality(energy, best_energy, worst_energy):
 if __name__ == '__main__':
     approximation_steps = 29
     approx_fixed_number = True
+    approx_single_entries = True
     print_bool = False
-    save_bool = True
-    cfg = load_cfg(cfg_id='test_small')
+    save_bool = False
+    cfg = load_cfg(cfg_id='test')
     gen = QUBOGenerator(cfg)
 
     qubos, labels, problems = gen.generate()
@@ -140,9 +142,9 @@ if __name__ == '__main__':
             overall_data[problem_name] = []
         metadata = eng.recommend(qubo)
         metadata.problem = label
-        metadata.approx = approximation_steps + 1
         metadata.approx_strategy = approx_fixed_number
 
+        #print(qubo)
         #qubo_heatmap(qubo)
 
         worst_energy = get_worst_energy(qubo, eng)
@@ -169,30 +171,28 @@ if __name__ == '__main__':
             solution_quality_dict[solver] = 1.
         metadata.approx_solution_quality['0'] = solution_quality_dict
 
-        approx_qubos = get_approximated_qubos(qubo, approx_fixed_number, percentage_steps)
+        approx_qubos, percentage_steps = get_approximated_qubos(qubo, approx_single_entries, approx_fixed_number, approximation_steps)
+        overall_data['approximation_steps'] = percentage_steps
         percentage_approxed = 0
+        metadata.approx = len(percentage_steps)
         for approx_step in approx_qubos:
             approx_data = approx_qubos[approx_step]
-
 
             approx_qubo = approx_data['qubo']
             approx_metadata = eng.recommend(approx_qubo)
 
             if approx_step == "1800":
                 qubo_heatmap(approx_qubo)
-            #metadata.approx = approx_step
-            #metadata.approx_strategy = approx_fixed_number
             solution_quality_dict = {}
             for solver in approx_metadata.solutions:
                 solution_quality_dict[solver] = \
                     get_max_solution_quality(approx_metadata.solutions[solver],
                                              qubo, best_energy_solver_dict[solver], worst_energy)
             metadata.approx_solution_quality[approx_step] = solution_quality_dict
-            #if save_bool:
-            #    eng.save_metadata(metadata)
 
             reverse_energy_appr = get_max_solution_quality(approx_metadata.solutions[list(approx_metadata.solutions.keys())[0]],
-                                                           qubo, best_energy_solver_dict[list(best_energy_solver_dict.keys())[0]], worst_energy)
+                                                           qubo, best_energy_solver_dict[list(best_energy_solver_dict.keys())[0]],
+                                                           worst_energy)
             #approx_solution_score = get_best_score(problem_name, problem, approx_metadata.solutions[list(approx_metadata.solutions.keys())[0]])
             if print_bool:
                 percentage_approxed += (approx_data["approximations"] / approx_data['size'])
@@ -216,7 +216,7 @@ if __name__ == '__main__':
 
         if save_bool:
             eng.save_metadata(metadata)
-        print(metadata.approx_solution_quality)
+        #print(metadata.approx_solution_quality)
 
         overall_data[problem_name].append(specific_problem)
         overall_data['solver'] = list(metadata.solutions.keys())[0]
