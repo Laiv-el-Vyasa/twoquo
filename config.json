@@ -181,7 +181,7 @@
       "dataset_id": "test",
       "problems": {
         "qubo_size": 64,
-        "n_problems": 30,
+        "n_problems": 500,
         "NP": {
           "size": 64
         },
@@ -233,7 +233,7 @@
           "T": 16
         },
         "problems": [
-          "JSS","NP", "MC", "M2SAT", "M3SAT", "SPP", "GC", "MMM", "MIS", "MVC"
+          "NP"
         ]
       }
     },
@@ -280,6 +280,20 @@
         },
         "problems": [
           "M2SAT", "NP", "MC"
+        ]
+      }
+    },
+    "test_evol": {
+      "base_cfg": "2",
+      "dataset_id": "test_evol",
+      "problems": {
+        "qubo_size": 24,
+        "n_problems": 100,
+        "NP": {
+          "size": 24
+        },
+        "problems": [
+          "NP"
         ]
       }
     },

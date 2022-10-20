@@ -74,14 +74,14 @@ def aggregate_problem_data(problem_data_list, include_zero):
         #    score.append(1)
         energy = []
         if include_zero:
-            energy.append(1.)
+            energy.append(0.)
         for approx_step_data in problem_data_dict['approximation']:
             energy.append(approx_step_data['rel_energy'])
             #score.append(approx_step_data['rel_score'])
         #score_list.append(score)
         energy_list.append(energy)
     #print(energy_list)
-    print(energy_list)
+    #print(energy_list)
     return get_mean_rotated_axis(energy_list), []
     #return np.mean(energy_list, axis=0), []#, np.mean(score_list, axis=0)
 
