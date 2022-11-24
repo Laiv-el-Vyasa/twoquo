@@ -16,6 +16,18 @@ color_dict = {
     "MMM": "purple"
 }
 
+metric_color_dict = {
+    0: 'green',
+    1: 'blue'
+}
+
+metric_name_dict = {
+    0: 'solution quality', #'mean energy deviation from min',
+    1: 'correct solutions'
+}
+
+marker_list = ['x', 'o', 'd']
+
 cfg = load_cfg(cfg_id='test')
 problem_name_array = cfg['pipeline']['problems']['problems']
 
@@ -85,8 +97,10 @@ def aggregate_problem_data(problem_data_list, include_zero):
     return get_mean_rotated_axis(energy_list), []
     #return np.mean(energy_list, axis=0), []#, np.mean(score_list, axis=0)
 
+
 def get_max_length(list_of_lists: list):
     return np.max([len(list_) for list_ in list_of_lists])
+
 
 def get_mean_rotated_axis(list_of_lists: list):
     mean_list = []
@@ -121,3 +135,41 @@ def approx_quality_graphs_problems_ml(aggregated_approx_data, percent_data, lear
     ax.set_xlabel(f'approximated {label_string} in percent')
     ax.set_title(f'Solver: {solver}, min solution quality: {min_solution_quality}, {learner_type}', fontsize=12)
     pyplot.show()
+
+
+def visualize_evol_results(aggregated_approx_data, percent_list, evol_data, solver):
+    fig, ax = pyplot.subplots()
+    legend_lines = []
+    for metric, problem_approx_data in enumerate(aggregated_approx_data):
+        color = metric_color_dict[metric]
+        shortend_percent_list = percent_list[0:len(problem_approx_data)]
+        print(problem_approx_data)
+        ax.plot(shortend_percent_list, problem_approx_data, color=color, markersize=8)
+        #legend_lines.append(lines.Line2D([], [], color=color,
+        #                                     markersize=8, label=f'{problem_name_array[problem_number]} solution quality'))
+    for idx, (evol_results, name) in enumerate(evol_data):
+        for metric, (evol_x, evol_y) in enumerate(evol_results):
+            color = metric_color_dict[metric]
+            metric_name = 'correct solutions' if metric else 'quality'
+            ax.plot(evol_x, evol_y,
+                color=color, marker=(4 + idx, 2), markersize=12)
+            legend_lines.append(lines.Line2D([], [], color=color, linestyle='None',
+                                         markersize=12, marker=(4 + idx, 2), label=f'{name} ({metric_name})'))
+    ax.legend(handles=legend_lines)
+    ax.set_ylabel(f'{metric_name_dict[0]} ({metric_color_dict[0]}) / '
+                  f'{metric_name_dict[1]} ({metric_color_dict[1]})')
+    ax.set_xlabel(f'approximated qubo entries in percent')
+    ax.set_title(f'Approximation quality, Learned Models, Solver: {solver}', fontsize=12)
+    pyplot.show()
+
+
+def plot_average_fitness(avg_fitness_list):
+    fig, ax = pyplot.subplots()
+    ax.plot([i + 1 for i in range(len(avg_fitness_list))], avg_fitness_list, color="blue", markersize=8)
+    ax.set_ylabel('Average Fitness')
+    ax.set_xlabel(f'Generation')
+    ax.set_title(f'Average Fitness', fontsize=12)
+    pyplot.show()
+
+
+

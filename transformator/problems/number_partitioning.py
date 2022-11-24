@@ -1,5 +1,15 @@
 import numpy as np
+from numpy import random
 from transformator.problems.problem import Problem
+
+
+def get_problems(n_problems, size):
+    rng = random.default_rng()
+    problems = rng.geometric(1/size, size=(n_problems, size)) * \
+               random.randint(0, size, (n_problems, size)) + \
+               random.randint(0, size, (n_problems, size))
+
+    return problems.astype(int)
 
 
 class NumberPartitioning(Problem):
@@ -21,5 +31,8 @@ class NumberPartitioning(Problem):
 
     @classmethod
     def gen_problems(self, cfg, n_problems, size=20, **kwargs):
-        problems = np.random.randint(0, 100, (n_problems, size))
+        if not cfg['problems']['NP']['new']:
+            problems = np.random.randint(0, 100, (n_problems, size))
+        else:
+            problems = get_problems(n_problems, size)
         return [{"numbers": problem} for problem in problems]

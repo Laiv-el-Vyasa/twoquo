@@ -287,13 +287,73 @@
       "base_cfg": "2",
       "dataset_id": "test_evol",
       "problems": {
-        "qubo_size": 24,
+        "qubo_size": 8,
         "n_problems": 100,
         "NP": {
-          "size": 24
+          "size": 8
         },
         "problems": [
           "NP"
+        ]
+      }
+    },
+    "test_evol_mc": {
+      "base_cfg": "2",
+      "dataset_id": "test_evol_mc",
+      "problems": {
+        "qubo_size": 8,
+        "n_problems": 100,
+        "MC": {
+          "size": [8, 12],
+          "random_edges": true
+        },
+        "problems": [
+          "MC"
+        ]
+      }
+    },
+    "test_evol_new": {
+      "base_cfg": "2",
+      "dataset_id": "test_evol_new",
+      "problems": {
+        "qubo_size": 8,
+        "n_problems": 100,
+        "NP": {
+          "size": 8,
+          "new": true
+        },
+        "problems": [
+          "NP"
+        ]
+      }
+    },
+    "test_evol_medium": {
+      "base_cfg": "2",
+      "dataset_id": "test_evol_medium",
+      "problems": {
+        "qubo_size": 24,
+        "n_problems": 100,
+        "NP": {
+          "size": 24,
+          "new": false
+        },
+        "problems": [
+          "NP"
+        ]
+      }
+    },
+    "test_evol_mc_medium": {
+      "base_cfg": "2",
+      "dataset_id": "test_evol_mc_medium",
+      "problems": {
+        "qubo_size": 24,
+        "n_problems": 100,
+        "MC": {
+          "size": [24, 60],
+          "random_edges": true
+        },
+        "problems": [
+          "MC"
         ]
       }
     },

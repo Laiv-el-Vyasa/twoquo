@@ -16,7 +16,7 @@ from database.database import Metadata
 from database.lmdb_database import LmdbDatabase
 from interceptor import Interceptor
 #from tooquo.loggin import GLOBAL_LOGGER
-from tooquo.loggin import Logger
+#from tooquo.loggin import Logger
 
 
 class RecommendationEngine:

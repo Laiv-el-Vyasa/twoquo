@@ -5,22 +5,23 @@ import numpy as np
 from visualisation import qubo_heatmap, visualize_evol_results, plot_average_fitness
 from pipeline import pipeline_run
 
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
-
 from pygad.torchga import torchga
 from torch import torch, nn
-print('Torch: ', torch.__version__)
-print('Cuda: ', torch.version.cuda)
+import torch.nn.functional as F
+import torch_geometric.nn as geo_nn
 
-from config import load_cfg
+from networks import GcnIdSimple, GcnIdStraight, GcnDiag
+
 import pygad.torchga
 
 from evolution.evolution_util import get_training_dataset, get_fitness_value, apply_approximation_to_qubo, \
     get_quality_of_approxed_qubo, get_qubo_approx_mask, aggregate_saved_problems, solver, \
-    check_model_config_fit, cfg
+    check_model_config_fit, get_diagonal_of_qubo, cfg, get_tensor_of_structure, linearize_qubo
 
-run_bool = False
-restart_bool = False
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
+
+run_bool = True
+restart_bool = True
 test_case_study = False
 plot_evol_results = False
 
@@ -28,129 +29,90 @@ plot_evol_results = False
 #cfg = load_cfg(cfg_id='test_evol_mc')
 qubo_size = cfg['pipeline']['problems']['qubo_size']
 problem = cfg['pipeline']['problems']['problems'][0]
-evolution_file = f"simple_evolution"
-model_name = '_sqrt_autoenc'
+evolution_file = f"gcn_evolution"
+model_name = '_diag'
 qubo_entries = int((qubo_size * (qubo_size + 1)) / 2)
 population = 100
 a = 1
-b = .5
-c = 10
-d = .1
+b = 1
+c = 1
+d = 1
 fitness_parameters = (a, b, c, d)
+min_approx = 0.05
 
 
 evaluation_models = {
-    '_NP_8_1_1_0_05':
-        {'name': 'quality, target .5 approxed entries',
-         'fitness_params': (1, 1, 0, .5),
-         'model_name': ''
-         },
-    '_NP_8_1_1_0_08':
-        {'name': 'quality, target .8 approxed entries',
-         'fitness_params': (1, 1, 0, .8),
-         'model_name': ''
-         },
-    '_NP_8_1_05_10_1':
-        {'name': 'correct_solutions',
+    '_MC_8_1_05_10_1':
+        {'name': 'gcn, simple model, id-matrix',
          'fitness_params': (1, .5, 10, 1),
+         'min_approx': 0,
+         'model_name': ''
+        },
+    '_MC_24_1_05_10_01':
+        {'name': 'gcn, simple model, id-matrix, approx basically nothing',
+         'fitness_params': (1, .5, 10, .1),
+         'min_approx': 0,
          'model_name': ''
          },
-    '_NP_24_1_05_10_01_20p': {
-        'name': 'correct solutions, 20 parents',
-        'fitness_params': (1, .5, 10, .1),
-        'model_name': ''
-    },
-    '_NP_24_1_1_0_09_20p': {
-        'name': 'quality, target .9 approxed entries',
-        'fitness_params': (1, 1, 0, .9),
-        'model_name': ''
-    },
-    '_MC_8_1_05_10_1_MC': {
-        'name': 'max-cut, correct solutions',
-        'fitness_params': (1, .5, 10, 1),
-        'model_name': ''
-    },
-    '_MC_24_1_05_10_1': {
-        'name': 'simple model (max approx)',
-        'fitness_params': (1, .5, 10, 1),
-        'model_name': ''
-    },
-    '_MC_24_1_05_10_01': {
-        'name': 'simple model',
-        'fitness_params': (1, .5, 10, .1),
-        'model_name': ''
-    },
-    '_MC_24_autoenc_1_05_10_01': {
-        'name': 'autoencoder model',
-        'fitness_params': (1, .5, 10, .1),
-        'model_name': '_autoenc'
-    },
-    '_MC_24_sqrt_autoenc_1_05_10_01': {
-        'name': 'sqrt autoencoder model',
-        'fitness_params': (1, .5, 10, .1),
-        'model_name': '_sqrt_autoenc'
-    }
+    '_MC_24_1_1_1_1':
+        {'name': 'gcn, simple model, id-matrix, approx a bit more',
+         'fitness_params': (1, 1, 1, 1),
+         'min_approx': 0,
+         'model_name': ''
+         },
+    '_MC_24_1_1_1_1_005':
+        {'name': 'gcn, simple model, id-matrix, approx a bit more',
+         'fitness_params': (1, 1, 1, 1),
+         'min_approx': .05,
+         'model_name': ''
+         },
+    '_MC_24_straight_1_2_1_1_005':
+        {'name': 'gcn, straight model, id-matrix',
+         'fitness_params': (1, 2, 1, 1),
+         'min_approx': .05,
+         'model_name': '_straight'
+         },
+    '_MC_24_diag_1_1_1_1_relu':
+        {'name': 'gcn, straight model, id-matrix',
+         'fitness_params': (1, 1, 1, 1),
+         'min_approx': 0,
+         'model_name': '_diag'
+         }
 }
 
 
 class Network(nn.Module):
     def __init__(self):
         super(Network, self).__init__()
-        self.linear1 = nn.Linear(qubo_entries, qubo_entries)
-        self.linear2 = nn.Linear(qubo_entries, qubo_entries)
+        self.conv1 = geo_nn.GCNConv(qubo_size, int(qubo_size / 2), add_self_loops=False)
+        self.conv2 = geo_nn.GCNConv(int(qubo_size / 2), qubo_size, add_self_loops=False)
 
-    def forward(self, x):
-        x = self.linear1(x)
-        x = self.linear2(x)
-        return nn.ReLU(x)
+    def forward(self, x, edge_index, edge_weights):
+        x = self.conv1(x, edge_index, edge_weights)
+        x = F.relu(x)
+        x = self.conv2(x, edge_index, edge_weights)
+        return F.relu(x)
 
 
-# model = Network()
-model = nn.Sequential(
-    nn.Linear(qubo_entries, qubo_entries),
-    nn.Linear(qubo_entries, qubo_entries),
-    nn.ReLU()
-)
-
-model_autoenc = nn.Sequential(
-    nn.Linear(qubo_entries, int(qubo_entries / 2)),
-    nn.Linear(int(qubo_entries/2), int(qubo_entries/4)),
-    nn.Sigmoid(),
-    nn.Linear(int(qubo_entries/4), int(qubo_entries/2)),
-    nn.Linear(int(qubo_entries/2), qubo_entries),
-    nn.ReLU()
-)
-
-model_sqrt_autoenc = nn.Sequential(
-    nn.Linear(qubo_entries, int(np.sqrt(qubo_entries))),
-    nn.Linear(int(np.sqrt(qubo_entries)), int(np.sqrt(qubo_entries) / 2)),
-    nn.Sigmoid(),
-    nn.Linear(int(np.sqrt(qubo_entries) / 2), int(np.sqrt(qubo_entries))),
-    nn.Linear(int(np.sqrt(qubo_entries)), qubo_entries),
-    nn.ReLU()
-)
+model = Network()
 
 model_dict = {
     'model': model,
-    'model_autoenc': model_autoenc,
-    'model_sqrt_autoenc': model_sqrt_autoenc
+    'model_straight': GcnIdStraight(qubo_size),
+    'model_diag': GcnDiag(qubo_size, 5)
 }
 
-for mdl_name in model_dict:
-    mdl = model_dict[mdl_name]
-    pytorch_total_params = sum(p.numel() for p in mdl.parameters() if p.requires_grad)
-    print(mdl_name, pytorch_total_params)
-
 torch_ga = pygad.torchga.TorchGA(model=model_dict[f'model{model_name}'], num_solutions=population)
-
 
 avg_fitness_list = []
 avg_fitness_generation = []
 
 
 def fitness_func(solution, solution_idx):
-    global data_inputs, data_outputs, torch_ga, model, avg_fitness_list, avg_fitness_generation, model_dict, model_name
+    global torch_ga, model, avg_fitness_list, avg_fitness_generation, model_dict, model_name, min_approx
+
     model = model_dict[f'model{model_name}']
+    #print(model)
 
     model_weights_dict = torchga.model_weights_as_dict(model=model,
                                                        weights_vector=solution)
@@ -158,10 +120,23 @@ def fitness_func(solution, solution_idx):
     # Use the current solution as the model parameters.
     model.load_state_dict(model_weights_dict)
 
-    linearized_qubos, qubos, min_energy, *_ = get_training_dataset()
-    linearized_approx = model(linearized_qubos).detach()
+    include_loops = not model_name == '_diag'
+    _, qubos, min_energy, _, _, edge_index_list, edge_weight_list = get_training_dataset(include_loops=include_loops)
+    #linearized_approx = model(linearized_qubos).detach()
+    linearized_approx = []
+    for qubo, edge_index, edge_weight in zip(qubos, edge_index_list, edge_weight_list):
+        #print('QUBO:', qubo)
+        if model_name == '_diag':
+            node_features = get_diagonal_of_qubo(qubo)
+        else:
+            node_features = np.identity(qubo_size)
+        approx_mask = model.forward(get_tensor_of_structure(node_features),
+                                    get_tensor_of_structure(edge_index).long(),
+                                    get_tensor_of_structure(edge_weight))
+        #print('APPROX', approx_mask)
+        linearized_approx.append(linearize_qubo(approx_mask.detach()))
 
-    solution_fitness = get_fitness_value(linearized_approx, qubos, min_energy, fitness_parameters)
+    solution_fitness = get_fitness_value(linearized_approx, qubos, min_energy, fitness_parameters, min_approx)
     print(f'Solution {solution_idx}: {solution_fitness}')
     avg_fitness_generation.append(solution_fitness)
 
@@ -179,7 +154,7 @@ def callback_generation(ga_instance):
     print("Avg. Fitness = {fitness}".format(fitness=avg_fitness))
 
 
-num_generations = 200
+num_generations = 50
 num_parents_mating = int(population * .2)
 initial_population = torch_ga.population_weights
 
@@ -198,10 +173,11 @@ if run_bool:
     ga_instance.save(f'{evolution_file}_{problem}_{qubo_size}{model_name}')
 
 
-test_model = '_MC_24_1_05_10_1'
-test_cases = 5
+test_model = '_MC_24_diag_1_1_1_1'
+test_cases = 10
 if test_case_study:
     fitness_parameters = evaluation_models[test_model]['fitness_params']
+    min_approx = evaluation_models[test_model]['min_approx']
     model_name = evaluation_models[test_model]["model_name"]
     model = model_dict[f'model{evaluation_models[test_model]["model_name"]}']
     loaded_ga_instance = pygad.load(evolution_file + test_model)
@@ -213,19 +189,31 @@ if test_case_study:
     best_model_weights_dict = torchga.model_weights_as_dict(model=model,
                                                             weights_vector=best_solution)
     model.load_state_dict(best_model_weights_dict)
-
-    linearized_qubos, qubos, min_energy,\
-        solution_list, problem_list, edge_index_list, edge_weight_list = get_training_dataset()
-    linearized_approx = model(linearized_qubos).detach()
+    include_loops = not model_name == '_diag'
+    linearized_qubos, qubos, min_energy, solution_list, problem_list, \
+        edge_index_list, edge_weight_list = get_training_dataset(include_loops=include_loops)
+    #linearized_approx = model(linearized_qubos).detach()
 
     solution_quality_list = [[], []]
     approx_quality_list = []
     fitness_list = []
-    for idx, (lin_approx, qubo, energy, solution, problem) in enumerate(
-            zip(linearized_approx, qubos, min_energy,
-                solution_list, problem_list)):
+    for idx, (linarized_qubo, qubo, energy, solution, problem, edge_index, edge_weight) in enumerate(
+            zip(linearized_qubos, qubos, min_energy, solution_list,
+                problem_list, edge_index_list, edge_weight_list)):
+
+        if model_name == '_diag':
+            node_features = get_diagonal_of_qubo(qubo)
+        else:
+            node_features = np.identity(qubo_size)
+
+        approx_mask = model.forward(get_tensor_of_structure(node_features),
+                                    get_tensor_of_structure(edge_index).long(),
+                                    get_tensor_of_structure(edge_weight))
+        lin_approx = linearize_qubo(approx_mask.detach())
+
         approxed_qubo, true_approx = apply_approximation_to_qubo(lin_approx, qubo)
         solution_quality, _ = get_quality_of_approxed_qubo(lin_approx, qubo, energy, print_solutions=True)
+        #print(f'True approx: {true_approx}')
         if idx < test_cases:
             print(f'Testcase {idx + 1}')
             print(f'Quality of approx: {solution_quality}')
@@ -255,6 +243,7 @@ if plot_evol_results:
         fitting_model = check_model_config_fit(model_descr)
         if fitting_model:
             fitness_parameters = evaluation_models[model_descr]['fitness_params']
+            min_approx = evaluation_models[test_model]['min_approx']
             loaded_ga_instance = pygad.load(evolution_file + model_descr)
             model_name = evaluation_models[model_descr]["model_name"]
             model = model_dict[f'model{evaluation_models[model_descr]["model_name"]}']
@@ -263,17 +252,35 @@ if plot_evol_results:
             # print(best_solution_tuple)
             best_solution = best_solution_tuple[0]
             best_model_weights_dict = torchga.model_weights_as_dict(model=model,
-                                                                weights_vector=best_solution)
+                                                                    weights_vector=best_solution)
             model.load_state_dict(best_model_weights_dict)
 
-            linearized_qubos, qubos, min_energy, solution_list, problem_list,\
-                edge_index_list, edge_weight_list = get_training_dataset()
-            linearized_approx = model(linearized_qubos).detach()
+            #linearized_qubos, qubos, min_energy, solution_list, problem_list = get_training_dataset()
+            #linearized_approx = model(linearized_qubos).detach()
 
             solution_quality_list = [[], []]
             approx_percent = []
 
-            for lin_approx, qubo, energy in zip(linearized_approx, qubos, min_energy):
+            include_loops = not model_name == '_diag'
+            linearized_qubos, qubos, min_energy, solution_list, problem_list, \
+                edge_index_list, edge_weight_list = get_training_dataset(include_loops=include_loops)
+            #linearized_approx = model(linearized_qubos).detach()
+
+            fitness_list = []
+            for idx, (linarized_qubo, qubo, energy, solution, problem, edge_index, edge_weight) in enumerate(
+                    zip(linearized_qubos, qubos, min_energy, solution_list,
+                        problem_list, edge_index_list, edge_weight_list)):
+
+                if model_name == '_diag':
+                    node_features = get_diagonal_of_qubo(qubo)
+                else:
+                    node_features = np.identity(qubo_size)
+
+                approx_mask = model.forward(get_tensor_of_structure(node_features),
+                                            get_tensor_of_structure(edge_index).long(),
+                                            get_tensor_of_structure(edge_weight))
+                lin_approx = linearize_qubo(approx_mask.detach())
+
                 solution_quality, true_approx = get_quality_of_approxed_qubo(lin_approx, qubo, energy)
                 approx_percent.append(true_approx / qubo_entries)
                 print(solution_quality)
@@ -287,5 +294,5 @@ if plot_evol_results:
 
     if evol_data:
         visualize_evol_results(aggregate_saved_problems(),
-                           [i / qubo_entries for i in range(qubo_entries + 1)],
-                           evol_data, solver)
+                               [i / qubo_entries for i in range(qubo_entries + 1)],
+                               evol_data, solver)

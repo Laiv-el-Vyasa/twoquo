@@ -1,5 +1,5 @@
 import numpy as np
-from tooquo.transformator.problems.problem import Problem
+from transformator.problems.problem import Problem
 
 
 class QuadraticAssignment(Problem):

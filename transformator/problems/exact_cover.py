@@ -1,8 +1,8 @@
 import itertools
 import numpy as np
-from tooquo.transformator.problems.problem import Problem
-from tooquo.transformator.common.util import gen_subsets_matrix
-from tooquo.transformator.common.util import gen_subset_problems
+from transformator.problems.problem import Problem
+from transformator.common.util import gen_subsets_matrix
+from transformator.common.util import gen_subset_problems
 
 
 class ExactCover(Problem):

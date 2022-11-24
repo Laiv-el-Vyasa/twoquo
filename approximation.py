@@ -20,6 +20,7 @@ def get_approximated_qubos(qubo, single_entry_approx, fixed, approximation_steps
     for i, percentage_bound in enumerate(percentage_steps):
         if fixed:
             if not single_entry_approx or i < len(qubodict):
+                #print('I:', i)
                 new_qubo, last_approx_number, number_of_approx = approx_fixed_number(copy.deepcopy(qubo),
                                                                                      percentage_bound,
                                                                                      last_approx_number, size,
@@ -39,8 +40,14 @@ def get_approximated_qubos(qubo, single_entry_approx, fixed, approximation_steps
 
 
 def approx_fixed_number(qubo, percentage_bound, last_approx_number, size, qubodict):
-    approx_number = int(np.ceil(percentage_bound * size))
+    #print('Ceil_number: ', percentage_bound * size)
+    #print('Percentage bound: ', percentage_bound)
+    #print('Size: ', size)
+    approx_number = int(np.ceil(percentage_bound * size - .00000001))
     number_of_approx = 0
+    #print('Length qubodict: ', len(qubodict))
+    #print('Last approx: ', last_approx_number)
+    #print('Approx: ', approx_number)
     for j in range(last_approx_number, approx_number):
         _, (idx, idy) = qubodict[j]
         qubo[idx][idy] = 0
