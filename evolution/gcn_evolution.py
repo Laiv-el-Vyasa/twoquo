@@ -10,7 +10,7 @@ from torch import torch, nn
 import torch.nn.functional as F
 import torch_geometric.nn as geo_nn
 
-from networks import GcnIdSimple, GcnIdStraight, GcnDiag
+from networks import GcnIdSimple, GcnIdStraight, GcnDiag, GcnDeep
 
 import pygad.torchga
 
@@ -20,8 +20,8 @@ from evolution.evolution_util import get_training_dataset, get_fitness_value, ap
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
-run_bool = True
-restart_bool = True
+run_bool = False
+restart_bool = False
 test_case_study = False
 plot_evol_results = False
 
@@ -30,7 +30,7 @@ plot_evol_results = False
 qubo_size = cfg['pipeline']['problems']['qubo_size']
 problem = cfg['pipeline']['problems']['problems'][0]
 evolution_file = f"gcn_evolution"
-model_name = '_diag'
+model_name = '_deep'
 qubo_entries = int((qubo_size * (qubo_size + 1)) / 2)
 population = 100
 a = 1
@@ -43,39 +43,39 @@ min_approx = 0.05
 
 evaluation_models = {
     '_MC_8_1_05_10_1':
-        {'name': 'gcn, simple model, id-matrix',
+        {'name': 'simple model, id-matrix',
          'fitness_params': (1, .5, 10, 1),
          'min_approx': 0,
          'model_name': ''
         },
     '_MC_24_1_05_10_01':
-        {'name': 'gcn, simple model, id-matrix, approx basically nothing',
+        {'name': 'simple model, id-matrix',
          'fitness_params': (1, .5, 10, .1),
          'min_approx': 0,
          'model_name': ''
          },
     '_MC_24_1_1_1_1':
-        {'name': 'gcn, simple model, id-matrix, approx a bit more',
+        {'name': 'simple model, id-matrix',
          'fitness_params': (1, 1, 1, 1),
          'min_approx': 0,
          'model_name': ''
          },
     '_MC_24_1_1_1_1_005':
-        {'name': 'gcn, simple model, id-matrix, approx a bit more',
+        {'name': 'simple model, id-matrix, min .05',
          'fitness_params': (1, 1, 1, 1),
          'min_approx': .05,
          'model_name': ''
          },
     '_MC_24_straight_1_2_1_1_005':
-        {'name': 'gcn, straight model, id-matrix',
+        {'name': 'straight model, id-matrix',
          'fitness_params': (1, 2, 1, 1),
          'min_approx': .05,
          'model_name': '_straight'
          },
-    '_MC_24_diag_1_1_1_1_relu':
-        {'name': 'gcn, straight model, id-matrix',
+    '_MC_24_diag_1_1_1_1_005':
+        {'name': 'single inputs, qubo-diagonal',
          'fitness_params': (1, 1, 1, 1),
-         'min_approx': 0,
+         'min_approx': 0.05,
          'model_name': '_diag'
          }
 }
@@ -99,8 +99,12 @@ model = Network()
 model_dict = {
     'model': model,
     'model_straight': GcnIdStraight(qubo_size),
-    'model_diag': GcnDiag(qubo_size, 5)
+    'model_diag': GcnDiag(qubo_size, 5),
+    'model_deep': GcnDeep(qubo_size)
 }
+
+pytorch_total_params = sum(p.numel() for p in model_dict[f'model{model_name}'].parameters() if p.requires_grad)
+#print(model_name, pytorch_total_params)
 
 torch_ga = pygad.torchga.TorchGA(model=model_dict[f'model{model_name}'], num_solutions=population)
 
@@ -120,7 +124,7 @@ def fitness_func(solution, solution_idx):
     # Use the current solution as the model parameters.
     model.load_state_dict(model_weights_dict)
 
-    include_loops = not model_name == '_diag'
+    include_loops = not (model_name == '_diag' or model_name == '_deep')
     _, qubos, min_energy, _, _, edge_index_list, edge_weight_list = get_training_dataset(include_loops=include_loops)
     #linearized_approx = model(linearized_qubos).detach()
     linearized_approx = []
@@ -128,6 +132,9 @@ def fitness_func(solution, solution_idx):
         #print('QUBO:', qubo)
         if model_name == '_diag':
             node_features = get_diagonal_of_qubo(qubo)
+        elif model_name == '_deep':
+            node_features = qubo
+            edge_weight = []
         else:
             node_features = np.identity(qubo_size)
         approx_mask = model.forward(get_tensor_of_structure(node_features),
@@ -154,9 +161,22 @@ def callback_generation(ga_instance):
     print("Avg. Fitness = {fitness}".format(fitness=avg_fitness))
 
 
-num_generations = 50
+num_generations = 100
 num_parents_mating = int(population * .2)
 initial_population = torch_ga.population_weights
+
+arr1 = [[1, 2], [1, 4]]
+arr2 = [[3, 4], [1, 5]]
+
+print('Extension: ', np.append(arr1, arr2, axis=1))
+
+arr3 = [1.5, 3.2]
+arr4 = [0.5, -1.8]
+print([arr3, arr4])
+print(np.mean([arr3, arr4], axis=0))
+
+#print(initial_population)
+#print(len(initial_population[0]))
 
 ga_instance = pygad.GA(num_generations=num_generations,
                        num_parents_mating=num_parents_mating,
@@ -173,8 +193,8 @@ if run_bool:
     ga_instance.save(f'{evolution_file}_{problem}_{qubo_size}{model_name}')
 
 
-test_model = '_MC_24_diag_1_1_1_1'
-test_cases = 10
+test_model = '_MC_24_diag_1_1_1_1_005'
+test_cases = 5
 if test_case_study:
     fitness_parameters = evaluation_models[test_model]['fitness_params']
     min_approx = evaluation_models[test_model]['min_approx']
@@ -184,12 +204,13 @@ if test_case_study:
     #loaded_ga_instance = pygad.load(evolution_file)
 
     best_solution_tuple = loaded_ga_instance.best_solution()
-    print(best_solution_tuple)
+    print('Best solution tuple: ', best_solution_tuple)
     best_solution = best_solution_tuple[0]
     best_model_weights_dict = torchga.model_weights_as_dict(model=model,
                                                             weights_vector=best_solution)
+    print('Weight dict: ', best_model_weights_dict)
     model.load_state_dict(best_model_weights_dict)
-    include_loops = not model_name == '_diag'
+    include_loops = not (model_name == '_diag' or model_name == '_deep')
     linearized_qubos, qubos, min_energy, solution_list, problem_list, \
         edge_index_list, edge_weight_list = get_training_dataset(include_loops=include_loops)
     #linearized_approx = model(linearized_qubos).detach()
@@ -203,6 +224,9 @@ if test_case_study:
 
         if model_name == '_diag':
             node_features = get_diagonal_of_qubo(qubo)
+        elif model_name == '_deep':
+            node_features = qubo
+            edge_weight = []
         else:
             node_features = np.identity(qubo_size)
 
@@ -243,7 +267,8 @@ if plot_evol_results:
         fitting_model = check_model_config_fit(model_descr)
         if fitting_model:
             fitness_parameters = evaluation_models[model_descr]['fitness_params']
-            min_approx = evaluation_models[test_model]['min_approx']
+            min_approx = evaluation_models[model_descr]['min_approx']
+            print(min_approx)
             loaded_ga_instance = pygad.load(evolution_file + model_descr)
             model_name = evaluation_models[model_descr]["model_name"]
             model = model_dict[f'model{evaluation_models[model_descr]["model_name"]}']
@@ -261,7 +286,7 @@ if plot_evol_results:
             solution_quality_list = [[], []]
             approx_percent = []
 
-            include_loops = not model_name == '_diag'
+            include_loops = not (model_name == '_diag' or model_name == '_deep')
             linearized_qubos, qubos, min_energy, solution_list, problem_list, \
                 edge_index_list, edge_weight_list = get_training_dataset(include_loops=include_loops)
             #linearized_approx = model(linearized_qubos).detach()
@@ -273,6 +298,9 @@ if plot_evol_results:
 
                 if model_name == '_diag':
                     node_features = get_diagonal_of_qubo(qubo)
+                elif model_name == '_deep':
+                    node_features = qubo
+                    edge_weight = []
                 else:
                     node_features = np.identity(qubo_size)
 
