@@ -125,7 +125,7 @@ def get_solution_quality(energy, best_energy, worst_energy, new_quality):
     return quality
 
 
-def pipeline_run(cfg, approx_fixed_number, approx_single_entries, print_bool, save_bool, approximation_steps = 29):
+def pipeline_run(cfg, approx_fixed_number, approx_single_entries, print_bool, save_bool, show_bool, approximation_steps = 29):
     gen = QUBOGenerator(cfg)
 
     qubos, labels, problems = gen.generate()
@@ -232,7 +232,9 @@ def pipeline_run(cfg, approx_fixed_number, approx_single_entries, print_bool, sa
         overall_data['solver'] = list(metadata.solutions.keys())[0]
 
     # print(overall_data)
-    approx_quality_score_graphs_problems(overall_data, approx_fixed_number, include_zero=True)
+    eng.get_database().close()
+    if show_bool:
+        approx_quality_score_graphs_problems(overall_data, approx_fixed_number, include_zero=True)
 
 
 if __name__ == '__main__':
@@ -241,5 +243,5 @@ if __name__ == '__main__':
     approx_single_entries = True
     print_bool = False
     save_bool = True
-    cfg = load_cfg(cfg_id='test_evol_mc_medium')
-    pipeline_run(cfg, approx_fixed_number, approx_single_entries, print_bool, save_bool, approximation_steps)
+    cfg = load_cfg(cfg_id='test_evol_mc_large')
+    pipeline_run(cfg, approx_fixed_number, approx_single_entries, print_bool, save_bool, approximation_steps, True)

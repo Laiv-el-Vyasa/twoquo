@@ -332,10 +332,25 @@
       "dataset_id": "test_evol_medium",
       "problems": {
         "qubo_size": 24,
-        "n_problems": 100,
+        "n_problems": 20,
         "NP": {
           "size": 24,
-          "new": false
+          "new": true
+        },
+        "problems": [
+          "NP"
+        ]
+      }
+    },
+    "test_evol_large": {
+      "base_cfg": "2",
+      "dataset_id": "test_evol_large",
+      "problems": {
+        "qubo_size": 48,
+        "n_problems": 100,
+        "NP": {
+          "size": 48,
+          "new": true
         },
         "problems": [
           "NP"
@@ -347,9 +362,24 @@
       "dataset_id": "test_evol_mc_medium",
       "problems": {
         "qubo_size": 24,
-        "n_problems": 100,
+        "n_problems": 1000,
         "MC": {
           "size": [24, 60],
+          "random_edges": true
+        },
+        "problems": [
+          "MC"
+        ]
+      }
+    },
+    "test_evol_mc_large": {
+      "base_cfg": "2",
+      "dataset_id": "test_evol_mc_large",
+      "problems": {
+        "qubo_size": 48,
+        "n_problems": 1000,
+        "MC": {
+          "size": [48, 160],
           "random_edges": true
         },
         "problems": [

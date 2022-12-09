@@ -20,8 +20,9 @@ from evolution.evolution_util import get_training_dataset, get_fitness_value, ap
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
-run_bool = False
-restart_bool = False
+run_bool = True
+restart_bool = True
+extend_model = True
 test_case_study = False
 plot_evol_results = False
 

@@ -9,7 +9,7 @@ import torch, os
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
-cfg = load_cfg(cfg_id='test_evol_mc')
+cfg = load_cfg(cfg_id='test_evol_mc_large')
 qubo_size = cfg['pipeline']['problems']['qubo_size']
 engine = RecommendationEngine(cfg=cfg)
 generator = QUBOGenerator(cfg)

@@ -137,7 +137,7 @@ def approx_quality_graphs_problems_ml(aggregated_approx_data, percent_data, lear
     pyplot.show()
 
 
-def visualize_evol_results(aggregated_approx_data, percent_list, evol_data, solver):
+def visualize_evol_results(aggregated_approx_data, percent_list, evol_data, solver, size):
     fig, ax = pyplot.subplots()
     legend_lines = []
     for metric, problem_approx_data in enumerate(aggregated_approx_data):
@@ -147,7 +147,7 @@ def visualize_evol_results(aggregated_approx_data, percent_list, evol_data, solv
         ax.plot(shortend_percent_list, problem_approx_data, color=color, markersize=8)
         #legend_lines.append(lines.Line2D([], [], color=color,
         #                                     markersize=8, label=f'{problem_name_array[problem_number]} solution quality'))
-    for idx, (evol_results, name) in enumerate(evol_data):
+    for idx, (evol_results, name, _) in enumerate(evol_data):
         for metric, (evol_x, evol_y) in enumerate(evol_results):
             color = metric_color_dict[metric]
             metric_name = 'correct solutions' if metric else 'quality'
@@ -159,7 +159,41 @@ def visualize_evol_results(aggregated_approx_data, percent_list, evol_data, solv
     ax.set_ylabel(f'{metric_name_dict[0]} ({metric_color_dict[0]}) / '
                   f'{metric_name_dict[1]} ({metric_color_dict[1]})')
     ax.set_xlabel(f'approximated qubo entries in percent')
-    ax.set_title(f'Approximation quality, Learned Models, Solver: {solver}', fontsize=12)
+    ax.set_title(f'Approximation quality, Learned Models, Size: {size}, Solver: {solver}', fontsize=12)
+    pyplot.show()
+
+
+evo_type_color_dict = {
+    'simple': 'green',
+    'gcn': 'red',
+    'combined': 'blue'
+}
+
+
+def visualize_evol_results_models(aggregated_approx_data, percent_list, evol_data, solver, size, problem):
+    fig, ax = pyplot.subplots()
+    legend_lines = []
+    color = 'black'
+    print(aggregated_approx_data)
+    ax.plot(percent_list, aggregated_approx_data[1], color=color, markersize=8)
+    legend_lines.append(lines.Line2D([], [], color=color, markersize=8, label=f'entry-wise approximation'))
+    evo_type_dict = {}
+    for evol_results, name, evo_type in evol_data:
+        evol_x, evol_y = evol_results[1]
+        color = evo_type_color_dict[evo_type]
+        if evo_type in evo_type_dict:
+            marker_size = evo_type_dict[evo_type] + 1
+        else:
+            marker_size = 4
+        evo_type_dict[evo_type] = marker_size
+        ax.plot(evol_x, evol_y, color=color, marker=(marker_size, 2), markersize=12)
+        legend_lines.append(lines.Line2D([], [], color=color, linestyle='None',
+                                         markersize=12, marker=(marker_size, 2), label=f'{name}'))
+    ax.legend(handles=legend_lines)
+    ax.set_ylabel(f'correct solutions found in percent')
+    ax.set_xlabel(f'approximated qubo entries in percent')
+    ax.set_title(f'Approximation quality, Learned Models, Problem: {problem}, '
+                 f'Size: {size}, Solver: {solver}', fontsize=12)
     pyplot.show()
 
 
