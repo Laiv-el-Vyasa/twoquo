@@ -1,9 +1,11 @@
+import copy
 import itertools
 import numpy as np
 
 from transformator.generalizations.graph_based.include_graph_structure import include_graph_structure
 from transformator.generalizations.graph_based.include_edges import \
     include_edges
+from transformator.problems.max_cut import generate_random_edge_number
 from transformator.problems.problem import Problem
 from transformator.common.util import gen_graph
 
@@ -60,7 +62,12 @@ class GraphColoring(Problem):
 
     @classmethod
     def gen_problems(self, cfg, n_problems, size, n_colors, seed=None, **kwargs):
-        graphs = gen_graph(n_problems, size, seed)
+        graphs = []
+        adapted_size = copy.deepcopy(size)
+        for i in range(n_problems):
+            if cfg['problems']['GC']['random_edges']:
+                adapted_size[1] = generate_random_edge_number(size)
+            graphs.extend(gen_graph(1, adapted_size, seed))
         return [
             {"graph": graph, "n_colors": n_colors}
             for graph in graphs

@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 import torch
 
@@ -8,7 +10,7 @@ from recommendation import RecommendationEngine
 
 cuda = torch.device('cuda')
 
-cfg = load_cfg(cfg_id='test_evol_medium')
+cfg = load_cfg(cfg_id='test_evol_large')
 qubo_size = cfg['pipeline']['problems']['qubo_size']
 problem = cfg['pipeline']['problems']['problems'][0]
 engine = RecommendationEngine(cfg=cfg)
@@ -33,19 +35,19 @@ def get_linearized_qubos(n_problems, include_loops=True):
     edge_index_list = []
     edge_weight_list = []
     for qubo in qubo_list:
-        solution, min_energy = solve_qubo(qubo)
+        solutions, min_energy = solve_qubo(qubo)
         linarized_qubo_list.append(linearize_qubo(qubo))
         edge_index, edge_weights = get_edge_data(qubo, include_loops=include_loops)
         edge_index_list.append(edge_index)
         edge_weight_list.append(edge_weights)
         energy_list.append(min_energy)
-        solution_List.append(solution)
+        solution_List.append(solutions[0])
     return linarized_qubo_list, qubo_list, energy_list, solution_List, problem_list, edge_index_list, edge_weight_list
 
 
 def get_quality_of_approxed_qubo(linearized_approx, qubo, min_energy, print_solutions=False):
     approxed_qubo, true_approx = apply_approximation_to_qubo(linearized_approx, qubo)
-    solutions = solve_qubo(approxed_qubo)
+    solutions, min_energy_approx = solve_qubo(approxed_qubo)
     if print_solutions:
         print(solutions)
     return get_min_solution_quality(solutions, qubo, min_energy), true_approx, \
@@ -74,6 +76,7 @@ def apply_approximation_to_qubo(linearized_approx, qubo):
                 if not qubo[i][j] == 0:
                     number_of_true_approx += 1
             linear_index += 1
+    #print('Approxed qubo: ', approxed_qubo.tolist())
     return approxed_qubo, number_of_true_approx
 
 
@@ -142,10 +145,10 @@ def solve_qubo(qubo):
 
 def get_min_solution_quality(solutions, qubo, min_energy):
     solution_quality_array = []
-    for solution in solutions[0]:
+    for solution in solutions:
         solution_quality = get_solution_quality(solution.dot(qubo.dot(solution)), min_energy)
         solution_quality_array.append(solution_quality)
-    return np.min(solution_quality_array)
+    return np.min(solution_quality_array), solutions[np.argmin(solution_quality_array)]
 
 
 def get_solution_quality(energy, min_energy):
@@ -157,11 +160,16 @@ def get_nonzero_count(nparray):
     return np.count_nonzero(nparray)
 
 
-def get_fitness_value(linearized_approx_list, qubo_list, min_energy_list, fitness_parameters, min_approx=0):
+def get_fitness_value(linearized_approx_list, qubo_list, min_energy_list, fitness_parameters, problems, min_approx=0):
     a, b, c, d = fitness_parameters
     fitness_list = []
-    for linearized_approx, qubo, min_energy in zip(linearized_approx_list, qubo_list, min_energy_list):
-        solution_quality, true_approx, true_approx_percent = get_quality_of_approxed_qubo(linearized_approx, qubo,
+    for linearized_approx, qubo, min_energy, problem in zip(linearized_approx_list, qubo_list, min_energy_list, problems):
+        #print('Problem solving: ', problem)
+        #print('Sum numbers: ', np.sum(problem['numbers']))
+        #print('Max qubo entry: ', np.max(qubo))
+        #print('Linearized approx: ', linearized_approx)
+        problem_time = time.time()
+        (solution_quality, best_approx_solution), true_approx, true_approx_percent = get_quality_of_approxed_qubo(linearized_approx, qubo,
                                                                                           min_energy)
         # approx_quality = get_approx_number(linearized_approx) / len(linearized_approx)
         # approx_quality = true_approx / len(linearized_approx)
@@ -171,6 +179,7 @@ def get_fitness_value(linearized_approx_list, qubo_list, min_energy_list, fitnes
                    c * np.floor(1 - solution_quality))
         # print('Qubo:', qubo)
         # print('Non-Zero:', get_nonzero_count(linearize_qubo(qubo)))
+        #print('Problem solving time: ', time.time() - problem_time)
         if not true_approx_percent > min_approx:
             fitness = 0
         fitness_list.append(fitness)
@@ -179,7 +188,6 @@ def get_fitness_value(linearized_approx_list, qubo_list, min_energy_list, fitnes
 
 def aggregate_saved_problems(true_approx=False):
     database = engine.get_database()
-    print('database:', database)
     qubo_entries = (qubo_size) * (qubo_size + 1) / 2
     aggregation_array = []
     approx_percent_array = []
@@ -193,6 +201,7 @@ def aggregate_saved_problems(true_approx=False):
                 #print('Nearest Bucket ', idx, ' of ', qubo_entries)
             aggregation_array[0][idx].append(metadata.approx_solution_quality[step][solver][0])
             aggregation_array[1][idx].append(metadata.approx_solution_quality[step][solver][1])
+    #print(aggregation_array[1])
     for metric, metric_array in enumerate(aggregation_array):
         new_metric_array = []
         for idx, approx_array in enumerate(metric_array):
@@ -209,7 +218,8 @@ def aggregate_saved_problems(true_approx=False):
 
 
 def get_nearest_bucket(approx_idx, approx_length, qubo_entries):
-    return int(np.floor((approx_idx / approx_length) * qubo_entries))
+    #return int(np.floor((approx_idx / approx_length) * qubo_entries))
+    return int(np.ceil((approx_idx / approx_length) * qubo_entries))
 
 
 def flatten_aggragation_array(aggregation_array, approx_percent_array):
@@ -249,7 +259,7 @@ def check_model_config_fit(model_descr, independence):
     #                  get_param_value(parameter_list[4]),
     #                  get_param_value(parameter_list[5]),
     #                  get_param_value(parameter_list[6]))
-    return model_problem == problem and (model_size == qubo_size or independence)  # , fitness_params
+    return (model_problem == problem or independence) and (model_size == qubo_size or independence)  # , fitness_params
 
 
 def get_param_value(param_string):
@@ -263,12 +273,28 @@ def get_param_value(param_string):
 
 def check_pipeline_necessity(n_problems):
     database = engine.get_database()
-    print('database:', database)
     db_count = 0
     for _, metadata in database.iter_metadata():
         db_count += 1
     print('DB count', db_count)
     return n_problems > db_count
+
+
+def check_solution(solution, problem):
+    solution_value = 0
+    if 'numbers' in problem:
+        solution_value = check_np_sum(solution, problem['numbers'])
+    return solution_value
+
+
+def check_np_sum(solution, np_numbers):
+    np_sum = 0
+    for idx, bit_solution in enumerate(solution):
+        if bit_solution:
+            np_sum += np_numbers[idx]
+        else:
+            np_sum -= np_numbers[idx]
+    return np_sum
 
 
 class Data(Dataset):

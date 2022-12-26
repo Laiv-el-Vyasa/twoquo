@@ -61,13 +61,13 @@ evaluation_models = {
          'display': False
          },
     'combined_evolution_MC_24_uwu_1_1_10_02_01_200gen':
-        {'name': 'combined model, 24, compression, increase approx, 200gen',
+        {'name': 'combined model, MC, 24, compression, increase approx',
          'fitness_params': (1, 1, 10, .2),
          'min_approx': 0.1,
          'independence': True,
          'model_name': '_uwu',
          'evolution_type': 'combined',
-         'display': False
+         'display': True
          },
     'combined_evolution_MC_48_uwu_1_05_10_01_005': {
         'name': 'combined model, 48, compression',
@@ -77,7 +77,7 @@ evaluation_models = {
         'model_name': '_uwu',
         'evolution_type': 'combined',
         'display': False
-    },
+        },
     'combined_evolution_MC_48_uwu_1_05_10_01_005_ext_24_1_05_10_01_005': {
         'name': 'combined model, 48, compression, extension of 24 model',
         'fitness_params': (1, .5, 10, .1),
@@ -86,7 +86,7 @@ evaluation_models = {
         'model_name': '_uwu',
         'evolution_type': 'combined',
         'display': False
-    },
+        },
     'combined_evolution_NP_24_uwu_1_05_10_02_01': {
         'name': 'combined model, 24, compression',
         'fitness_params': (1, .5, 10, .2),
@@ -95,6 +95,24 @@ evaluation_models = {
         'model_name': '_uwu',
         'evolution_type': 'combined',
         'display': True
+        },
+    'combined_evolution_NP_48_uwu_1_05_10_02_01': {
+        'name': 'combined model, 48, compression',
+        'fitness_params': (1, .5, 10, .2),
+        'min_approx': 0.1,
+        'independence': True,
+        'model_name': '_uwu',
+        'evolution_type': 'combined',
+        'display': True
+        },
+    'combined_evolution_GC_48_uwu_1_05_10_02_01': {
+        'name': 'combined model, 48, compression',
+        'fitness_params': (1, .5, 10, .1),
+        'min_approx': 0.05,
+        'independence': True,
+        'model_name': '_uwu',
+        'evolution_type': 'combined',
+        'display': False
     },
     'gcn_evolution_MC_8_1_05_10_1': {
         'name': 'gcn model, 24, id-matrix',
@@ -104,7 +122,7 @@ evaluation_models = {
         'independence': False,
         'evolution_type': 'gcn',
         'display': False
-    },
+        },
     'gcn_evolution_MC_24_1_05_10_01': {
         'name': 'gcn model, 24, id-matrix, correct solutions',
         'fitness_params': (1, .5, 10, .1),
@@ -113,7 +131,7 @@ evaluation_models = {
         'independence': False,
         'evolution_type': 'gcn',
         'display': False
-    },
+        },
     'gcn_evolution_MC_24_1_1_1_1': {
         'name': 'gcn model, 24, id-matrix, balanced',
         'fitness_params': (1, 1, 1, 1),
@@ -122,7 +140,7 @@ evaluation_models = {
         'independence': False,
         'evolution_type': 'gcn',
         'display': False
-    },
+        },
     'gcn_evolution_MC_24_1_1_1_1_005': {
         'name': 'gcn model, 24, id-matrix, balanced min .05',
         'fitness_params': (1, 1, 1, 1),
@@ -131,7 +149,7 @@ evaluation_models = {
         'independence': False,
         'evolution_type': 'gcn',
         'display': False
-    },
+        },
     'gcn_evolution_MC_24_straight_1_2_1_1_005': {
         'name': 'gcn straight model, 24, id-matrix',
         'fitness_params': (1, 2, 1, 1),
@@ -140,7 +158,7 @@ evaluation_models = {
         'independence': False,
         'evolution_type': 'gcn',
         'display': False
-    },
+        },
     'gcn_evolution_MC_24_diag_1_1_1_1_005': {
         'name': 'gcn single inputs, 24, qubo-diagonal',
         'fitness_params': (1, 1, 1, 1),
@@ -149,7 +167,7 @@ evaluation_models = {
         'independence': False,
         'evolution_type': 'gcn',
         'display': False
-    },
+        },
     'simple_evolution_NP_8_1_1_0_05':
         {'name': 'simple model, 8, target quality & .5 approxed entries',
          'fitness_params': (1, 1, 0, .5),
@@ -184,8 +202,8 @@ evaluation_models = {
         'model_name': '',
         'independence': False,
         'evolution_type': 'simple',
-        'display': True
-    },
+        'display': False
+        },
     'simple_evolution_NP_24_1_1_0_09_20p': {
         'name': 'simple model, 24, target quality & .9 approxed entries',
         'fitness_params': (1, 1, 0, .9),
@@ -194,7 +212,7 @@ evaluation_models = {
         'independence': False,
         'evolution_type': 'simple',
         'display': False
-    },
+        },
     'simple_evolution_MC_8_1_05_10_1_MC': {
         'name': 'simple model, 8, target correct solutions',
         'fitness_params': (1, .5, 10, 1),
@@ -203,7 +221,7 @@ evaluation_models = {
         'independence': False,
         'evolution_type': 'simple',
         'display': False
-    },
+        },
     'simple_evolution_MC_24_1_05_10_1': {
         'name': 'simple model, 24, target increased approx',
         'min_approx': 0,
@@ -212,7 +230,7 @@ evaluation_models = {
         'independence': False,
         'evolution_type': 'simple',
         'display': False
-    },
+        },
     'simple_evolution_MC_24_1_05_10_01': {
         'name': 'simple model, 24',
         'fitness_params': (1, .5, 10, .1),
@@ -221,7 +239,7 @@ evaluation_models = {
         'independence': False,
         'evolution_type': 'simple',
         'display': False
-    },
+        },
     'simple_evolution_MC_24_autoenc_1_05_10_01': {
         'name': 'simple model, 24, autoencoder',
         'fitness_params': (1, .5, 10, .1),
@@ -230,7 +248,7 @@ evaluation_models = {
         'independence': False,
         'evolution_type': 'simple',
         'display': False
-    },
+        },
     'simple_evolution_MC_24_sqrt_autoenc_1_05_10_01': {
         'name': 'simple model, 24, sqrt autoencoder',
         'fitness_params': (1, .5, 10, .1),
@@ -239,6 +257,15 @@ evaluation_models = {
         'independence': False,
         'evolution_type': 'simple',
         'display': False
+        },
+    'simple_evolution_NP_24_autoenc_1_05_10_01_005': {
+        'name': 'simple model, 24, autoencoder',
+        'fitness_params': (1, .5, 10, .1),
+        'min_approx': 0.05,
+        'model_name': '_autoenc',
+        'independence': False,
+        'evolution_type': 'simple',
+        'display': True
     }
 }
 

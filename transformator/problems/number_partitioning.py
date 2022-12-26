@@ -5,10 +5,20 @@ from transformator.problems.problem import Problem
 
 def get_problems(n_problems, size):
     rng = random.default_rng()
-    problems = rng.geometric(1/size, size=(n_problems, size)) * \
+    problems = []
+    #for n in range(n_problems):
+    #    numbers = []
+    #    for i in range(size):
+    #        numbers.append(np.floor(rng.normal(2 * size, size)))
+    #        if numbers[i] < 0:
+    #            numbers[i] = np.floor(rng.normal(2 * size, 4 * size))
+    #        if numbers[i] < 0:
+    #            numbers[i] = random.randint(0, size * size * 3)
+    #    problems.append(numbers)
+    problems = rng.geometric(1 / (size / 4), size=(n_problems, size)) * \
                random.randint(0, size, (n_problems, size)) + \
                random.randint(0, size, (n_problems, size))
-
+    problems = np.array(problems)
     return problems.astype(int)
 
 

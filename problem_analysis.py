@@ -9,7 +9,7 @@ import torch, os
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
-cfg = load_cfg(cfg_id='test_evol_mc_large')
+cfg = load_cfg(cfg_id='test_evol_large')
 qubo_size = cfg['pipeline']['problems']['qubo_size']
 engine = RecommendationEngine(cfg=cfg)
 generator = QUBOGenerator(cfg)
@@ -25,8 +25,7 @@ if problem_name == 'NP':
         number_list.extend(problem['numbers'])
         if np.max(problem['numbers']) > max_number:
             max_number = np.max(problem['numbers'])
-
-
+    print(max_number)
     pyplot.hist(number_list, bins=max_number)
     pyplot.xlabel('Numbers in NP-problems')
     pyplot.ylabel('Count')
