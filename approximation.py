@@ -6,7 +6,7 @@ import numpy as np
 
 def get_approximated_qubos(qubo, single_entry_approx, fixed, approximation_steps, sorted_approx=True):
     approx_qubos = {}
-    qubodict = get_sorted_qubodict(qubo, single_entry_approx, sorted_approx)
+    qubodict = get_sorted_qubodict(qubo, sorted_approx)
     #print(qubodict)
     size = len(qubodict)
     if single_entry_approx:
@@ -75,12 +75,12 @@ def approx_fixed_values(qubo, percentage_bound, last_approx_number, size, qubodi
     return qubo, last_approx_number, number_of_approx
 
 
-def get_sorted_qubodict(qubo, single_entry_approx, sorted_approx):
+def get_sorted_qubodict(qubo, sorted_approx):
     dict_list = []
     shape = len(qubo)
     for i in range(shape):
         for j in range(i + 1):
-            if not single_entry_approx or not qubo[i][j] == 0:
+            if not qubo[i][j] == 0:
                 dict_list.append((np.absolute(qubo[i][j]), (i, j)))
     random.shuffle(dict_list)
     if sorted_approx:

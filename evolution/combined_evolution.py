@@ -82,7 +82,7 @@ def get_linearized_approx_combined(fitness_bool):
     n_problems = problem_count
     if fitness_bool:
         n_problems = int(fitness_problem_percent * problem_count)
-    _, qubos, min_energy, solution_list, problem_list, edge_index_list, edge_weight_list = \
+    _, qubos, min_energy, solutions_list, problem_list, edge_index_list, edge_weight_list = \
         get_training_dataset(n_problems, include_loops=True)
     linearized_approx = []
     problem_time_list = []
@@ -121,7 +121,7 @@ def get_linearized_approx_combined(fitness_bool):
 
     #print('Max time aproxxing problem: ', problem_list[np.argmax(problem_time_list)])
     #print('Max time aproxxing: ', np.max(problem_time_list))
-    return linearized_approx, qubos, min_energy, solution_list, problem_list
+    return linearized_approx, qubos, min_energy, solutions_list, problem_list
 
 
 def get_linearized_approx_gcn(fitness_bool):
@@ -130,7 +130,7 @@ def get_linearized_approx_gcn(fitness_bool):
     if fitness_bool:
         n_problems = int(fitness_problem_percent * problem_count)
     include_loops = not (model_name == '_diag' or model_name == '_deep')
-    _, qubos, min_energy, solution_list, problem_list, edge_index_list, edge_weight_list = get_training_dataset(n_problems,
+    _, qubos, min_energy, solutions_list, problem_list, edge_index_list, edge_weight_list = get_training_dataset(n_problems,
                                                                                          include_loops=include_loops)
     linearized_approx = []
     for qubo, edge_index, edge_weight in zip(qubos, edge_index_list, edge_weight_list):
@@ -147,7 +147,7 @@ def get_linearized_approx_gcn(fitness_bool):
                                     get_tensor_of_structure(edge_weight))
         #print('APPROX', approx_mask)
         linearized_approx.append(linearize_qubo(approx_mask.detach()))
-    return linearized_approx, qubos, min_energy, solution_list, problem_list
+    return linearized_approx, qubos, min_energy, solutions_list, problem_list
 
 
 def get_linearized_approx_simple(fitness_bool):
@@ -155,9 +155,9 @@ def get_linearized_approx_simple(fitness_bool):
     n_problems = problem_count
     if fitness_bool:
         n_problems = int(fitness_problem_percent * problem_count)
-    linearized_qubos, qubos, min_energy, solution_list, problem_list, *_ = get_training_dataset(n_problems)
+    linearized_qubos, qubos, min_energy, solution_lists, problem_list, *_ = get_training_dataset(n_problems)
     linearized_approx = model(linearized_qubos).detach()
-    return linearized_approx, qubos, min_energy, solution_list, problem_list
+    return linearized_approx, qubos, min_energy, solutions_list, problem_list
 
 
 def fitness_func(solution, solution_idx):
@@ -185,10 +185,11 @@ def fitness_func(solution, solution_idx):
         model.load_state_dict(model_weights_dict)
         #print('In Fitness Func: ', model)
 
-    linearized_approx, qubos, min_energy, _,  problems = get_linarized_approx(evolution_type, fitness_bool=True)
+    linearized_approx, qubos, min_energy, solutions_list, problems = get_linarized_approx(evolution_type, fitness_bool=True)
     #print('Lin approx: ', linearized_approx)
     #print('Len Fitness', len(qubos))
-    solution_fitness = get_fitness_value(linearized_approx, qubos, min_energy, fitness_parameters, problems, min_approx)
+    solution_fitness = get_fitness_value(linearized_approx, qubos, min_energy, solutions_list, fitness_parameters,
+                                         problems, min_approx)
     print(f'Solution {solution_idx}: {solution_fitness}')
     if solution_fitness > best_fitness:
         best_fitness = solution_fitness
@@ -301,28 +302,32 @@ if test_case_study and evaluation_models[test_model] and \
         model.load_state_dict(model_weights_dict)
         print('After evaluation: ', model)
 
-    linearized_approx, qubos, min_energy, solution_list, problem_list = get_linarized_approx(evolution_type, fitness_bool=False)
+    linearized_approx, qubos, min_energy, solutions_list, problem_list = get_linarized_approx(evolution_type, fitness_bool=False)
     print('Len eval', len(qubos))
 
     solution_quality_list = [[], []]
     approx_percent = []
     fitness_list = []
 
-    for idx, (lin_approx, qubo, energy, solution, problem) in enumerate(
-            zip(linearized_approx, qubos, min_energy, solution_list, problem_list)):
+    for idx, (lin_approx, qubo, energy, solutions, problem) in enumerate(
+            zip(linearized_approx, qubos, min_energy, solutions_list, problem_list)):
         approxed_qubo, _ = apply_approximation_to_qubo(lin_approx, qubo)
-        (solution_quality, best_approx_solution), true_approx, true_approx_percent = \
-            get_quality_of_approxed_qubo(lin_approx, qubo, energy)
+        (solution_quality, best_approx_solution), best_approx_solutions, true_approx, true_approx_percent = \
+            get_quality_of_approxed_qubo(lin_approx, qubo, solutions)
         #print(f'True approx: {true_approx}')
         if idx < test_cases:
             print(f'Testcase {idx + 1}')
             print(f'Quality of approx: {solution_quality}')
             print(f'Number of approx: {true_approx}')
             print(f'Problem: {problem}')
-            print(f'True solution: {solution}, {energy}')
-            print(f'True solution value: {check_solution(solution, problem)}')
-            print(f'Best approxed solution: {best_approx_solution}')
-            print(f'Approxed solution value: {check_solution(best_approx_solution, problem)}')
+            print(f'True solution: {solutions}, {energy}')
+            check_solution_original = check_solution(solutions, problem)
+            print(f'True solution value: {check_solution_original}')
+            print(f'Best approxed solution: {best_approx_solutions}')
+            check_solution_approx = check_solution(best_approx_solutions, problem)
+            print(f'Approxed solution value: {check_solution_approx}')
+            print(f'Summary: Quality: {solution_quality}, Best original: {np.min(np.abs(check_solution_original))}, '
+                  f'Best approx: {np.min(np.abs(check_solution_approx))}')
             qubo_heatmap(qubo)
             qubo_heatmap(get_qubo_approx_mask(lin_approx))
             qubo_heatmap(approxed_qubo)
@@ -342,7 +347,10 @@ evol_data = []
 
 if plot_evol_results:
     if check_pipeline_necessity(problem_count):
-        pipeline_run(cfg, True, True, False, True, False)
+        approx_single_entries = True
+        if qubo_size > 24:
+            approx_single_entries = False
+        pipeline_run(cfg, True, approx_single_entries, False, True, False, approximation_steps=99)
     for model_descr in evaluation_models:
         fitting_model = check_model_config_fit(model_descr, evaluation_models[model_descr]['independence'])
         if fitting_model and evaluation_models[model_descr]['display']:
@@ -379,17 +387,17 @@ if plot_evol_results:
                 model.load_state_dict(model_weights_dict)
                 print('After evaluation: ', model)
 
-            linearized_approx, qubos, min_energy, *_ = get_linarized_approx(evolution_type, fitness_bool=False)
+            linearized_approx, qubos, min_energy, solutions_list, *_ = get_linarized_approx(evolution_type, fitness_bool=False)
             print('Len eval', len(qubos))
 
             solution_quality_list = [[], []]
             approx_percent = []
             fitness_list = []
 
-            for idx, (lin_approx, qubo, energy) in enumerate(
-                    zip(linearized_approx, qubos, min_energy)):
-                (solution_quality, best_solution), true_approx, true_approx_percent = get_quality_of_approxed_qubo(lin_approx,
-                                                                                                  qubo, energy)
+            for idx, (lin_approx, qubo, solutions) in enumerate(
+                    zip(linearized_approx, qubos, solutions_list)):
+                (solution_quality, best_solution), true_approx, true_approx_percent = \
+                    get_quality_of_approxed_qubo(lin_approx, qubo, solutions)
                 approx_percent.append(true_approx_percent)
                 print(solution_quality)
                 solution_quality_list[0].append(solution_quality)

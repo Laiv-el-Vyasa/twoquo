@@ -347,7 +347,7 @@
       "dataset_id": "test_evol_large",
       "problems": {
         "qubo_size": 48,
-        "n_problems": 20,
+        "n_problems": 1000,
         "NP": {
           "size": 48,
           "new": true

@@ -21,37 +21,37 @@ solver = 'qbsolv_simulated_annealing'
 
 def get_training_dataset(n_problems, include_loops=True):
     linearized_qubo_list, qubo_list, energy_list, \
-    solution_list, problem_list, edge_index_list, \
+        solutions_list, problem_list, edge_index_list, \
         edge_weight_list = get_linearized_qubos(n_problems, include_loops=include_loops)
     return torch.from_numpy(np.array(linearized_qubo_list).astype(np.float32)), qubo_list, \
-           energy_list, solution_list, problem_list, edge_index_list, edge_weight_list
+        energy_list, solutions_list, problem_list, edge_index_list, edge_weight_list
 
 
 def get_linearized_qubos(n_problems, include_loops=True):
     qubo_list, problem_list = get_problem_qubos(n_problems)
     linarized_qubo_list = []
     energy_list = []
-    solution_List = []
+    solutions_list = []
     edge_index_list = []
     edge_weight_list = []
     for qubo in qubo_list:
-        solutions, min_energy = solve_qubo(qubo)
+        best_solution, solutions, min_energy = solve_qubo(qubo)
         linarized_qubo_list.append(linearize_qubo(qubo))
         edge_index, edge_weights = get_edge_data(qubo, include_loops=include_loops)
         edge_index_list.append(edge_index)
         edge_weight_list.append(edge_weights)
         energy_list.append(min_energy)
-        solution_List.append(solutions[0])
-    return linarized_qubo_list, qubo_list, energy_list, solution_List, problem_list, edge_index_list, edge_weight_list
+        solutions_list.append(solutions)
+    return linarized_qubo_list, qubo_list, energy_list, solutions_list, problem_list, edge_index_list, edge_weight_list
 
 
-def get_quality_of_approxed_qubo(linearized_approx, qubo, min_energy, print_solutions=False):
+def get_quality_of_approxed_qubo(linearized_approx, qubo, solutions, print_solutions=False):
     approxed_qubo, true_approx = apply_approximation_to_qubo(linearized_approx, qubo)
-    solutions, min_energy_approx = solve_qubo(approxed_qubo)
+    best_solution_approx, best_solutions_approx, min_energy_approx = solve_qubo(approxed_qubo)
     if print_solutions:
-        print(solutions)
-    return get_min_solution_quality(solutions, qubo, min_energy), true_approx, \
-           true_approx / get_nonzero_count(linearize_qubo(qubo))
+        print(best_solutions_approx)
+    return get_min_solution_quality(best_solutions_approx, qubo, solutions), best_solutions_approx, true_approx, \
+        true_approx / get_nonzero_count(linearize_qubo(qubo))
 
 
 def linearize_qubo(qubo):
@@ -76,7 +76,7 @@ def apply_approximation_to_qubo(linearized_approx, qubo):
                 if not qubo[i][j] == 0:
                     number_of_true_approx += 1
             linear_index += 1
-    #print('Approxed qubo: ', approxed_qubo.tolist())
+    # print('Approxed qubo: ', approxed_qubo.tolist())
     return approxed_qubo, number_of_true_approx
 
 
@@ -137,18 +137,35 @@ def get_problem_qubos(n_problems):
     return qubos[:n_problems], problems[:n_problems]
 
 
-def solve_qubo(qubo):
+def solve_qubo(qubo):  # Returns the best solution / min energy (provided values and order is not always to be trusted)
     metadata = engine.recommend(qubo)
-    # print(metadata.solutions[solver], metadata.energies[solver])
-    return metadata.solutions[solver][0], np.min(metadata.energies[solver][0])
+    #print('Metadata solutions: ', metadata.solutions[solver][0])
+    #print('Metadata energies: ', metadata.energies[solver][0])
+    solution_list = metadata.solutions[solver][0]
+    energy_list = metadata.energies[solver][0]
+    calc_energies = []
+    for solution in solution_list:
+        calc_energies.append(solution.dot(qubo.dot(solution)))
+    #print('Calc energies: ', calc_energies)
+    #print(metadata.solutions[solver], metadata.energies[solver])
+    return solution_list[np.argmin(calc_energies)], solution_list, np.min(calc_energies)
 
 
-def get_min_solution_quality(solutions, qubo, min_energy):
-    solution_quality_array = []
+def get_min_solution_quality(approx_solutions, qubo, solutions):
+    min_energy_list = []
     for solution in solutions:
-        solution_quality = get_solution_quality(solution.dot(qubo.dot(solution)), min_energy)
+        min_energy_list.append(solution.dot(qubo.dot(solution)))
+    min_energy = np.min(min_energy_list)
+    solution_quality_array = []
+    for approx_solution in approx_solutions:
+        approx_energy = approx_solution.dot(qubo.dot(approx_solution))
+        if approx_energy < np.min(min_energy_list):
+            print('APPROX BETTER THAN ORIGINAL')
+            print('Min energy list: ', min_energy_list)
+            print('Approx energy: ', approx_energy)
+        solution_quality = get_solution_quality(approx_energy, min_energy)
         solution_quality_array.append(solution_quality)
-    return np.min(solution_quality_array), solutions[np.argmin(solution_quality_array)]
+    return np.min(solution_quality_array), approx_solutions[np.argmin(solution_quality_array)]
 
 
 def get_solution_quality(energy, min_energy):
@@ -160,17 +177,19 @@ def get_nonzero_count(nparray):
     return np.count_nonzero(nparray)
 
 
-def get_fitness_value(linearized_approx_list, qubo_list, min_energy_list, fitness_parameters, problems, min_approx=0):
+def get_fitness_value(linearized_approx_list, qubo_list, min_energy_list, solutions_list, fitness_parameters, problems,
+                      min_approx=0):
     a, b, c, d = fitness_parameters
     fitness_list = []
-    for linearized_approx, qubo, min_energy, problem in zip(linearized_approx_list, qubo_list, min_energy_list, problems):
-        #print('Problem solving: ', problem)
-        #print('Sum numbers: ', np.sum(problem['numbers']))
-        #print('Max qubo entry: ', np.max(qubo))
-        #print('Linearized approx: ', linearized_approx)
+    for linearized_approx, qubo, min_energy, solutions, problem in zip(linearized_approx_list, qubo_list,
+                                                                       min_energy_list, solutions_list, problems):
+        # print('Problem solving: ', problem)
+        # print('Sum numbers: ', np.sum(problem['numbers']))
+        # print('Max qubo entry: ', np.max(qubo))
+        # print('Linearized approx: ', linearized_approx)
         problem_time = time.time()
-        (solution_quality, best_approx_solution), true_approx, true_approx_percent = get_quality_of_approxed_qubo(linearized_approx, qubo,
-                                                                                          min_energy)
+        (solution_quality, best_approx_solution), _, true_approx, true_approx_percent = get_quality_of_approxed_qubo(
+            linearized_approx, qubo, solutions)
         # approx_quality = get_approx_number(linearized_approx) / len(linearized_approx)
         # approx_quality = true_approx / len(linearized_approx)
         # fitness_list.append((1 - solution_quality) * approx_quality)
@@ -179,7 +198,7 @@ def get_fitness_value(linearized_approx_list, qubo_list, min_energy_list, fitnes
                    c * np.floor(1 - solution_quality))
         # print('Qubo:', qubo)
         # print('Non-Zero:', get_nonzero_count(linearize_qubo(qubo)))
-        #print('Problem solving time: ', time.time() - problem_time)
+        # print('Problem solving time: ', time.time() - problem_time)
         if not true_approx_percent > min_approx:
             fitness = 0
         fitness_list.append(fitness)
@@ -196,16 +215,16 @@ def aggregate_saved_problems(true_approx=False):
             aggregation_array = prepare_aggregation_array(qubo_entries)
         for idx, step in enumerate(metadata.approx_solution_quality):
             if true_approx:
-                #print(metadata.approx_solution_quality)
+                # print(metadata.approx_solution_quality)
                 idx = get_nearest_bucket(idx, len(metadata.approx_solution_quality), qubo_entries)
-                #print('Nearest Bucket ', idx, ' of ', qubo_entries)
+                # print('Nearest Bucket ', idx, ' of ', qubo_entries)
             aggregation_array[0][idx].append(metadata.approx_solution_quality[step][solver][0])
             aggregation_array[1][idx].append(metadata.approx_solution_quality[step][solver][1])
-    #print(aggregation_array[1])
+    # print(aggregation_array[1])
     for metric, metric_array in enumerate(aggregation_array):
         new_metric_array = []
         for idx, approx_array in enumerate(metric_array):
-            #print('Bucket ', idx, ' filling ', len(approx_array))
+            # print('Bucket ', idx, ' filling ', len(approx_array))
             if approx_array:
                 # aggregation_array[metric][idx] = np.mean(approx_array)
                 new_metric_array.append(np.mean(approx_array))
@@ -218,7 +237,7 @@ def aggregate_saved_problems(true_approx=False):
 
 
 def get_nearest_bucket(approx_idx, approx_length, qubo_entries):
-    #return int(np.floor((approx_idx / approx_length) * qubo_entries))
+    # return int(np.floor((approx_idx / approx_length) * qubo_entries))
     return int(np.ceil((approx_idx / approx_length) * qubo_entries))
 
 
@@ -280,10 +299,25 @@ def check_pipeline_necessity(n_problems):
     return n_problems > db_count
 
 
-def check_solution(solution, problem):
+def check_solution(original_solutions, approx_solutions, problem):
     solution_value = 0
     if 'numbers' in problem:
-        solution_value = check_np_sum(solution, problem['numbers'])
+        solution_value = check_np_problem(original_solutions, approx_solutions, problem)
+    elif 'graph' in problem:
+        solution_value = check_mc_problem(original_solutions, approx_solutions, problem)
+    return solution_value
+
+
+def check_np_problem(original_solutions, approx_solutions, problem):
+    solution_value = 0
+    original_solution_values = []
+    for org_sol in original_solutions:
+        original_solution_values.append(check_np_sum(org_sol, problem['numbers']))
+    approx_solution_values = []
+    for app_sol in approx_solutions:
+        approx_solution_values.append(check_np_sum(app_sol, problem['numbers']))
+    if np.min(np.abs(approx_solution_values)) > np.min(np.abs(original_solution_values)):
+        solution_value = 1
     return solution_value
 
 
@@ -296,6 +330,39 @@ def check_np_sum(solution, np_numbers):
             np_sum -= np_numbers[idx]
     return np_sum
 
+
+def check_mc_problem(original_solutions, approx_solutions, problem):
+    solution_value = 0
+    graph = problem['graph']
+    original_solution_values = []
+    for org_sol in original_solutions:
+        original_solution_values.append(get_cut_score(org_sol, graph))
+    approx_solution_values = []
+    for app_sol in approx_solutions:
+        approx_solution_values.append(get_cut_score(app_sol, graph))
+    if np.max(original_solution_values) > np.max(approx_solution_values):
+        solution_value = 1
+    return solution_value
+
+
+def get_cut_score(solution, graph):
+    score = 0
+    nodes = list(graph.nodes)
+    edges = list(graph.edges)
+    set_1 = []
+    set_2 = []
+    for index, i in enumerate(solution):
+        if i:
+            set_1.append(nodes[index])
+        else:
+            set_2.append(nodes[index])
+    # print(solution)
+    # print(set_1, set_2)
+    for node_1, node_2 in edges:
+        if (node_1 in set_1 and node_2 in set_2) or (node_1 in set_2 and node_2 in set_1):
+            score += 1
+    # print('Score: ' + str(score))
+    return score
 
 class Data(Dataset):
     def __init__(self, x_train, x_qubos, x_energy):
