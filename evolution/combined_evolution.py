@@ -265,7 +265,7 @@ if run_bool:
     ga_instance.save(f'{evolution_file}_{problem}_{qubo_size}{model_name}')
 
 
-test_model = 'combined_evolution_NP_48_uwu_1_05_10_02_01'
+test_model = 'combined_evolution_GC_48_uwu_1_05_10_01_005'
 test_cases = 10
 if test_case_study and evaluation_models[test_model] and \
         check_model_config_fit(test_model, evaluation_models[test_model]['independence']):
@@ -305,7 +305,7 @@ if test_case_study and evaluation_models[test_model] and \
     linearized_approx, qubos, min_energy, solutions_list, problem_list = get_linarized_approx(evolution_type, fitness_bool=False)
     print('Len eval', len(qubos))
 
-    solution_quality_list = [[], []]
+    solution_quality_list = [[], [], []]
     approx_percent = []
     fitness_list = []
 
@@ -315,32 +315,28 @@ if test_case_study and evaluation_models[test_model] and \
         (solution_quality, best_approx_solution), best_approx_solutions, true_approx, true_approx_percent = \
             get_quality_of_approxed_qubo(lin_approx, qubo, solutions)
         #print(f'True approx: {true_approx}')
+        solution_check_value = check_solution(solutions, best_approx_solution, problem)
         if idx < test_cases:
             print(f'Testcase {idx + 1}')
             print(f'Quality of approx: {solution_quality}')
             print(f'Number of approx: {true_approx}')
             print(f'Problem: {problem}')
             print(f'True solution: {solutions}, {energy}')
-            check_solution_original = check_solution(solutions, problem)
-            print(f'True solution value: {check_solution_original}')
             print(f'Best approxed solution: {best_approx_solutions}')
-            check_solution_approx = check_solution(best_approx_solutions, problem)
-            print(f'Approxed solution value: {check_solution_approx}')
-            print(f'Summary: Quality: {solution_quality}, Best original: {np.min(np.abs(check_solution_original))}, '
-                  f'Best approx: {np.min(np.abs(check_solution_approx))}')
+            print(f'Summary: Quality: {solution_quality}, '
+                  f'Solution value: {solution_check_value}')
             qubo_heatmap(qubo)
             qubo_heatmap(get_qubo_approx_mask(lin_approx))
             qubo_heatmap(approxed_qubo)
         solution_quality_list[0].append(solution_quality)
         solution_quality_list[1].append(np.floor(1 - solution_quality))
+        solution_quality_list[2].append(solution_check_value)
         approx_percent.append(true_approx_percent)
 
     print(f'Model Fitness: Approx percent: {np.mean(approx_percent)}, '
           f'Solution quality: {np.mean(solution_quality_list[0])}, '
-          f'True solution percentage: {np.mean(solution_quality_list[1])}')
-
-    # print(f'best_solution {best_solution}')
-
+          f'True solution percentage: {np.mean(solution_quality_list[1])}, '
+          f'Problem solved percentage: {np.mean(solution_quality_list[2])}')
 
 
 evol_data = []

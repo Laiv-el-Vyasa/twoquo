@@ -105,7 +105,7 @@ evaluation_models = {
         'evolution_type': 'combined',
         'display': True
         },
-    'combined_evolution_GC_48_uwu_1_05_10_02_01': {
+    'combined_evolution_GC_48_uwu_1_05_10_01_005': {
         'name': 'combined model, 48, compression',
         'fitness_params': (1, .5, 10, .1),
         'min_approx': 0.05,

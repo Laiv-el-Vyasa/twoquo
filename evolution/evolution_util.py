@@ -10,7 +10,7 @@ from recommendation import RecommendationEngine
 
 cuda = torch.device('cuda')
 
-cfg = load_cfg(cfg_id='test_evol_large')
+cfg = load_cfg(cfg_id='test_evol_gc_large')
 qubo_size = cfg['pipeline']['problems']['qubo_size']
 problem = cfg['pipeline']['problems']['problems'][0]
 engine = RecommendationEngine(cfg=cfg)
@@ -300,16 +300,18 @@ def check_pipeline_necessity(n_problems):
 
 
 def check_solution(original_solutions, approx_solutions, problem):
-    solution_value = 0
+    solution_value = 1
     if 'numbers' in problem:
         solution_value = check_np_problem(original_solutions, approx_solutions, problem)
-    elif 'graph' in problem:
+    elif 'graph' in problem and 'n_colors' not in problem:
         solution_value = check_mc_problem(original_solutions, approx_solutions, problem)
+    elif 'graph' in problem and 'n_colors' in problem:
+        solution_value = check_gc_problem(approx_solutions, problem)
     return solution_value
 
 
 def check_np_problem(original_solutions, approx_solutions, problem):
-    solution_value = 0
+    solution_value = 1
     original_solution_values = []
     for org_sol in original_solutions:
         original_solution_values.append(check_np_sum(org_sol, problem['numbers']))
@@ -317,7 +319,7 @@ def check_np_problem(original_solutions, approx_solutions, problem):
     for app_sol in approx_solutions:
         approx_solution_values.append(check_np_sum(app_sol, problem['numbers']))
     if np.min(np.abs(approx_solution_values)) > np.min(np.abs(original_solution_values)):
-        solution_value = 1
+        solution_value = 0
     return solution_value
 
 
@@ -332,7 +334,7 @@ def check_np_sum(solution, np_numbers):
 
 
 def check_mc_problem(original_solutions, approx_solutions, problem):
-    solution_value = 0
+    solution_value = 1
     graph = problem['graph']
     original_solution_values = []
     for org_sol in original_solutions:
@@ -341,7 +343,7 @@ def check_mc_problem(original_solutions, approx_solutions, problem):
     for app_sol in approx_solutions:
         approx_solution_values.append(get_cut_score(app_sol, graph))
     if np.max(original_solution_values) > np.max(approx_solution_values):
-        solution_value = 1
+        solution_value = 0
     return solution_value
 
 
@@ -363,6 +365,41 @@ def get_cut_score(solution, graph):
             score += 1
     # print('Score: ' + str(score))
     return score
+
+
+def check_gc_problem(approx_solutions, graph, n_colors):
+    solution_value = 0
+    node_count = len(list(graph.nodes))
+    for app_sol in approx_solutions:
+        node_colors = get_colors_of_nodes(app_sol, n_colors, node_count)
+        if node_colors and check_colors_with_graph(graph, node_colors):
+            solution_value = 1
+            break
+    return solution_value
+
+
+def get_colors_of_nodes(solution, n_colors, node_count):
+    node_colors = [0 for x in range(node_count)]
+    for i in range(node_count):
+        color_sum = 0
+        for j in range(n_colors):
+            color_bit = solution[i * n_colors + j]
+            if color_bit:
+                node_colors[i] = j
+                color_sum += 1
+        if not color_sum == 1: # No or more than one color selected
+            node_colors = []
+            break
+    return node_colors
+
+
+def check_colors_with_graph(graph, node_colors):
+    all_colors_good = True
+    for node_1, node_2 in list(graph.edges):
+        if node_colors[node_1] == node_colors[node_2]:
+            all_colors_good = False
+    return all_colors_good
+
 
 class Data(Dataset):
     def __init__(self, x_train, x_qubos, x_energy):

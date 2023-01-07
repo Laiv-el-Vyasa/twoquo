@@ -9,13 +9,14 @@ import torch, os
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
-cfg = load_cfg(cfg_id='test_evol_large')
+cfg = load_cfg(cfg_id='test_evol_gc_large')
 qubo_size = cfg['pipeline']['problems']['qubo_size']
 engine = RecommendationEngine(cfg=cfg)
 generator = QUBOGenerator(cfg)
 problem_name = cfg['pipeline']['problems']['problems'][0]
 
 qubos, labels, problems = generator.generate()
+print(problems[0])
 
 
 if problem_name == 'NP':
