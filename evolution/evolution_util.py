@@ -10,7 +10,7 @@ from recommendation import RecommendationEngine
 
 cuda = torch.device('cuda')
 
-cfg = load_cfg(cfg_id='test_evol_gc_large')
+cfg = load_cfg(cfg_id='test_evol_ec_large')
 qubo_size = cfg['pipeline']['problems']['qubo_size']
 problem = cfg['pipeline']['problems']['problems'][0]
 engine = RecommendationEngine(cfg=cfg)
@@ -168,8 +168,13 @@ def get_min_solution_quality(approx_solutions, qubo, solutions):
     return np.min(solution_quality_array), approx_solutions[np.argmin(solution_quality_array)]
 
 
-def get_solution_quality(energy, min_energy):
-    return (min_energy - energy) / min_energy
+def get_solution_quality(energy, min_energy):  # 0: perfect result, 1: worst result
+    solution_quality = 1  # Fallback for the worst result
+    if min_energy < 0:  # Minimal energy should be negative, else the qubo does not make sense
+        if energy > 0:  # Allowing positive energy will lead to wrong results, set to 0
+            energy = 0
+        solution_quality = (min_energy - energy) / min_energy
+    return solution_quality
 
 
 def get_nonzero_count(nparray):
@@ -307,6 +312,8 @@ def check_solution(original_solutions, approx_solutions, problem):
         solution_value = check_mc_problem(original_solutions, approx_solutions, problem)
     elif 'graph' in problem and 'n_colors' in problem:
         solution_value = check_gc_problem(approx_solutions, problem)
+    elif 'clauses' in problem and 'n_vars' in problem:
+        solution_value = check_m3sat_problem(approx_solutions, problem)
     return solution_value
 
 
@@ -367,8 +374,10 @@ def get_cut_score(solution, graph):
     return score
 
 
-def check_gc_problem(approx_solutions, graph, n_colors):
+def check_gc_problem(approx_solutions, problem):
     solution_value = 0
+    graph = problem['graph']
+    n_colors = problem['n_colors']
     node_count = len(list(graph.nodes))
     for app_sol in approx_solutions:
         node_colors = get_colors_of_nodes(app_sol, n_colors, node_count)
@@ -387,7 +396,7 @@ def get_colors_of_nodes(solution, n_colors, node_count):
             if color_bit:
                 node_colors[i] = j
                 color_sum += 1
-        if not color_sum == 1: # No or more than one color selected
+        if not color_sum == 1:  # No, or more than one color selected
             node_colors = []
             break
     return node_colors
@@ -399,6 +408,30 @@ def check_colors_with_graph(graph, node_colors):
         if node_colors[node_1] == node_colors[node_2]:
             all_colors_good = False
     return all_colors_good
+
+
+def check_m3sat_problem(approx_solutions, problem):
+    clauses = problem['clauses']
+    solution_value = 0
+    for app_sol in approx_solutions:
+        all_clauses_good = True
+        for clause in clauses:
+            if not evaluate_clause(app_sol, clause):
+                all_clauses_good = False
+                break
+        if all_clauses_good:
+            solution_value = 1
+            break
+    return solution_value
+
+
+def evaluate_clause(solution, clause):
+    clause_bool = False
+    for variable, bool in clause:
+        if (solution[variable] + int(bool)) % 2 == 0:       # literal in clause is positive
+            clause_bool = True
+            break
+    return clause_bool
 
 
 class Data(Dataset):

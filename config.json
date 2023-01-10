@@ -403,6 +403,48 @@
         ]
       }
     },
+    "test_evol_ec_large": {
+      "base_cfg": "2",
+      "dataset_id": "test_evol_ec_large",
+      "problems": {
+        "qubo_size": 8,
+        "n_problems": 10,
+        "EC": {
+          "size": [8, 8]
+        },
+        "problems": [
+          "EC"
+        ]
+      }
+    },
+    "test_evol_kiw_large": {
+      "base_cfg": "2",
+      "dataset_id": "test_evol_kiw_large",
+      "problems": {
+        "qubo_size": 48,
+        "n_problems": 1000,
+        "KIW": {
+          "size": [30, 18]
+        },
+        "problems": [
+          "KIW"
+        ]
+      }
+    },
+    "test_evol_m3sat_large": {
+      "base_cfg": "2",
+      "dataset_id": "test_evol_m3sat_large",
+      "problems": {
+        "qubo_size": 48,
+        "n_problems": 1000,
+        "M3SAT": {
+          "size": [15, 33]
+        },
+        "problems": [
+          "M3SAT"
+        ]
+      }
+    },
     "test_1": {
       "base_cfg": "1",
       "dataset_id": "test_1",

@@ -21,11 +21,11 @@ from evolution.evolution_util import get_training_dataset, get_fitness_value, ap
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
-run_bool = False
-restart_bool = False
+run_bool = True
+restart_bool = True
 extend_model = False
 model_to_extend = 'combined_evolution_MC_24_uwu_1_05_10_01_005'
-test_case_study = True
+test_case_study = False
 plot_evol_results = False
 compare_types = False
 
@@ -216,7 +216,7 @@ def callback_generation(ga_instance):
     complete_fitness_time = []
 
 
-num_generations = 100
+num_generations = 50
 num_parents_mating = int(population * .2)
 if evolution_type == 'combined':
     initial_population_node = torch_ga_node.population_weights
@@ -265,7 +265,7 @@ if run_bool:
     ga_instance.save(f'{evolution_file}_{problem}_{qubo_size}{model_name}')
 
 
-test_model = 'combined_evolution_GC_48_uwu_1_05_10_01_005'
+test_model = 'combined_evolution_M3SAT_48_uwu_1_05_10_01_005'
 test_cases = 10
 if test_case_study and evaluation_models[test_model] and \
         check_model_config_fit(test_model, evaluation_models[test_model]['independence']):
@@ -315,7 +315,7 @@ if test_case_study and evaluation_models[test_model] and \
         (solution_quality, best_approx_solution), best_approx_solutions, true_approx, true_approx_percent = \
             get_quality_of_approxed_qubo(lin_approx, qubo, solutions)
         #print(f'True approx: {true_approx}')
-        solution_check_value = check_solution(solutions, best_approx_solution, problem)
+        solution_check_value = check_solution(solutions, best_approx_solutions, problem)
         if idx < test_cases:
             print(f'Testcase {idx + 1}')
             print(f'Quality of approx: {solution_quality}')

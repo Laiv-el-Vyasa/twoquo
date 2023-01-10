@@ -2,21 +2,24 @@ import numpy as np
 from matplotlib import pyplot
 
 from config import load_cfg
+from evolution.evolution_util import check_solution
 from pipeline_util import QUBOGenerator
 from recommendation import RecommendationEngine
+from visualisation import qubo_heatmap
 
 import torch, os
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
-cfg = load_cfg(cfg_id='test_evol_gc_large')
+cfg = load_cfg(cfg_id='test_evol_kiw_large')
 qubo_size = cfg['pipeline']['problems']['qubo_size']
 engine = RecommendationEngine(cfg=cfg)
 generator = QUBOGenerator(cfg)
 problem_name = cfg['pipeline']['problems']['problems'][0]
+solver = 'qbsolv_simulated_annealing'
 
 qubos, labels, problems = generator.generate()
-print(problems[0])
+#print(problems[0])
 
 
 if problem_name == 'NP':
@@ -50,3 +53,10 @@ elif problem_name == 'MC':
     pyplot.ylabel('Count')
     pyplot.title(f'Edge number count in {len(problems)} MC-problems ({qubo_size}x{qubo_size})')
     pyplot.show()
+else:
+    print(problems[0])
+    print(qubos[0])
+    metadata = engine.recommend(qubos[0])
+    print(metadata.solutions)
+    #print('Solution value: ', check_solution(metadata.solutions[solver][0], metadata.solutions[solver][0], problems[0]))
+    #qubo_heatmap(qubos[0])
