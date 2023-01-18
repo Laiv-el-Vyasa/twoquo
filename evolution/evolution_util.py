@@ -10,7 +10,7 @@ from recommendation import RecommendationEngine
 
 cuda = torch.device('cuda')
 
-cfg = load_cfg(cfg_id='test_evol_ec_large')
+cfg = load_cfg(cfg_id='test_evol_gc_large')
 qubo_size = cfg['pipeline']['problems']['qubo_size']
 problem = cfg['pipeline']['problems']['problems'][0]
 engine = RecommendationEngine(cfg=cfg)
@@ -159,11 +159,12 @@ def get_min_solution_quality(approx_solutions, qubo, solutions):
     solution_quality_array = []
     for approx_solution in approx_solutions:
         approx_energy = approx_solution.dot(qubo.dot(approx_solution))
-        if approx_energy < np.min(min_energy_list):
-            print('APPROX BETTER THAN ORIGINAL')
-            print('Min energy list: ', min_energy_list)
-            print('Approx energy: ', approx_energy)
+        #if approx_energy < np.min(min_energy_list):
+        #    print('APPROX BETTER THAN ORIGINAL')
+        #    print('Min energy list: ', min_energy_list)
+        #    print('Approx energy: ', approx_energy)
         solution_quality = get_solution_quality(approx_energy, min_energy)
+        #print('Solution quality: ', solution_quality)
         solution_quality_array.append(solution_quality)
     return np.min(solution_quality_array), approx_solutions[np.argmin(solution_quality_array)]
 
@@ -197,7 +198,6 @@ def get_fitness_value(linearized_approx_list, qubo_list, min_energy_list, soluti
             linearized_approx, qubo, solutions)
         # approx_quality = get_approx_number(linearized_approx) / len(linearized_approx)
         # approx_quality = true_approx / len(linearized_approx)
-        # fitness_list.append((1 - solution_quality) * approx_quality)
         fitness = (a * (1 - solution_quality) +
                    b * (1 - np.square(d - true_approx_percent)) +
                    c * np.floor(1 - solution_quality))
@@ -210,14 +210,15 @@ def get_fitness_value(linearized_approx_list, qubo_list, min_energy_list, soluti
     return np.mean(fitness_list)
 
 
-def aggregate_saved_problems(true_approx=False):
-    database = engine.get_database()
+def aggregate_saved_problems(database, true_approx=False):
+    #database = engine.get_database()
     qubo_entries = (qubo_size) * (qubo_size + 1) / 2
     aggregation_array = []
     approx_percent_array = []
     for i, (_, metadata) in enumerate(database.iter_metadata()):
         if i == 0:
             aggregation_array = prepare_aggregation_array(qubo_entries)
+        print(f'Step {i} in processing database data')
         for idx, step in enumerate(metadata.approx_solution_quality):
             if true_approx:
                 # print(metadata.approx_solution_quality)
@@ -225,6 +226,7 @@ def aggregate_saved_problems(true_approx=False):
                 # print('Nearest Bucket ', idx, ' of ', qubo_entries)
             aggregation_array[0][idx].append(metadata.approx_solution_quality[step][solver][0])
             aggregation_array[1][idx].append(metadata.approx_solution_quality[step][solver][1])
+            aggregation_array[2][idx].append(metadata.approx_solution_quality[step][solver][2])
     # print(aggregation_array[1])
     for metric, metric_array in enumerate(aggregation_array):
         new_metric_array = []
@@ -238,6 +240,7 @@ def aggregate_saved_problems(true_approx=False):
         aggregation_array[metric] = new_metric_array
     if true_approx:
         aggregation_array, approx_percent_array = flatten_aggragation_array(aggregation_array, approx_percent_array)
+    print(approx_percent_array)
     return aggregation_array, approx_percent_array
 
 
@@ -267,11 +270,12 @@ def flatten_aggragation_array(aggregation_array, approx_percent_array):
     return new_aggragation_array, new_approx_percent_array
 
 
-def prepare_aggregation_array(qubo_entries):
-    aggregation_array = [[], []]
-    for i in range(int(qubo_entries) + 1):
+def prepare_aggregation_array(approx_steps):
+    aggregation_array = [[], [], []]
+    for i in range(int(approx_steps) + 1):
         aggregation_array[0].append([])
         aggregation_array[1].append([])
+        aggregation_array[2].append([])
     return aggregation_array
 
 

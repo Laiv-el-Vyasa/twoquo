@@ -8,6 +8,7 @@ from config import load_cfg
 from approximation import get_approximated_qubos
 from pipeline_util import QUBOGenerator
 from recommendation import RecommendationEngine
+from evolution.evolution_util import check_solution
 import numpy as np
 from visualisation import qubo_heatmap, approx_quality_score_graphs_problems
 from operator import add
@@ -171,7 +172,7 @@ def pipeline_run(cfg, approx_fixed_number, approx_single_entries, print_bool, sa
 
         solution_quality_dict = {}
         for solver in metadata.solutions:
-            solution_quality_dict[solver] = (0., 1.)
+            solution_quality_dict[solver] = (0., 1., 1.)
         metadata.approx_solution_quality['0'] = solution_quality_dict
 
         approx_qubos, percentage_steps = get_approximated_qubos(qubo, approx_single_entries,
@@ -181,10 +182,14 @@ def pipeline_run(cfg, approx_fixed_number, approx_single_entries, print_bool, sa
         percentage_approxed = 0
         metadata.approx = len(percentage_steps)
         for approx_step in approx_qubos:
+            print('Calculating approx step ', approx_step)
             approx_data = approx_qubos[approx_step]
 
             approx_qubo = approx_data['qubo']
+            np.set_printoptions(threshold=np.inf)
+            #print(approx_qubo)
             approx_metadata = eng.recommend(approx_qubo)
+            #print('recommended')
 
             # if approx_step == "1800":
             #    qubo_heatmap(approx_qubo)
@@ -196,7 +201,8 @@ def pipeline_run(cfg, approx_fixed_number, approx_single_entries, print_bool, sa
                                               worst_energy, only_correct=False, new_quality=True),
                      get_max_solution_quality(approx_metadata.solutions[solver],
                                               qubo, best_energy_solver_dict[solver],
-                                              worst_energy, only_correct=True, new_quality=False))
+                                              worst_energy, only_correct=True, new_quality=False),
+                     check_solution(metadata.solutions[solver][0], approx_metadata.solutions[solver][0], problem))
             metadata.approx_solution_quality[approx_step] = solution_quality_dict
 
             reverse_energy_appr = get_max_solution_quality(
@@ -232,9 +238,11 @@ def pipeline_run(cfg, approx_fixed_number, approx_single_entries, print_bool, sa
         overall_data['solver'] = list(metadata.solutions.keys())[0]
 
     # print(overall_data)
-    eng.get_database().close()
+    #eng.get_database().close()
     if show_bool:
         approx_quality_score_graphs_problems(overall_data, approx_fixed_number, include_zero=True)
+
+    return eng.get_database()
 
 
 if __name__ == '__main__':

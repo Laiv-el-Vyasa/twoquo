@@ -394,7 +394,7 @@
         "qubo_size": 48,
         "n_problems": 1000,
         "GC": {
-          "size": [12, 20],
+          "size": [12, 30],
           "n_colors": 4,
           "random_edges": true
         },
@@ -424,10 +424,25 @@
         "qubo_size": 48,
         "n_problems": 1000,
         "KIW": {
-          "size": [30, 18]
+          "size": [32, 16]
         },
         "problems": [
           "KIW"
+        ]
+      }
+    },
+    "test_evol_tsp_large": {
+      "base_cfg": "2",
+      "dataset_id": "test_evol_tsp_large",
+      "problems": {
+        "qubo_size": 49,
+        "n_problems": 1000,
+        "TSP": {
+          "size": [7, 12],
+          "random_edges": true
+        },
+        "problems": [
+          "TSP"
         ]
       }
     },

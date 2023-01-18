@@ -169,17 +169,23 @@ evo_type_color_dict = {
     'combined': 'blue'
 }
 
+metric_meaning = [
+    'mean solution quality',
+    'best energy found in percent',
+    'correct solutions found in percent'
+]
 
-def visualize_evol_results_models(aggregated_approx_data, percent_list, evol_data, solver, size, problem):
+
+def visualize_evol_results_models(aggregated_approx_data, percent_list, evol_data, solver, size, problem, metric=1):
     fig, ax = pyplot.subplots()
     legend_lines = []
     color = 'black'
     print(aggregated_approx_data)
-    ax.plot(percent_list, aggregated_approx_data[1], color=color, markersize=8)
-    legend_lines.append(lines.Line2D([], [], color=color, markersize=8, label=f'entry-wise approximation'))
+    ax.plot(percent_list, aggregated_approx_data[metric], color=color, markersize=8)
+    legend_lines.append(lines.Line2D([], [], color=color, markersize=8, label=f'step-wise approximation, 100 steps'))
     evo_type_dict = {}
     for evol_results, name, evo_type in evol_data:
-        evol_x, evol_y = evol_results[1]
+        evol_x, evol_y = evol_results[metric]
         color = evo_type_color_dict[evo_type]
         if evo_type in evo_type_dict:
             marker_size = evo_type_dict[evo_type] + 1
@@ -190,7 +196,7 @@ def visualize_evol_results_models(aggregated_approx_data, percent_list, evol_dat
         legend_lines.append(lines.Line2D([], [], color=color, linestyle='None',
                                          markersize=12, marker=(marker_size, 2), label=f'{name}'))
     ax.legend(handles=legend_lines)
-    ax.set_ylabel(f'correct solutions found in percent')
+    ax.set_ylabel(f'{metric_meaning[metric]}')
     ax.set_xlabel(f'approximated qubo entries in percent')
     ax.set_title(f'Approximation quality, Learned Models, Problem: {problem}, '
                  f'Size: {size}, Solver: {solver}', fontsize=12)

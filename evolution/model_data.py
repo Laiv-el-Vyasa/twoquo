@@ -6,6 +6,112 @@ from evolution_util import qubo_size
 node_feature_number = 8
 
 evaluation_models = {
+    'combined_evolution_MC_24_nonlin_1_05_10_01_005':
+        {'name': 'combined model, 24, non-linear',
+         'fitness_params': (1, .5, 10, .1),
+         'min_approx': 0.05,
+         'independence': True,
+         'model_name': '_nonlin',
+         'evolution_type': 'combined',
+         'display': False
+         },
+    'combined_evolution_MC_24_uwu_1_05_10_01_005':
+        {'name': 'combined model, MC, 24, compression',
+         'fitness_params': (1, .5, 10, .1),
+         'min_approx': 0.05,
+         'independence': True,
+         'model_name': '_uwu',
+         'evolution_type': 'combined',
+         'display': False
+         },
+    'combined_evolution_MC_48_uwu_1_05_10_01_005': {
+        'name': 'combined model, MC, 48, compression',
+        'fitness_params': (1, .5, 10, .1),
+        'min_approx': 0.05,
+        'independence': True,
+        'model_name': '_uwu',
+        'evolution_type': 'combined',
+        'display': False
+        },
+    'combined_evolution_NP_48_uwu_1_05_10_02_01': {
+        'name': 'combined model, NP, 48, compression',
+        'fitness_params': (1, .5, 10, .2),
+        'min_approx': 0.1,
+        'independence': True,
+        'model_name': '_uwu',
+        'evolution_type': 'combined',
+        'display': False
+        },
+    'combined_evolution_GC_48_uwu_1_05_10_01_005': {
+        'name': 'combined model, GC, 48, compression',
+        'fitness_params': (1, .5, 10, .1),
+        'min_approx': 0.05,
+        'independence': True,
+        'model_name': '_uwu',
+        'evolution_type': 'combined',
+        'display': False
+    },
+    'combined_evolution_M3SAT_48_uwu_1_05_10_01_005': {
+        'name': 'combined model, M3SAT, 48, compression',
+        'fitness_params': (1, .5, 10, .1),
+        'min_approx': 0.05,
+        'independence': True,
+        'model_name': '_uwu',
+        'evolution_type': 'combined',
+        'display': True
+    },
+    'combined_evolution_KIW_24_uwu_1_05_10_01_005': {
+        'name': 'combined model, KIW, 24, compression',
+        'fitness_params': (1, .5, 10, .1),
+        'min_approx': 0.05,
+        'independence': True,
+        'model_name': '_uwu',
+        'evolution_type': 'combined',
+        'display': False
+    }
+}
+
+model_dict = {
+    'model': [
+        CombinedNodeFeatures(node_feature_number),
+        CombinedEdgeDecision(node_feature_number)
+    ],
+    'model_nonlin': [
+        CombinedNodeFeaturesNonLin(node_feature_number),
+        CombinedEdgeDecisionNonLin(node_feature_number)
+    ],
+    'model_uwu': [
+        CombinedNodeFeaturesUwu(node_feature_number),
+        CombinedEdgeDecisionUwu(node_feature_number)
+    ],
+    'combined': {
+        'model': [
+            CombinedNodeFeatures(node_feature_number),
+            CombinedEdgeDecision(node_feature_number)
+        ],
+        'model_nonlin': [
+            CombinedNodeFeaturesNonLin(node_feature_number),
+            CombinedEdgeDecisionNonLin(node_feature_number)
+        ],
+        'model_uwu': [
+            CombinedNodeFeaturesUwu(node_feature_number),
+            CombinedEdgeDecisionUwu(node_feature_number)
+        ]
+    },
+    'gcn': {
+        'model': GcnIdSimple(qubo_size),
+        'model_straight': GcnIdStraight(qubo_size),
+        'model_diag': GcnDiag(qubo_size, 5),
+        'model_deep': GcnDeep(qubo_size)
+    },
+    'simple': {
+        'model': Network(qubo_size),
+        'model_autoenc': AutoEnc(qubo_size),
+        'model_sqrt_autoenc': SqrtAutoEnc(qubo_size)
+    }
+}
+
+old_evaluation_models = {
     'combined_evolution_MC_8_1_05_10_01_005':
         {'name': 'combined model, 8',
          'fitness_params': (1, .5, 10, .1),
@@ -23,24 +129,6 @@ evaluation_models = {
          'model_name': '',
          'evolution_type': 'combined',
          'display': False
-         },
-    'combined_evolution_MC_24_nonlin_1_05_10_01_005':
-        {'name': 'combined model, 24, non-linear',
-         'fitness_params': (1, .5, 10, .1),
-         'min_approx': 0.05,
-         'independence': True,
-         'model_name': '_nonlin',
-         'evolution_type': 'combined',
-         'display': False
-         },
-    'combined_evolution_MC_24_uwu_1_05_10_01_005':
-        {'name': 'combined model, MC, 24, compression',
-         'fitness_params': (1, .5, 10, .1),
-         'min_approx': 0.05,
-         'independence': True,
-         'model_name': '_uwu',
-         'evolution_type': 'combined',
-         'display': True
          },
     'combined_evolution_MC_24_uwu_1_1_10_02_01_ext_1_05_10_01_005':
         {'name': 'combined model, 24, compression, increase approx, extended',
@@ -69,15 +157,6 @@ evaluation_models = {
          'evolution_type': 'combined',
          'display': True
          },
-    'combined_evolution_MC_48_uwu_1_05_10_01_005': {
-        'name': 'combined model, MC, 48, compression',
-        'fitness_params': (1, .5, 10, .1),
-        'min_approx': 0.05,
-        'independence': True,
-        'model_name': '_uwu',
-        'evolution_type': 'combined',
-        'display': False
-        },
     'combined_evolution_MC_48_uwu_1_05_10_01_005_ext_24_1_05_10_01_005': {
         'name': 'combined model, 48, compression, extension of 24 model',
         'fitness_params': (1, .5, 10, .1),
@@ -86,7 +165,7 @@ evaluation_models = {
         'model_name': '_uwu',
         'evolution_type': 'combined',
         'display': False
-        },
+    },
     'combined_evolution_NP_24_uwu_1_05_10_02_01': {
         'name': 'combined model, 24, compression',
         'fitness_params': (1, .5, 10, .2),
@@ -96,33 +175,6 @@ evaluation_models = {
         'evolution_type': 'combined',
         'display': True
         },
-    'combined_evolution_NP_48_uwu_1_05_10_02_01': {
-        'name': 'combined model, NP, 48, compression',
-        'fitness_params': (1, .5, 10, .2),
-        'min_approx': 0.1,
-        'independence': True,
-        'model_name': '_uwu',
-        'evolution_type': 'combined',
-        'display': True
-        },
-    'combined_evolution_GC_48_uwu_1_05_10_01_005': {
-        'name': 'combined model, GC, 48, compression',
-        'fitness_params': (1, .5, 10, .1),
-        'min_approx': 0.05,
-        'independence': True,
-        'model_name': '_uwu',
-        'evolution_type': 'combined',
-        'display': False
-    },
-    'combined_evolution_M3SAT_48_uwu_1_05_10_01_005': {
-        'name': 'combined model, M3SAT, 48, compression',
-        'fitness_params': (1, .5, 10, .1),
-        'min_approx': 0.05,
-        'independence': True,
-        'model_name': '_uwu',
-        'evolution_type': 'combined',
-        'display': False
-    },
     'gcn_evolution_MC_8_1_05_10_1': {
         'name': 'gcn model, 24, id-matrix',
         'fitness_params': (1, .5, 10, 1),
@@ -275,45 +327,5 @@ evaluation_models = {
         'independence': False,
         'evolution_type': 'simple',
         'display': True
-    }
-}
-
-model_dict = {
-    'model': [
-        CombinedNodeFeatures(node_feature_number),
-        CombinedEdgeDecision(node_feature_number)
-    ],
-    'model_nonlin': [
-        CombinedNodeFeaturesNonLin(node_feature_number),
-        CombinedEdgeDecisionNonLin(node_feature_number)
-    ],
-    'model_uwu': [
-        CombinedNodeFeaturesUwu(node_feature_number),
-        CombinedEdgeDecisionUwu(node_feature_number)
-    ],
-    'combined': {
-        'model': [
-            CombinedNodeFeatures(node_feature_number),
-            CombinedEdgeDecision(node_feature_number)
-        ],
-        'model_nonlin': [
-            CombinedNodeFeaturesNonLin(node_feature_number),
-            CombinedEdgeDecisionNonLin(node_feature_number)
-        ],
-        'model_uwu': [
-            CombinedNodeFeaturesUwu(node_feature_number),
-            CombinedEdgeDecisionUwu(node_feature_number)
-        ]
-    },
-    'gcn': {
-        'model': GcnIdSimple(qubo_size),
-        'model_straight': GcnIdStraight(qubo_size),
-        'model_diag': GcnDiag(qubo_size, 5),
-        'model_deep': GcnDeep(qubo_size)
-    },
-    'simple': {
-        'model': Network(qubo_size),
-        'model_autoenc': AutoEnc(qubo_size),
-        'model_sqrt_autoenc': SqrtAutoEnc(qubo_size)
     }
 }

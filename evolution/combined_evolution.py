@@ -22,7 +22,7 @@ from evolution.evolution_util import get_training_dataset, get_fitness_value, ap
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 run_bool = True
-restart_bool = True
+restart_bool = False
 extend_model = False
 model_to_extend = 'combined_evolution_MC_24_uwu_1_05_10_01_005'
 test_case_study = False
@@ -342,11 +342,11 @@ if test_case_study and evaluation_models[test_model] and \
 evol_data = []
 
 if plot_evol_results:
-    if check_pipeline_necessity(problem_count):
+    if True: #check_pipeline_necessity(problem_count):
         approx_single_entries = True
         if qubo_size > 24:
             approx_single_entries = False
-        pipeline_run(cfg, True, approx_single_entries, False, True, False, approximation_steps=99)
+        pipeline_db = pipeline_run(cfg, True, approx_single_entries, False, True, False, approximation_steps=99)
     for model_descr in evaluation_models:
         fitting_model = check_model_config_fit(model_descr, evaluation_models[model_descr]['independence'])
         if fitting_model and evaluation_models[model_descr]['display']:
@@ -383,21 +383,23 @@ if plot_evol_results:
                 model.load_state_dict(model_weights_dict)
                 print('After evaluation: ', model)
 
-            linearized_approx, qubos, min_energy, solutions_list, *_ = get_linarized_approx(evolution_type, fitness_bool=False)
+            linearized_approx, qubos, min_energy, solutions_list, problem_list = \
+                get_linarized_approx(evolution_type, fitness_bool=False)
             print('Len eval', len(qubos))
 
-            solution_quality_list = [[], []]
+            solution_quality_list = [[], [], []]
             approx_percent = []
             fitness_list = []
 
-            for idx, (lin_approx, qubo, solutions) in enumerate(
-                    zip(linearized_approx, qubos, solutions_list)):
-                (solution_quality, best_solution), true_approx, true_approx_percent = \
+            for idx, (lin_approx, qubo, solutions, prob) in enumerate(
+                    zip(linearized_approx, qubos, solutions_list, problem_list)):
+                (solution_quality, best_solution), appros_solutions, true_approx, true_approx_percent = \
                     get_quality_of_approxed_qubo(lin_approx, qubo, solutions)
                 approx_percent.append(true_approx_percent)
                 print(solution_quality)
                 solution_quality_list[0].append(solution_quality)
                 solution_quality_list[1].append(np.floor(1 - solution_quality))
+                solution_quality_list[2].append(check_solution(solutions, appros_solutions, prob))
 
             evol_results = []
             for metric, results in enumerate(solution_quality_list):
@@ -406,11 +408,14 @@ if plot_evol_results:
                               evaluation_models[model_descr]['evolution_type']))
 
     if evol_data:
-        aggregated_problems, approx_percent_array = aggregate_saved_problems(true_approx=True)
+        aggregated_problems, approx_percent_array = aggregate_saved_problems(pipeline_db, true_approx=True)
         if compare_types:
             visualize_evol_results_models(aggregated_problems,
                                           approx_percent_array,
                                           evol_data, solver, qubo_size, problem)
+            visualize_evol_results_models(aggregated_problems,
+                                          approx_percent_array,
+                                          evol_data, solver, qubo_size, problem, metric=2)
         else:
             visualize_evol_results(aggregated_problems,
                                    approx_percent_array,

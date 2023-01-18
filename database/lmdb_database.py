@@ -60,9 +60,11 @@ class LmdbDatabase(Database):
         with self.env.begin(write=True, db=self.main_db) as txn:
             # txn.put(metadata.key(), metadata.serialize().read())
             txn.put(idx, metadata.serialize().read())
+            #txn.commit()
 
         with self.env.begin(write=True, db=self.key_db) as txn:
             txn.put(metadata.key(), idx)
+            #txn.commit()
 
         return idx
 
