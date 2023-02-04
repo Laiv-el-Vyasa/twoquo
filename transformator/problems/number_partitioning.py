@@ -22,6 +22,16 @@ def get_problems(n_problems, size):
     return problems.astype(int)
 
 
+def get_number_bound(cfg, size):
+    if not cfg['problems']['NP']['hard']:
+        number_bound = 100
+    else:
+        k_c = 1 - (np.log2(size) / (2 * size) - (np.log2(np.pi / 6) / (2 * size)))
+        print('KC: ', k_c)
+        number_bound = np.power(2, (k_c + .01) * size)
+    return number_bound
+
+
 class NumberPartitioning(Problem):
     def __init__(self, cfg, numbers):
         self.numbers = numbers
@@ -41,8 +51,10 @@ class NumberPartitioning(Problem):
 
     @classmethod
     def gen_problems(self, cfg, n_problems, size=20, **kwargs):
+        number_bound = get_number_bound(cfg, size)
         if not cfg['problems']['NP']['new']:
-            problems = np.random.randint(0, 100, (n_problems, size))
+            print('Number bound: ', number_bound)
+            problems = np.random.randint(0, number_bound, (n_problems, size))
         else:
             problems = get_problems(n_problems, size)
         return [{"numbers": problem} for problem in problems]

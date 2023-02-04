@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib import pyplot
 
 from config import load_cfg
-from evolution.evolution_util import check_solution
+#from evolution.evolution_util import check_solution
 from pipeline_util import QUBOGenerator
 from recommendation import RecommendationEngine
 from visualisation import qubo_heatmap
@@ -19,7 +19,9 @@ problem_name = cfg['pipeline']['problems']['problems'][0]
 solver = 'qbsolv_simulated_annealing'
 
 qubos, labels, problems = generator.generate()
+print(qubos)
 #print(problems[0])
+np.set_printoptions(threshold=np.inf)
 
 
 if problem_name == 'NP':
@@ -59,4 +61,4 @@ else:
     metadata = engine.recommend(qubos[0])
     print(metadata.solutions)
     #print('Solution value: ', check_solution(metadata.solutions[solver][0], metadata.solutions[solver][0], problems[0]))
-    #qubo_heatmap(qubos[0])
+    qubo_heatmap(qubos[0])

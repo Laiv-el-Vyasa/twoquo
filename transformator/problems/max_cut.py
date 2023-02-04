@@ -21,7 +21,7 @@ def generate_random_edge_number(size):
         return_edges = size[1] + random_power
     else:
         return_edges = size[1] - random_power
-    if not return_edges > 0:
+    if not return_edges > 0 or not return_edges < max_nodes:
         return_edges = random.binomial(max_nodes, size[1] / max_nodes)
     return return_edges
 

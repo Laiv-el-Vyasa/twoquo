@@ -40,8 +40,17 @@ evaluation_models = {
         'independence': True,
         'model_name': '_uwu',
         'evolution_type': 'combined',
-        'display': False
+        'display': True
         },
+    'combined_evolution_NP_24_uwu_1_05_10_02_01': {
+        'name': 'combined model, 24, compression',
+        'fitness_params': (1, .5, 10, .2),
+        'min_approx': 0.1,
+        'independence': True,
+        'model_name': '_uwu',
+        'evolution_type': 'combined',
+        'display': False
+    },
     'combined_evolution_GC_48_uwu_1_05_10_01_005': {
         'name': 'combined model, GC, 48, compression',
         'fitness_params': (1, .5, 10, .1),
@@ -58,9 +67,19 @@ evaluation_models = {
         'independence': True,
         'model_name': '_uwu',
         'evolution_type': 'combined',
-        'display': True
+        'display': False
     },
     'combined_evolution_KIW_24_uwu_1_05_10_01_005': {
+        'name': 'combined model, KIW, 24, compression',
+        'fitness_params': (1, .5, 10, .1),
+        'min_approx': 0.05,
+        'independence': True,
+        'model_name': '_uwu',
+        'evolution_type': 'combined',
+        'display': False
+    }
+    ,
+    'combined_evolution_TSP_49_uwu_1_05_10_01_005': {
         'name': 'combined model, KIW, 24, compression',
         'fitness_params': (1, .5, 10, .1),
         'min_approx': 0.05,
@@ -81,7 +100,11 @@ model_dict = {
         CombinedEdgeDecisionNonLin(node_feature_number)
     ],
     'model_uwu': [
-        CombinedNodeFeaturesUwu(node_feature_number),
+        CombinedNodeFeaturesUwu(node_feature_number, False),
+        CombinedEdgeDecisionUwu(node_feature_number)
+    ],
+    'model_uwu_normalized': [
+        CombinedNodeFeaturesUwu(node_feature_number, True),
         CombinedEdgeDecisionUwu(node_feature_number)
     ],
     'combined': {
@@ -94,7 +117,11 @@ model_dict = {
             CombinedEdgeDecisionNonLin(node_feature_number)
         ],
         'model_uwu': [
-            CombinedNodeFeaturesUwu(node_feature_number),
+            CombinedNodeFeaturesUwu(node_feature_number, False),
+            CombinedEdgeDecisionUwu(node_feature_number)
+        ],
+        'model_uwu_normalized': [
+            CombinedNodeFeaturesUwu(node_feature_number, True),
             CombinedEdgeDecisionUwu(node_feature_number)
         ]
     },

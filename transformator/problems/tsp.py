@@ -1,5 +1,5 @@
 import copy
-from typing import Tuple, List
+from typing import Tuple, List, Any
 
 import numpy as np
 from networkx import Graph
@@ -18,7 +18,9 @@ from transformator.problems.problem import Problem
 class TSP(Problem):
     def __init__(
             self,
-            graph: Graph
+            cfg,
+            graph: Graph,
+            tsp: bool
     ):
         # raise exception if input graph is empty
         if not graph.nodes:
@@ -74,20 +76,21 @@ class TSP(Problem):
             n_problems,
             size: Tuple[int, int] = (10, 10),
             #size,
-            weight_range=(1, 10),
+            weight_range=(1, 100),
             **kwargs
     ):
-        print(size)
-        #graphs = []
-        #adapted_size = copy.deepcopy(size)
-        #for i in range(n_problems):
-        #    if cfg['problems']['TSP']['random_edges']:
-        #        adapted_size[1] = generate_random_edge_number(size)
-        #    graphs.extend(gen_graph(1, adapted_size, weight_range=weight_range))
-        graphs: List[Graph] = gen_graph(
-            n_problems=n_problems, size=size, weight_range=weight_range
-        )
+        graphs = []
+        adapted_size = copy.deepcopy(size)
+        for i in range(n_problems):
+            if cfg['problems']['TSP']['random_edges']:
+                adapted_size[1] = generate_random_edge_number(size)
+                while adapted_size[1] < adapted_size[0]:
+                    adapted_size[1] = generate_random_edge_number(size)
+            graphs.extend(gen_graph(1, adapted_size, weight_range=weight_range, tsp=True))
+        #graphs: List[Graph] = gen_graph(
+        #    n_problems=n_problems, size=size, weight_range=weight_range
+        #)
         problems = []
         for graph in graphs:
-            problems.append({'graph': graph})
+            problems.append({'graph': graph, 'tsp': True})
         return problems

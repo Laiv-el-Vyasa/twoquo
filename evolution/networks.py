@@ -213,22 +213,22 @@ class CombinedEdgeDecisionNonLin(nn.Module):
 
 
 class CombinedNodeFeaturesUwu(nn.Module):
-    def __init__(self, node_features):
+    def __init__(self, node_features: int, normalized: bool):
         super(CombinedNodeFeaturesUwu, self).__init__()
         self.conv1 = geo_nn.GCNConv(1, int(np.power(2, 2) * node_features / 8),
-                                    add_self_loops=False, normalize=False)
+                                    add_self_loops=False, normalize=normalized)
         self.conv2 = geo_nn.GCNConv(int(np.power(2, 2) * node_features / 8),
                                     int(np.power(2, 3) * node_features / 8),
-                                    add_self_loops=False, normalize=False)
+                                    add_self_loops=False, normalize=normalized)
         self.conv3 = geo_nn.GCNConv(int(np.power(2, 3) * node_features / 8),
                                     int(np.power(2, 4) * node_features / 8),
-                                    add_self_loops=False, normalize=False)
+                                    add_self_loops=False, normalize=normalized)
         self.conv4 = geo_nn.GCNConv(int(np.power(2, 4) * node_features / 8),
                                     int(np.power(2, 3) * node_features / 8),
-                                    add_self_loops=False, normalize=False)
+                                    add_self_loops=False, normalize=normalized)
         self.conv5 = geo_nn.GCNConv(int(np.power(2, 3) * node_features / 8),
                                     int(np.power(2, 2) * node_features / 8),
-                                    add_self_loops=False, normalize=False)
+                                    add_self_loops=False, normalize=normalized)
 
     def forward(self, x, edge_index, edge_weights):
         #print(x)

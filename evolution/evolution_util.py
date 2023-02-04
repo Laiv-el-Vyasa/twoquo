@@ -10,7 +10,7 @@ from recommendation import RecommendationEngine
 
 cuda = torch.device('cuda')
 
-cfg = load_cfg(cfg_id='test_evol_gc_large')
+cfg = load_cfg(cfg_id='test_evol_large')
 qubo_size = cfg['pipeline']['problems']['qubo_size']
 problem = cfg['pipeline']['problems']['problems'][0]
 engine = RecommendationEngine(cfg=cfg)
@@ -128,6 +128,20 @@ def get_diagonal_of_qubo(qubo):
     return diagonal
 
 
+def get_mean_of_qubo_line(qubo):
+    mean_list = []
+    qubo_line_mean_list = []
+    for i in range(qubo_size):
+        qubo_line_mean_list.append([])
+        line_mean = np.mean(qubo[i])
+        qubo_line_mean_list[i].append(line_mean)
+        mean_list.append(line_mean)
+    mean_of_lines = np.mean(mean_list)
+    for i in range(qubo_size):
+        qubo_line_mean_list[i][0] -= mean_of_lines
+    return qubo_line_mean_list
+
+
 def get_tensor_of_structure(ndarray, np_type=np.float32):
     return torch.from_numpy(np.array(ndarray).astype(np_type))
 
@@ -204,7 +218,8 @@ def get_fitness_value(linearized_approx_list, qubo_list, min_energy_list, soluti
         # print('Qubo:', qubo)
         # print('Non-Zero:', get_nonzero_count(linearize_qubo(qubo)))
         # print('Problem solving time: ', time.time() - problem_time)
-        if not true_approx_percent > min_approx:
+        #print('True approx %: ', true_approx_percent)
+        if not true_approx_percent > min_approx:# or true_approx_percent == 1:
             fitness = 0
         fitness_list.append(fitness)
     return np.mean(fitness_list)
@@ -312,7 +327,7 @@ def check_solution(original_solutions, approx_solutions, problem):
     solution_value = 1
     if 'numbers' in problem:
         solution_value = check_np_problem(original_solutions, approx_solutions, problem)
-    elif 'graph' in problem and 'n_colors' not in problem:
+    elif 'graph' in problem and 'n_colors' not in problem and 'tsp' not in problem:
         solution_value = check_mc_problem(original_solutions, approx_solutions, problem)
     elif 'graph' in problem and 'n_colors' in problem:
         solution_value = check_gc_problem(approx_solutions, problem)

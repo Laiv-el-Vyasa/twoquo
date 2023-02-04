@@ -17,20 +17,19 @@ cuda = torch.device('cuda')
 from evolution.evolution_util import get_training_dataset, get_fitness_value, apply_approximation_to_qubo, \
     get_quality_of_approxed_qubo, get_qubo_approx_mask, aggregate_saved_problems, solver, \
     check_model_config_fit, get_diagonal_of_qubo, cfg, get_tensor_of_structure, linearize_qubo, \
-    check_pipeline_necessity, check_solution
+    check_pipeline_necessity, check_solution, get_mean_of_qubo_line
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
-run_bool = True
+run_bool = False
 restart_bool = False
 extend_model = False
 model_to_extend = 'combined_evolution_MC_24_uwu_1_05_10_01_005'
 test_case_study = False
-plot_evol_results = False
-compare_types = False
+plot_evol_results = True
+compare_types = True
 
 
-#cfg = load_cfg(cfg_id='test_evol_mc')
 qubo_size = cfg['pipeline']['problems']['qubo_size']
 problem = cfg['pipeline']['problems']['problems'][0]
 problem_count = cfg['pipeline']['problems']['n_problems']
@@ -50,6 +49,7 @@ min_approx = 0.05
 #node_model = CombinedNodeFeatures(node_feature_number)
 if evolution_type == 'combined':
     node_model = model_dict[f'model{model_name}'][0]
+    node_model_normalized = model_dict[f'model{model_name}_normalized'][0]
     edge_model = model_dict[f'model{model_name}'][1]
     #edge_model = CombinedEdgeDecision(node_feature_number)
 
@@ -65,9 +65,22 @@ best_fitness = 0
 
 complete_fitness_time = []
 
+global_node_model_dict = {}
+
+
+def get_node_model_and_features(problem, qubo):
+    global node_model, node_model_normalized
+    return_node_model = node_model
+    return_node_features = get_diagonal_of_qubo(qubo)
+    if 'graph' in problem and 'tsp' in problem:
+        #print('Normalized model choosen!')
+        return_node_model = node_model_normalized
+        #return_node_features = get_mean_of_qubo_line(qubo)
+    return return_node_model, return_node_features
+
 
 def get_linarized_approx(evo_type, fitness_bool):
-    linearized_return = []
+    #linearized_return = []
     if evo_type == 'combined':
         linearized_return = get_linearized_approx_combined(fitness_bool)
     elif evo_type == 'gcn':
@@ -78,7 +91,7 @@ def get_linarized_approx(evo_type, fitness_bool):
 
 
 def get_linearized_approx_combined(fitness_bool):
-    global node_model, edge_model, problem_count, fitness_problem_percent
+    global edge_model, problem_count, fitness_problem_percent
     n_problems = problem_count
     if fitness_bool:
         n_problems = int(fitness_problem_percent * problem_count)
@@ -90,11 +103,12 @@ def get_linearized_approx_combined(fitness_bool):
         #print('QUBO:', qubo)
         #print('Problem approxxing: ', problem)
         problem_time = time.time()
-        node_features = get_diagonal_of_qubo(qubo)
-        node_features = node_model.forward(get_tensor_of_structure(node_features),
-                                           get_tensor_of_structure(edge_index).long(),
-                                           get_tensor_of_structure(edge_weight)).detach()
+        use_node_model, node_features = get_node_model_and_features(problem, qubo)
         #print(node_features)
+        node_features = use_node_model.forward(get_tensor_of_structure(node_features),
+                                               get_tensor_of_structure(edge_index).long(),
+                                               get_tensor_of_structure(edge_weight)).detach()
+        #print('Node features', node_features)
         approx_mask = np.ones((qubo_size, qubo_size))
         node_mean_tensor_list = []
         for edge_0, edge_1 in zip(edge_index[0], edge_index[1]):
@@ -161,12 +175,13 @@ def get_linearized_approx_simple(fitness_bool):
 
 
 def fitness_func(solution, solution_idx):
-    global torch_ga, node_model, edge_model, avg_fitness_list, avg_fitness_generation, min_approx, node_edge_cutoff, \
-        best_fitness, complete_fitness_time, evolution_type
+    global torch_ga, node_model, node_model_normalized, edge_model, avg_fitness_list, avg_fitness_generation, \
+        min_approx, node_edge_cutoff, best_fitness, complete_fitness_time, evolution_type
 
     start = time.time()
     if evolution_type == 'combined':
         node_model = model_dict[f'model{model_name}'][0]
+        node_model_normalized = model_dict[f'model{model_name}_normalized'][0]
         edge_model = model_dict[f'model{model_name}'][1]
         #print(node_model)
         #print(edge_model)
@@ -174,6 +189,7 @@ def fitness_func(solution, solution_idx):
         model_weights_dict_node = torchga.model_weights_as_dict(model=node_model,
                                                                 weights_vector=solution[:node_edge_cutoff])
         node_model.load_state_dict(model_weights_dict_node)
+        node_model_normalized.load_state_dict(model_weights_dict_node)
 
         model_weights_dict_edge = torchga.model_weights_as_dict(model=edge_model,
                                                                 weights_vector=solution[node_edge_cutoff:])
@@ -265,7 +281,7 @@ if run_bool:
     ga_instance.save(f'{evolution_file}_{problem}_{qubo_size}{model_name}')
 
 
-test_model = 'combined_evolution_M3SAT_48_uwu_1_05_10_01_005'
+test_model = 'combined_evolution_NP_48_uwu_1_05_10_02_01'
 test_cases = 10
 if test_case_study and evaluation_models[test_model] and \
         check_model_config_fit(test_model, evaluation_models[test_model]['independence']):
