@@ -28,7 +28,7 @@ metric_name_dict = {
 
 marker_list = ['x', 'o', 'd']
 
-cfg = load_cfg(cfg_id='test')
+cfg = load_cfg(cfg_id='1')
 problem_name_array = cfg['pipeline']['problems']['problems']
 
 

@@ -11,7 +11,7 @@ import torch, os
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
-cfg = load_cfg(cfg_id='test_evol_ec_large')
+cfg = load_cfg(cfg_id='test_evol_npp')
 qubo_size = cfg['pipeline']['problems']['qubo_size']
 engine = RecommendationEngine(cfg=cfg)
 generator = QUBOGenerator(cfg)
@@ -19,24 +19,27 @@ problem_name = cfg['pipeline']['problems']['problems'][0]
 solver = 'qbsolv_simulated_annealing'
 
 qubos, labels, problems = generator.generate()
-print(qubos)
-#print(problems[0])
+print(qubos[0])
+print(problems[0])
 np.set_printoptions(threshold=np.inf)
 
 
 if problem_name == 'NP':
     number_list = []
+    length_list = []
     max_number = 0
     for problem in problems:
+        length_list.append(len(problem['numbers']))
         number_list.extend(problem['numbers'])
         if np.max(problem['numbers']) > max_number:
             max_number = np.max(problem['numbers'])
     print(max_number)
-    pyplot.hist(number_list, bins=max_number)
-    pyplot.xlabel('Numbers in NP-problems')
-    pyplot.ylabel('Count')
-    pyplot.title(f'Number count in {len(problems)} NP-problems ({qubo_size}x{qubo_size})')
-    pyplot.show()
+    print(length_list)
+    #pyplot.hist(number_list, bins=max_number)
+    #pyplot.xlabel('Numbers in NP-problems')
+    #pyplot.ylabel('Count')
+    #pyplot.title(f'Number count in {len(problems)} NP-problems ({qubo_size}x{qubo_size})')
+    #pyplot.show()
 elif problem_name == 'MC':
     edge_number_list = []
     max_number = 0

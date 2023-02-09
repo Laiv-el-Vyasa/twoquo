@@ -3,33 +3,37 @@ from numpy import random
 from transformator.problems.problem import Problem
 
 
-def get_problems(n_problems, size):
+def get_problems(n_problems, size: tuple[int, int], target: float):
     rng = random.default_rng()
-    problems = []
-    #for n in range(n_problems):
-    #    numbers = []
-    #    for i in range(size):
-    #        numbers.append(np.floor(rng.normal(2 * size, size)))
-    #        if numbers[i] < 0:
-    #            numbers[i] = np.floor(rng.normal(2 * size, 4 * size))
-    #        if numbers[i] < 0:
-    #            numbers[i] = random.randint(0, size * size * 3)
-    #    problems.append(numbers)
-    problems = rng.geometric(1 / (size / 4), size=(n_problems, size)) * \
-               random.randint(0, size, (n_problems, size)) + \
-               random.randint(0, size, (n_problems, size))
-    problems = np.array(problems)
-    return problems.astype(int)
+    problems = np.empty(shape=n_problems, dtype=np.ndarray)
+    #print('empty problems: ', problems)
+    for n in range(n_problems):
+        number_bound = get_number_bound()
+        numbers = rng.integers(0, number_bound, get_problem_size(size, target))
+        #print('numbers: ', numbers)
+        problems[n] = numbers
+        #np.append(problems, numbers)
+    #problems = rng.geometric(1 / (size / 4), size=(n_problems, size)) * \
+    #           random.randint(0, size, (n_problems, size)) + \
+    #           random.randint(0, size, (n_problems, size))
+    #problems = np.array(problems)
+    #print('problems: ', problems)
+    return problems
+    #return problems.astype(int)
 
 
-def get_number_bound(cfg, size):
-    if not cfg['problems']['NP']['hard']:
-        number_bound = 100
-    else:
-        k_c = 1 - (np.log2(size) / (2 * size) - (np.log2(np.pi / 6) / (2 * size)))
-        print('KC: ', k_c)
-        number_bound = np.power(2, (k_c + .01) * size)
-    return number_bound
+def get_problem_size(size: tuple[int, int],
+                     target: float):
+    rng = random.default_rng()
+    problem_size = 0
+    while problem_size < size[0] or problem_size > size[1]:
+        problem_size = rng.normal(target, ((size[1] - size[0]) / 4))
+    return int(np.round(problem_size))
+
+
+def get_number_bound():
+    high = np.power(2, 31) - 1
+    return high
 
 
 class NumberPartitioning(Problem):
@@ -50,11 +54,6 @@ class NumberPartitioning(Problem):
         return Q
 
     @classmethod
-    def gen_problems(self, cfg, n_problems, size=20, **kwargs):
-        number_bound = get_number_bound(cfg, size)
-        if not cfg['problems']['NP']['new']:
-            print('Number bound: ', number_bound)
-            problems = np.random.randint(0, number_bound, (n_problems, size))
-        else:
-            problems = get_problems(n_problems, size)
+    def gen_problems(self, cfg, n_problems, size=(16, 64), **kwargs):
+        problems = get_problems(n_problems, size, cfg['problems']['NP']['transition'])
         return [{"numbers": problem} for problem in problems]

@@ -45,7 +45,7 @@ class QUBOGenerator:
             )
 
             all_problems.extend(problems)
-            qubo_matrices = np.array(qubo_matrices)
+            #qubo_matrices = np.array(qubo_matrices)
             #self.logger.info((cls, qubo_matrices.shape))
 
             #if self.cfg["model"]["norm_div_max"]:
@@ -55,7 +55,9 @@ class QUBOGenerator:
             labels.extend([i for _ in range(len(qubo_matrices))])
 
         #self.logger.info(("TOTAL DATA LEN", len(data)))
-        data = np.array(data, dtype=np.float32)
+        #data = np.array([], dtype=np.float23)
+        #for matrix in qubo_matrices
+        #data = np.array(data)#, dtype=np.float32)
         labels = np.array(labels, dtype=np.int32)
         return data, labels, all_problems
 
