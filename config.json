@@ -198,8 +198,8 @@
         "n_problems": 1000,
         "NP": {
           "size": [16, 64],
-          "transition": 29.9864,
-          "bits": 28
+          "transition": 31.0106,
+          "bits": 29
         },
         "problems": [
           "NP"

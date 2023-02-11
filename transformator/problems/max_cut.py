@@ -86,7 +86,7 @@ class MaxCut(Problem):
         for i in range(n_problems):
             nodes = get_random_node_number(size)
             edges = get_random_edge_number(cfg, nodes)
-            graphs.extend(gen_graph(1, adapted_size, seed))
+            graphs.extend(gen_graph(1, (nodes, edges), seed))
         return [{"graph": graph} for graph in graphs]
 
 
