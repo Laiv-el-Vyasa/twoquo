@@ -3,12 +3,12 @@ from numpy import random
 from transformator.problems.problem import Problem
 
 
-def get_problems(n_problems, size: tuple[int, int], target: float):
+def get_problems(cfg, n_problems, size: tuple[int, int], target: float):
     rng = random.default_rng()
     problems = np.empty(shape=n_problems, dtype=np.ndarray)
     #print('empty problems: ', problems)
     for n in range(n_problems):
-        number_bound = get_number_bound()
+        number_bound = get_number_bound(cfg)
         numbers = rng.integers(0, number_bound, get_problem_size(size, target))
         #print('numbers: ', numbers)
         problems[n] = numbers
@@ -31,8 +31,8 @@ def get_problem_size(size: tuple[int, int],
     return int(np.round(problem_size))
 
 
-def get_number_bound():
-    high = np.power(2, 31) - 1
+def get_number_bound(cfg):
+    high = np.power(2, cfg['problems']['NP']['bits'])
     return high
 
 
@@ -55,5 +55,5 @@ class NumberPartitioning(Problem):
 
     @classmethod
     def gen_problems(self, cfg, n_problems, size=(16, 64), **kwargs):
-        problems = get_problems(n_problems, size, cfg['problems']['NP']['transition'])
+        problems = get_problems(cfg, n_problems, size, cfg['problems']['NP']['transition'])
         return [{"numbers": problem} for problem in problems]

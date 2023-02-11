@@ -195,10 +195,11 @@
       "dataset_id": "test_evol_npp",
       "problems": {
         "qubo_size": 48,
-        "n_problems": 10,
+        "n_problems": 1000,
         "NP": {
           "size": [16, 64],
-          "transition": 34.0787
+          "transition": 29.9864,
+          "bits": 28
         },
         "problems": [
           "NP"

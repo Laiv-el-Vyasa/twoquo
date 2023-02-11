@@ -62,12 +62,12 @@ def approx_quality_score_graphs_problems(overall_data, approx_fixed_number, incl
             shortend_approx_steps = approximation_steps[0:len(mean_energy_list)]
             ax.plot(shortend_approx_steps, mean_energy_list, color=color_dict[key], markersize=8)
             legend_lines.append(lines.Line2D([], [], color=color_dict[key],
-                                     markersize=8, label=f'{key} energy'))
+                                     markersize=8, label=f'{key}'))
             #ax.plot(approximation_steps, mean_score_list, color=color_dict[key], linestyle='dashed')
             #legend_lines.append(lines.Line2D([], [], color=color_dict[key], linestyle='dashed',
             #                         markersize=8, label=f'{key} score'))
     ax.legend(handles=legend_lines)
-    ax.set_ylabel('quality')
+    ax.set_ylabel('correct solution percentage')
     if approx_fixed_number:
         label_string = 'entries'
     else:
@@ -86,7 +86,7 @@ def aggregate_problem_data(problem_data_list, include_zero):
         #    score.append(1)
         energy = []
         if include_zero:
-            energy.append(0.)
+            energy.append(1.)
         for approx_step_data in problem_data_dict['approximation']:
             energy.append(approx_step_data['rel_energy'])
             #score.append(approx_step_data['rel_score'])

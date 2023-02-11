@@ -128,7 +128,7 @@ def get_solution_quality(energy, best_energy, worst_energy, new_quality):
 
 def pipeline_run(cfg, approx_fixed_number, approx_single_entries, print_bool, save_bool, show_bool, approximation_steps = 29):
     gen = QUBOGenerator(cfg)
-
+    print('approx steps: ', approximation_steps)
     qubos, labels, problems = gen.generate()
     qubo_problem_list = list(zip(qubos, labels, problems))
     random.shuffle(qubo_problem_list)
@@ -137,6 +137,7 @@ def pipeline_run(cfg, approx_fixed_number, approx_single_entries, print_bool, sa
 
     eng = RecommendationEngine(cfg=cfg)
     percentage_steps = [((x + 1) / (approximation_steps + 1)) for x in range(approximation_steps)]
+    print('percentage steps: ', percentage_steps)
     overall_data = {'approximation_steps': percentage_steps}
 
     for count, (qubo, label, problem) in enumerate(qubo_problem_list):
@@ -187,12 +188,8 @@ def pipeline_run(cfg, approx_fixed_number, approx_single_entries, print_bool, sa
 
             approx_qubo = approx_data['qubo']
             np.set_printoptions(threshold=np.inf)
-            #print(approx_qubo)
             approx_metadata = eng.recommend(approx_qubo)
-            #print('recommended')
 
-            # if approx_step == "1800":
-            #    qubo_heatmap(approx_qubo)
             solution_quality_dict = {}
             for solver in approx_metadata.solutions:
                 solution_quality_dict[solver] = \
@@ -205,10 +202,14 @@ def pipeline_run(cfg, approx_fixed_number, approx_single_entries, print_bool, sa
                      check_solution(metadata.solutions[solver][0], approx_metadata.solutions[solver][0], problem))
             metadata.approx_solution_quality[approx_step] = solution_quality_dict
 
-            reverse_energy_appr = get_max_solution_quality(
-                approx_metadata.solutions[list(approx_metadata.solutions.keys())[0]],
-                qubo, best_energy_solver_dict[list(best_energy_solver_dict.keys())[0]],
-                worst_energy, only_correct=False, new_quality=True)
+            #reverse_energy_appr = get_max_solution_quality(
+            #    approx_metadata.solutions[list(approx_metadata.solutions.keys())[0]],
+            #    qubo, best_energy_solver_dict[list(best_energy_solver_dict.keys())[0]],
+            #    worst_energy, only_correct=True, new_quality=False)
+            reverse_energy_appr = \
+                check_solution(metadata.solutions[list(metadata.solutions.keys())[0]][0],
+                               approx_metadata.solutions[list(approx_metadata.solutions.keys())[0]][0],
+                               problem)
             # approx_solution_score = get_best_score(problem_name, problem, approx_metadata.solutions[list(approx_metadata.solutions.keys())[0]])
             if print_bool:
                 percentage_approxed += (approx_data["approximations"] / approx_data['size'])
@@ -246,10 +247,10 @@ def pipeline_run(cfg, approx_fixed_number, approx_single_entries, print_bool, sa
 
 
 if __name__ == '__main__':
-    approximation_steps = 29
+    approximation_steps = 99
     approx_fixed_number = True
-    approx_single_entries = True
+    approx_single_entries = False
     print_bool = False
     save_bool = True
-    cfg = load_cfg(cfg_id='test_evol_mc_large')
-    pipeline_run(cfg, approx_fixed_number, approx_single_entries, print_bool, save_bool, approximation_steps, True)
+    cfg = load_cfg(cfg_id='test_evol_npp')
+    pipeline_run(cfg, approx_fixed_number, approx_single_entries, print_bool, save_bool, True, approximation_steps)

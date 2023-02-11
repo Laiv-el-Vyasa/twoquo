@@ -34,6 +34,19 @@ def generate_random_edge_number2(size):
     return rng.binomial(max_nodes, random_target / max_nodes)
 
 
+def get_random_node_number(size):
+    rng = random.default_rng()
+    return rng.integers(size[0], size[1])
+
+
+def get_random_edge_number(cfg, nodes):
+    rng = random.default_rng()
+    edges = 0
+    while edges < 1 or edges > ((nodes * (nodes + 1)) / 2):
+        edges = rng.normal(nodes * cfg['problems']['MC']['edge_node_factor'], nodes)
+    return int(np.round(edges))
+
+
 class MaxCut(Problem):
     def __init__(self, cfg, graph):
         self.graph = graph
@@ -68,12 +81,11 @@ class MaxCut(Problem):
         return Q
 
     @classmethod
-    def gen_problems(self, cfg, n_problems, size, seed=None, **kwargs):
+    def gen_problems(self, cfg, n_problems, size=(16, 64), seed=None, **kwargs):
         graphs = []
-        adapted_size = copy.deepcopy(size)
         for i in range(n_problems):
-            if cfg['problems']['MC']['random_edges']:
-                adapted_size[1] = generate_random_edge_number(size)
+            nodes = get_random_node_number(size)
+            edges = get_random_edge_number(cfg, nodes)
             graphs.extend(gen_graph(1, adapted_size, seed))
         return [{"graph": graph} for graph in graphs]
 
