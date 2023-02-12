@@ -194,12 +194,27 @@
       "base_cfg": "1",
       "dataset_id": "test_evol_npp",
       "problems": {
-        "qubo_size": 48,
+        "qubo_size": 64,
         "n_problems": 1000,
         "NP": {
           "size": [16, 64],
           "transition": 31.0106,
           "bits": 29
+        },
+        "problems": [
+          "NP"
+        ]
+      }
+    },
+    "test_evol_mc": {
+      "base_cfg": "1",
+      "dataset_id": "test_evol_mc",
+      "problems": {
+        "qubo_size": 48,
+        "n_problems": 1000,
+        "NP": {
+          "size": [16, 64],
+          "edge_node_factor": 0.5
         },
         "problems": [
           "NP"

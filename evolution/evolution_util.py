@@ -56,17 +56,17 @@ def get_quality_of_approxed_qubo(linearized_approx, qubo, solutions, print_solut
 
 def linearize_qubo(qubo):
     linearized_qubo = []
-    for i in range(qubo_size):
+    for i in range(len(qubo)):
         for j in range(i + 1):
             linearized_qubo.append(qubo[i][j])
     return linearized_qubo
 
 
 def apply_approximation_to_qubo(linearized_approx, qubo):
-    approxed_qubo = np.zeros((qubo_size, qubo_size))
+    approxed_qubo = np.zeros((len(qubo), len(qubo)))
     linear_index = 0
     number_of_true_approx = 0
-    for i in range(qubo_size):
+    for i in range(len(qubo)):
         for j in range(i + 1):
             if linearized_approx[linear_index] > 0:
                 approxed_qubo[i][j] = qubo[i][j]
@@ -80,10 +80,10 @@ def apply_approximation_to_qubo(linearized_approx, qubo):
     return approxed_qubo, number_of_true_approx
 
 
-def get_qubo_approx_mask(linearized_approx):
-    qubo_mask = np.zeros((qubo_size, qubo_size))
+def get_qubo_approx_mask(linearized_approx, qubo):
+    qubo_mask = np.zeros((len(qubo), len(qubo)))
     linear_index = 0
-    for i in range(qubo_size):
+    for i in range(len(qubo)):
         for j in range(i + 1):
             if linearized_approx[linear_index] > 0:
                 qubo_mask[i][j] = 1
@@ -96,7 +96,7 @@ def get_qubo_approx_mask(linearized_approx):
 def get_edge_data(qubo, include_loops=True):
     edge_index = [[], []]
     edge_weight = []
-    for i in range(qubo_size):
+    for i in range(len(qubo)):
         for j in range(i + 1):
             if not i == j or include_loops:
                 if not qubo[i][j] == 0:
@@ -112,7 +112,7 @@ def get_edge_data(qubo, include_loops=True):
 
 def get_adjacency_matrix_of_qubo(qubo):
     adj_matrix = np.zeros(np.shape(qubo))
-    for i in range(qubo_size):
+    for i in range(len(qubo)):
         for j in range(i):
             if not qubo[i][j] == 0:
                 adj_matrix[i][j] = 1
@@ -122,7 +122,7 @@ def get_adjacency_matrix_of_qubo(qubo):
 
 def get_diagonal_of_qubo(qubo):
     diagonal = []
-    for i in range(qubo_size):
+    for i in range(len(qubo)):
         diagonal.append([])
         diagonal[i].append(qubo[i][i])
     return diagonal
@@ -131,13 +131,13 @@ def get_diagonal_of_qubo(qubo):
 def get_mean_of_qubo_line(qubo):
     mean_list = []
     qubo_line_mean_list = []
-    for i in range(qubo_size):
+    for i in range(len(qubo)):
         qubo_line_mean_list.append([])
         line_mean = np.mean(qubo[i])
         qubo_line_mean_list[i].append(line_mean)
         mean_list.append(line_mean)
     mean_of_lines = np.mean(mean_list)
-    for i in range(qubo_size):
+    for i in range(len(qubo)):
         qubo_line_mean_list[i][0] -= mean_of_lines
     return qubo_line_mean_list
 

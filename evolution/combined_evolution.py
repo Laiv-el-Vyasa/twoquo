@@ -21,14 +21,13 @@ from evolution.evolution_util import get_training_dataset, get_fitness_value, ap
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
-run_bool = False
-restart_bool = False
+run_bool = True
+restart_bool = True
 extend_model = False
 model_to_extend = 'combined_evolution_MC_24_uwu_1_05_10_01_005'
 test_case_study = False
-plot_evol_results = True
-compare_types = True
-
+plot_evol_results = False
+compare_types = False
 
 qubo_size = cfg['pipeline']['problems']['qubo_size']
 problem = cfg['pipeline']['problems']['problems'][0]
@@ -42,16 +41,16 @@ population = 100
 a = 1
 b = .5
 c = 10
-d = .1
+d = .2
 fitness_parameters = (a, b, c, d)
-min_approx = 0.05
+min_approx = 0.1
 
-#node_model = CombinedNodeFeatures(node_feature_number)
+# node_model = CombinedNodeFeatures(node_feature_number)
 if evolution_type == 'combined':
     node_model = model_dict[f'model{model_name}'][0]
     node_model_normalized = model_dict[f'model{model_name}_normalized'][0]
     edge_model = model_dict[f'model{model_name}'][1]
-    #edge_model = CombinedEdgeDecision(node_feature_number)
+    # edge_model = CombinedEdgeDecision(node_feature_number)
 
     torch_ga_node = pygad.torchga.TorchGA(model=node_model, num_solutions=population)
     torch_ga_edge = pygad.torchga.TorchGA(model=edge_model, num_solutions=population)
@@ -73,14 +72,14 @@ def get_node_model_and_features(problem, qubo):
     return_node_model = node_model
     return_node_features = get_diagonal_of_qubo(qubo)
     if 'graph' in problem and 'tsp' in problem:
-        #print('Normalized model choosen!')
+        # print('Normalized model choosen!')
         return_node_model = node_model_normalized
-        #return_node_features = get_mean_of_qubo_line(qubo)
+        # return_node_features = get_mean_of_qubo_line(qubo)
     return return_node_model, return_node_features
 
 
 def get_linarized_approx(evo_type, fitness_bool):
-    #linearized_return = []
+    # linearized_return = []
     if evo_type == 'combined':
         linearized_return = get_linearized_approx_combined(fitness_bool)
     elif evo_type == 'gcn':
@@ -100,41 +99,41 @@ def get_linearized_approx_combined(fitness_bool):
     linearized_approx = []
     problem_time_list = []
     for qubo, edge_index, edge_weight, problem in zip(qubos, edge_index_list, edge_weight_list, problem_list):
-        #print('QUBO:', qubo)
-        #print('Problem approxxing: ', problem)
+        # print('QUBO:', qubo)
+        # print('Problem approxxing: ', problem)
         problem_time = time.time()
         use_node_model, node_features = get_node_model_and_features(problem, qubo)
-        #print(node_features)
+        # print(node_features)
         node_features = use_node_model.forward(get_tensor_of_structure(node_features),
                                                get_tensor_of_structure(edge_index).long(),
                                                get_tensor_of_structure(edge_weight)).detach()
-        #print('Node features', node_features)
+        # print('Node features', node_features)
         approx_mask = np.ones((qubo_size, qubo_size))
         node_mean_tensor_list = []
         for edge_0, edge_1 in zip(edge_index[0], edge_index[1]):
             node_features_0 = np.array(node_features[edge_0].numpy())
             node_features_1 = np.array(node_features[edge_1].numpy())
-            #print(node_features_0, node_features_1, edge_0, edge_1)
-            #print(np.mean(node_features_0, node_features_1))
-            #node_mean_tensor = np.mean([node_features_0, node_features_1], axis=0)
+            # print(node_features_0, node_features_1, edge_0, edge_1)
+            # print(np.mean(node_features_0, node_features_1))
+            # node_mean_tensor = np.mean([node_features_0, node_features_1], axis=0)
             node_mean_tensor_list.append(np.mean([node_features_0, node_features_1], axis=0))
-        #print(node_mean_tensor_list)
+        # print(node_mean_tensor_list)
 
         edge_descision_list = edge_model.forward(get_tensor_of_structure(node_mean_tensor_list)).detach()
-        #edge_descision = edge_model.forward(get_tensor_of_structure(node_mean_tensor)).detach()
+        # edge_descision = edge_model.forward(get_tensor_of_structure(node_mean_tensor)).detach()
         for idx, edge_descision in enumerate(edge_descision_list):
-            #print(edge_descision.cpu().detach())
+            # print(edge_descision.cpu().detach())
             if edge_descision.detach() <= 0:
                 approx_mask[edge_index[0][idx]][edge_index[1][idx]] = 0
-                #approx_mask[edge_0][edge_1] = 0
-        #print(approx_mask)
-        #print(np.mean(node_features_0, node_features_1))
+                # approx_mask[edge_0][edge_1] = 0
+        # print(approx_mask)
+        # print(np.mean(node_features_0, node_features_1))
         linearized_approx.append(linearize_qubo(approx_mask))
-        #print('Problem approxxing time: ', time.time() - problem_time)
+        # print('Problem approxxing time: ', time.time() - problem_time)
         problem_time_list.append(time.time() - problem_time)
 
-    #print('Max time aproxxing problem: ', problem_list[np.argmax(problem_time_list)])
-    #print('Max time aproxxing: ', np.max(problem_time_list))
+    # print('Max time aproxxing problem: ', problem_list[np.argmax(problem_time_list)])
+    # print('Max time aproxxing: ', np.max(problem_time_list))
     return linearized_approx, qubos, min_energy, solutions_list, problem_list
 
 
@@ -144,11 +143,12 @@ def get_linearized_approx_gcn(fitness_bool):
     if fitness_bool:
         n_problems = int(fitness_problem_percent * problem_count)
     include_loops = not (model_name == '_diag' or model_name == '_deep')
-    _, qubos, min_energy, solutions_list, problem_list, edge_index_list, edge_weight_list = get_training_dataset(n_problems,
-                                                                                         include_loops=include_loops)
+    _, qubos, min_energy, solutions_list, problem_list, edge_index_list, edge_weight_list = get_training_dataset(
+        n_problems,
+        include_loops=include_loops)
     linearized_approx = []
     for qubo, edge_index, edge_weight in zip(qubos, edge_index_list, edge_weight_list):
-        #print('QUBO:', qubo)
+        # print('QUBO:', qubo)
         if model_name == '_diag':
             node_features = get_diagonal_of_qubo(qubo)
         elif model_name == '_deep':
@@ -159,7 +159,7 @@ def get_linearized_approx_gcn(fitness_bool):
         approx_mask = model.forward(get_tensor_of_structure(node_features),
                                     get_tensor_of_structure(edge_index).long(),
                                     get_tensor_of_structure(edge_weight))
-        #print('APPROX', approx_mask)
+        # print('APPROX', approx_mask)
         linearized_approx.append(linearize_qubo(approx_mask.detach()))
     return linearized_approx, qubos, min_energy, solutions_list, problem_list
 
@@ -183,8 +183,8 @@ def fitness_func(solution, solution_idx):
         node_model = model_dict[f'model{model_name}'][0]
         node_model_normalized = model_dict[f'model{model_name}_normalized'][0]
         edge_model = model_dict[f'model{model_name}'][1]
-        #print(node_model)
-        #print(edge_model)
+        # print(node_model)
+        # print(edge_model)
 
         model_weights_dict_node = torchga.model_weights_as_dict(model=node_model,
                                                                 weights_vector=solution[:node_edge_cutoff])
@@ -194,16 +194,17 @@ def fitness_func(solution, solution_idx):
         model_weights_dict_edge = torchga.model_weights_as_dict(model=edge_model,
                                                                 weights_vector=solution[node_edge_cutoff:])
         edge_model.load_state_dict(model_weights_dict_edge)
-        #print('In Fitness Func: ', node_model)
+        # print('In Fitness Func: ', node_model)
     else:
         model = model_dict[evolution_type][f'model{model_name}']
         model_weights_dict = torchga.model_weights_as_dict(model=model, weights_vector=solution)
         model.load_state_dict(model_weights_dict)
-        #print('In Fitness Func: ', model)
+        # print('In Fitness Func: ', model)
 
-    linearized_approx, qubos, min_energy, solutions_list, problems = get_linarized_approx(evolution_type, fitness_bool=True)
-    #print('Lin approx: ', linearized_approx)
-    #print('Len Fitness', len(qubos))
+    linearized_approx, qubos, min_energy, solutions_list, problems = get_linarized_approx(evolution_type,
+                                                                                          fitness_bool=True)
+    # print('Lin approx: ', linearized_approx)
+    # print('Len Fitness', len(qubos))
     solution_fitness = get_fitness_value(linearized_approx, qubos, min_energy, solutions_list, fitness_parameters,
                                          problems, min_approx)
     print(f'Solution {solution_idx}: {solution_fitness}')
@@ -211,9 +212,9 @@ def fitness_func(solution, solution_idx):
         best_fitness = solution_fitness
     avg_fitness_generation.append(solution_fitness)
     time_spent = time.time() - start
-    #print('Recent time: ', time_spent)
+    # print('Recent time: ', time_spent)
     complete_fitness_time.append(time_spent)
-    #print('Avg time so far: ', np.mean(complete_fitness_time))
+    # print('Avg time so far: ', np.mean(complete_fitness_time))
     return solution_fitness
 
 
@@ -221,9 +222,9 @@ def callback_generation(ga_instance):
     global avg_fitness_generation, avg_fitness_list, best_fitness, complete_fitness_time
     print("Generation   = {generation}".format(generation=ga_instance.generations_completed))
 
-    #print("Fitness      = {fitness}".format(fitness=ga_instance.best_solution()[1]))
+    # print("Fitness      = {fitness}".format(fitness=ga_instance.best_solution()[1]))
     print("Fitness      = {fitness}".format(fitness=best_fitness))
-    #print(avg_fitness_generation)
+    # print(avg_fitness_generation)
     avg_fitness = np.mean(avg_fitness_generation)
     avg_fitness_list.append(avg_fitness)
     avg_fitness_generation = []
@@ -232,22 +233,23 @@ def callback_generation(ga_instance):
     complete_fitness_time = []
 
 
-num_generations = 50
+num_generations = 100
 num_parents_mating = int(population * .2)
 if evolution_type == 'combined':
     initial_population_node = torch_ga_node.population_weights
     node_edge_cutoff = len(initial_population_node[0])
     initial_population_edge = torch_ga_edge.population_weights
     initial_population = np.append(initial_population_node, initial_population_edge, axis=-1)
-    print(f'{node_edge_cutoff} + {len(initial_population_edge[0])} = {node_edge_cutoff + len(initial_population_edge[0])}, '
+    print(
+        f'{node_edge_cutoff} + {len(initial_population_edge[0])} = {node_edge_cutoff + len(initial_population_edge[0])}, '
         f'{len(initial_population[0])}')
 else:
     initial_population = torch_ga.population_weights
 
 ga_instance = pygad.GA(num_generations=num_generations,
-                       #parent_selection_type='rws',
+                       # parent_selection_type='rws',
                        keep_elitism=5,
-                       #crossover_type='scattered',
+                       # crossover_type='scattered',
                        num_parents_mating=num_parents_mating,
                        initial_population=initial_population,
                        fitness_func=fitness_func,
@@ -261,14 +263,13 @@ if extend_model:
     initial_population = ga_instance_loaded.population
     print(initial_population)
     ga_instance = pygad.GA(num_generations=num_generations,
-                           #parent_selection_type='rws',
+                           # parent_selection_type='rws',
                            keep_elitism=5,
-                           #crossover_type='scattered',
+                           # crossover_type='scattered',
                            num_parents_mating=num_parents_mating,
                            initial_population=initial_population,
                            fitness_func=fitness_func,
                            on_generation=callback_generation)
-
 
 if run_bool:
     print(f'{evolution_file}_{problem}_{qubo_size}{model_name}')
@@ -280,7 +281,6 @@ if run_bool:
     plot_average_fitness(avg_fitness_list)
     ga_instance.save(f'{evolution_file}_{problem}_{qubo_size}{model_name}')
 
-
 test_model = 'combined_evolution_NP_48_uwu_1_05_10_02_01'
 test_cases = 10
 if test_case_study and evaluation_models[test_model] and \
@@ -291,7 +291,7 @@ if test_case_study and evaluation_models[test_model] and \
     loaded_ga_instance = pygad.load(f'{test_model}')
     model_name = evaluation_models[test_model]["model_name"]
     print(test_model, model_name, evolution_type, min_approx)
-    #model = model_dict[f'model{evaluation_models[model_descr]["model_name"]}']
+    # model = model_dict[f'model{evaluation_models[model_descr]["model_name"]}']
     if evolution_type == 'combined':
         node_model = model_dict['combined'][f'model{model_name}'][0]
         node_edge_cutoff = sum(p.numel() for p in node_model.parameters() if p.requires_grad)
@@ -318,7 +318,8 @@ if test_case_study and evaluation_models[test_model] and \
         model.load_state_dict(model_weights_dict)
         print('After evaluation: ', model)
 
-    linearized_approx, qubos, min_energy, solutions_list, problem_list = get_linarized_approx(evolution_type, fitness_bool=False)
+    linearized_approx, qubos, min_energy, solutions_list, problem_list = get_linarized_approx(evolution_type,
+                                                                                              fitness_bool=False)
     print('Len eval', len(qubos))
 
     solution_quality_list = [[], [], []]
@@ -330,7 +331,7 @@ if test_case_study and evaluation_models[test_model] and \
         approxed_qubo, _ = apply_approximation_to_qubo(lin_approx, qubo)
         (solution_quality, best_approx_solution), best_approx_solutions, true_approx, true_approx_percent = \
             get_quality_of_approxed_qubo(lin_approx, qubo, solutions)
-        #print(f'True approx: {true_approx}')
+        # print(f'True approx: {true_approx}')
         solution_check_value = check_solution(solutions, best_approx_solutions, problem)
         if idx < test_cases:
             print(f'Testcase {idx + 1}')
@@ -342,7 +343,7 @@ if test_case_study and evaluation_models[test_model] and \
             print(f'Summary: Quality: {solution_quality}, '
                   f'Solution value: {solution_check_value}')
             qubo_heatmap(qubo)
-            qubo_heatmap(get_qubo_approx_mask(lin_approx))
+            qubo_heatmap(get_qubo_approx_mask(lin_approx, qubo))
             qubo_heatmap(approxed_qubo)
         solution_quality_list[0].append(solution_quality)
         solution_quality_list[1].append(np.floor(1 - solution_quality))
@@ -354,11 +355,10 @@ if test_case_study and evaluation_models[test_model] and \
           f'True solution percentage: {np.mean(solution_quality_list[1])}, '
           f'Problem solved percentage: {np.mean(solution_quality_list[2])}')
 
-
 evol_data = []
 
 if plot_evol_results:
-    if True: #check_pipeline_necessity(problem_count):
+    if True:  # check_pipeline_necessity(problem_count):
         approx_single_entries = True
         if qubo_size > 24:
             approx_single_entries = False
@@ -372,7 +372,7 @@ if plot_evol_results:
             loaded_ga_instance = pygad.load(f'{model_descr}')
             model_name = evaluation_models[model_descr]["model_name"]
             print(model_descr, model_name, evolution_type, min_approx)
-            #model = model_dict[f'model{evaluation_models[model_descr]["model_name"]}']
+            # model = model_dict[f'model{evaluation_models[model_descr]["model_name"]}']
             if evolution_type == 'combined':
                 node_model = model_dict['combined'][f'model{model_name}'][0]
                 node_edge_cutoff = sum(p.numel() for p in node_model.parameters() if p.requires_grad)
