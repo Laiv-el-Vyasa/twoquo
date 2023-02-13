@@ -23,8 +23,9 @@ def get_training_dataset(n_problems, include_loops=True):
     linearized_qubo_list, qubo_list, energy_list, \
         solutions_list, problem_list, edge_index_list, \
         edge_weight_list = get_linearized_qubos(n_problems, include_loops=include_loops)
-    return torch.from_numpy(np.array(linearized_qubo_list).astype(np.float32)), qubo_list, \
-        energy_list, solutions_list, problem_list, edge_index_list, edge_weight_list
+    #return torch.from_numpy(np.array(linearized_qubo_list).astype(np.float32)), qubo_list, \
+    return linearized_qubo_list, qubo_list, \
+                energy_list, solutions_list, problem_list, edge_index_list, edge_weight_list
 
 
 def get_linearized_qubos(n_problems, include_loops=True):

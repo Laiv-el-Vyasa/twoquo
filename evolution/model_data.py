@@ -5,7 +5,20 @@ from evolution_util import qubo_size
 
 node_feature_number = 8
 
+
 evaluation_models = {
+    'combined_evolution_NP_64_uwu_1_05_10_02_01':
+        {'name': 'NPP, 16 - 64, 29 bit numbers',
+         'fitness_params': (1, .5, 10, .2),
+         'min_approx': 0.1,
+         'independence': True,
+         'model_name': '_uwu',
+         'evolution_type': 'combined',
+         'display': False
+         }
+    }
+
+evaluation_models_old = {
     'combined_evolution_MC_24_nonlin_1_05_10_01_005':
         {'name': 'combined model, 24, non-linear',
          'fitness_params': (1, .5, 10, .1),
