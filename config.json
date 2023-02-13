@@ -210,14 +210,29 @@
       "base_cfg": "1",
       "dataset_id": "test_evol_mc",
       "problems": {
-        "qubo_size": 48,
+        "qubo_size": 64,
         "n_problems": 1000,
-        "NP": {
+        "MC": {
           "size": [16, 64],
           "edge_node_factor": 0.5
         },
         "problems": [
-          "NP"
+          "MC"
+        ]
+      }
+    },
+    "test_evol_m3sat": {
+      "base_cfg": "1",
+      "dataset_id": "test_evol_m3sat",
+      "problems": {
+        "qubo_size": 128,
+        "n_problems": 1000,
+        "M3SAT": {
+          "size": [16, 128],
+          "target_density": 4.27
+        },
+        "problems": [
+          "M3SAT"
         ]
       }
     }

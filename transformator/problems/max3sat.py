@@ -2,7 +2,17 @@ import random
 import itertools
 
 import numpy as np
+from numpy import random as np_random
 from transformator.problems.problem import Problem
+
+
+def gen_random_clause_number(cfg, size):
+    target = cfg["problems"]["M3SAT"].get("target_density", 4)
+    rng = np_random.default_rng()
+    clauses = 0
+    while clauses < size[0] or clauses > size[1]:
+        clauses = rng.normal(target * size[0], (size[1] - size[0]) / 4)
+    return int(np.round(clauses))
 
 
 class Max3SAT(Problem):
@@ -66,7 +76,7 @@ class Max3SAT(Problem):
         return Q
 
     @classmethod
-    def gen_problems(self, cfg, n_problems, size=(20, 25), **kwargs):
+    def gen_problems(self, cfg, n_problems, size=(10, 128), **kwargs):
         check_duplicates = cfg["problems"]["M3SAT"].get("check_duplicates", False)
         if check_duplicates:
             print("M3SAT gen_problems: Checking for duplicates.")
@@ -78,9 +88,9 @@ class Max3SAT(Problem):
         problems = []
         for _ in range(n_problems):
             problem = []
-
+            clauses = gen_random_clause_number(cfg, size)
             # Eg: 25 clauses
-            for _ in range(size[1]):
+            for _ in range(clauses):
                 # Each has THREE tuples!! But random vars and random value.
                 # (True/False).
                 idx1 = int(round(random.random() * n_vars))
@@ -123,7 +133,7 @@ class Max3SAT(Problem):
                         continue
 
                 problem.append(clause)
-            if len(problem) == size[1]:
+            if len(problem) == clauses:
                 problems.append(sorted(problem))
         len_ = len(problems)
 

@@ -252,5 +252,5 @@ if __name__ == '__main__':
     approx_single_entries = False
     print_bool = False
     save_bool = True
-    cfg = load_cfg(cfg_id='test_evol_npp')
+    cfg = load_cfg(cfg_id='test_evol_m3sat')
     pipeline_run(cfg, approx_fixed_number, approx_single_entries, print_bool, save_bool, True, approximation_steps)
