@@ -19,6 +19,7 @@ from evolution.evolution_util import get_training_dataset, get_fitness_value, ap
     check_model_config_fit, get_diagonal_of_qubo, cfg, get_tensor_of_structure, linearize_qubo, \
     check_pipeline_necessity, check_solution, get_mean_of_qubo_line
 
+
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 run_bool = True
@@ -41,9 +42,9 @@ population = 100
 a = 1
 b = .5
 c = 10
-d = .2
+d = .1
 fitness_parameters = (a, b, c, d)
-min_approx = 0.1
+min_approx = 0.05
 
 # node_model = CombinedNodeFeatures(node_feature_number)
 if evolution_type == 'combined':
@@ -108,7 +109,7 @@ def get_linearized_approx_combined(fitness_bool):
                                                get_tensor_of_structure(edge_index).long(),
                                                get_tensor_of_structure(edge_weight)).detach()
         # print('Node features', node_features)
-        approx_mask = np.ones((qubo_size, qubo_size))
+        approx_mask = np.ones((len(qubo), len(qubo)))
         node_mean_tensor_list = []
         for edge_0, edge_1 in zip(edge_index[0], edge_index[1]):
             node_features_0 = np.array(node_features[edge_0].numpy())
@@ -155,7 +156,7 @@ def get_linearized_approx_gcn(fitness_bool):
             node_features = qubo
             edge_weight = []
         else:
-            node_features = np.identity(qubo_size)
+            node_features = np.identity(len(qubo))
         approx_mask = model.forward(get_tensor_of_structure(node_features),
                                     get_tensor_of_structure(edge_index).long(),
                                     get_tensor_of_structure(edge_weight))
@@ -233,7 +234,7 @@ def callback_generation(ga_instance):
     complete_fitness_time = []
 
 
-num_generations = 100
+num_generations = 50
 num_parents_mating = int(population * .2)
 if evolution_type == 'combined':
     initial_population_node = torch_ga_node.population_weights
@@ -358,7 +359,7 @@ if test_case_study and evaluation_models[test_model] and \
 evol_data = []
 
 if plot_evol_results:
-    if True:  # check_pipeline_necessity(problem_count):
+    if True: #check_pipeline_necessity(problem_count):
         approx_single_entries = True
         if qubo_size > 24:
             approx_single_entries = False

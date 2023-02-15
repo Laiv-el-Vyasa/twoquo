@@ -8,15 +8,26 @@ node_feature_number = 8
 
 evaluation_models = {
     'combined_evolution_NP_64_uwu_1_05_10_02_01':
-        {'name': 'NPP, 16 - 64, 29 bit numbers',
-         'fitness_params': (1, .5, 10, .2),
-         'min_approx': 0.1,
-         'independence': True,
-         'model_name': '_uwu',
-         'evolution_type': 'combined',
-         'display': False
-         }
-    }
+        {
+            'name': 'NPP, 16 - 64, 29 bit numbers',
+            'fitness_params': (1, .5, 10, .2),
+            'min_approx': 0.1,
+            'independence': True,
+            'model_name': '_uwu',
+            'evolution_type': 'combined',
+            'display': False
+         },
+    'combined_evolution_M3SAT_128_uwu_1_05_10_01_005':
+        {
+            'name': 'M3SAT, 16 - 128, centred around 4.27 clause density',
+            'fitness_params': (1, .5, 10, .1),
+            'min_approx': 0.05,
+            'independence': True,
+            'model_name': '_uwu',
+            'evolution_type': 'combined',
+            'display': True
+        }
+}
 
 evaluation_models_old = {
     'combined_evolution_MC_24_nonlin_1_05_10_01_005':
