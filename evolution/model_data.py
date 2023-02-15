@@ -25,6 +25,16 @@ evaluation_models = {
             'independence': True,
             'model_name': '_uwu',
             'evolution_type': 'combined',
+            'display': False
+        },
+    'combined_evolution_MC_64_uwu_1_05_10_01_005':
+        {
+            'name': 'MC, 16 - 128, centred around 0.5 edges per node',
+            'fitness_params': (1, .5, 10, .1),
+            'min_approx': 0.05,
+            'independence': True,
+            'model_name': '_uwu',
+            'evolution_type': 'combined',
             'display': True
         }
 }
