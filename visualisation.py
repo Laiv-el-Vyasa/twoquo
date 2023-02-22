@@ -176,7 +176,8 @@ metric_meaning = [
 ]
 
 
-def visualize_evol_results_models(aggregated_approx_data, percent_list, evol_data, solver, size, problem, metric=1):
+def visualize_evol_results_models(aggregated_approx_data, percent_list, evol_data, solver,
+                                  size, problem, metric=1, boxplot=False):
     fig, ax = pyplot.subplots()
     legend_lines = []
     color = 'black'
@@ -186,13 +187,20 @@ def visualize_evol_results_models(aggregated_approx_data, percent_list, evol_dat
     evo_type_dict = {}
     for evol_results, name, evo_type in evol_data:
         evol_x, evol_y = evol_results[metric]
+        if not boxplot:
+            evol_x = np.mean(evol_x)
         color = evo_type_color_dict[evo_type]
         if evo_type in evo_type_dict:
             marker_size = evo_type_dict[evo_type] + 1
         else:
             marker_size = 4
         evo_type_dict[evo_type] = marker_size
-        ax.plot(evol_x, evol_y, color=color, marker=(marker_size, 2), markersize=12)
+        if not boxplot:
+            ax.plot(evol_x, evol_y, color=color, marker=(marker_size, 2), markersize=12)
+        else:
+            for x in evol_x:
+                ax.plot(x, evol_y, color=color, marker=(marker_size, 2), markersize=12)
+            #pyplot.boxplot(evol_x, positions=np.mean(evol_x), vert=False)
         legend_lines.append(lines.Line2D([], [], color=color, linestyle='None',
                                          markersize=12, marker=(marker_size, 2), label=f'{name}'))
     ax.legend(handles=legend_lines)

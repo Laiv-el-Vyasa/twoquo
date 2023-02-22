@@ -228,8 +228,8 @@
         "qubo_size": 128,
         "n_problems": 1000,
         "M3SAT": {
-          "size": [16, 20],
-          "target_density": 1
+          "size": [16, 128],
+          "target_density": 4.27
         },
         "problems": [
           "M3SAT"

@@ -10,7 +10,7 @@ from recommendation import RecommendationEngine
 
 cuda = torch.device('cuda')
 
-cfg = load_cfg(cfg_id='test_evol_mc')
+cfg = load_cfg(cfg_id='test_evol_m3sat')
 qubo_size = cfg['pipeline']['problems']['qubo_size']
 problem = cfg['pipeline']['problems']['problems'][0]
 engine = RecommendationEngine(cfg=cfg)
@@ -315,8 +315,7 @@ def get_param_value(param_string):
     return return_value
 
 
-def check_pipeline_necessity(n_problems):
-    database = engine.get_database()
+def check_pipeline_necessity(n_problems, database):
     db_count = 0
     for _, metadata in database.iter_metadata():
         db_count += 1

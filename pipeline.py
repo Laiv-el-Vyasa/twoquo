@@ -8,7 +8,7 @@ from config import load_cfg
 from approximation import get_approximated_qubos
 from pipeline_util import QUBOGenerator
 from recommendation import RecommendationEngine
-from evolution.evolution_util import check_solution
+from evolution.evolution_util import check_solution, check_pipeline_necessity
 import numpy as np
 from visualisation import qubo_heatmap, approx_quality_score_graphs_problems
 from operator import add
@@ -126,7 +126,8 @@ def get_solution_quality(energy, best_energy, worst_energy, new_quality):
     return quality
 
 
-def pipeline_run(cfg, approx_fixed_number, approx_single_entries, print_bool, save_bool, show_bool, approximation_steps = 29):
+def pipeline_run(cfg, approx_fixed_number, approx_single_entries, print_bool, save_bool,
+                 show_bool, check_pipeline_necessity_bool=False, approximation_steps=29):
     gen = QUBOGenerator(cfg)
     print('approx steps: ', approximation_steps)
     qubos, labels, problems = gen.generate()
@@ -136,6 +137,10 @@ def pipeline_run(cfg, approx_fixed_number, approx_single_entries, print_bool, sa
     # solver_name = 'qbsolv_simulated_annealing'
 
     eng = RecommendationEngine(cfg=cfg)
+    database = eng.get_database()
+    if check_pipeline_necessity_bool:
+        if not check_pipeline_necessity(cfg['pipeline']['problems']['n_problems'], database):
+            return database
     percentage_steps = [((x + 1) / (approximation_steps + 1)) for x in range(approximation_steps)]
     print('percentage steps: ', percentage_steps)
     overall_data = {'approximation_steps': percentage_steps}
@@ -243,7 +248,7 @@ def pipeline_run(cfg, approx_fixed_number, approx_single_entries, print_bool, sa
     if show_bool:
         approx_quality_score_graphs_problems(overall_data, approx_fixed_number, include_zero=True)
 
-    return eng.get_database()
+    return database
 
 
 if __name__ == '__main__':

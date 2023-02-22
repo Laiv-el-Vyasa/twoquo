@@ -22,13 +22,13 @@ from evolution.evolution_util import get_training_dataset, get_fitness_value, ap
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
-run_bool = True
-restart_bool = True
+run_bool = False
+restart_bool = False
 extend_model = False
 model_to_extend = 'combined_evolution_MC_24_uwu_1_05_10_01_005'
 test_case_study = False
-plot_evol_results = False
-compare_types = False
+plot_evol_results = True
+compare_types = True
 
 qubo_size = cfg['pipeline']['problems']['qubo_size']
 problem = cfg['pipeline']['problems']['problems'][0]
@@ -363,7 +363,8 @@ if plot_evol_results:
         approx_single_entries = True
         if qubo_size > 24:
             approx_single_entries = False
-        pipeline_db = pipeline_run(cfg, True, approx_single_entries, False, True, False, approximation_steps=99)
+        pipeline_db = pipeline_run(cfg, True, approx_single_entries, False, True, False,
+                                   check_pipeline_necessity_bool=True, approximation_steps=99)
     for model_descr in evaluation_models:
         fitting_model = check_model_config_fit(model_descr, evaluation_models[model_descr]['independence'])
         if fitting_model and evaluation_models[model_descr]['display']:
@@ -379,16 +380,29 @@ if plot_evol_results:
                 node_edge_cutoff = sum(p.numel() for p in node_model.parameters() if p.requires_grad)
                 print(node_edge_cutoff)
                 edge_model = model_dict['combined'][f'model{model_name}'][1]
-
-                best_solution_tuple = loaded_ga_instance.best_solution()
-                # print(best_solution_tuple)
-                best_solution = best_solution_tuple[0]
-                model_weights_dict_node = torchga.model_weights_as_dict(model=node_model,
-                                                                        weights_vector=best_solution[:node_edge_cutoff])
+                try:
+                    model_weights_dict_node = torch.load(f'best_model_{evolution_type}_{problem}_{qubo_size}_node')
+                    model_weights_dict_edge = torch.load(f'best_model_{evolution_type}_{problem}_{qubo_size}_edge')
+                    print('Stored models loaded')
+                except FileNotFoundError:
+                    best_solution_tuple = loaded_ga_instance.best_solution()
+                    # print(best_solution_tuple)
+                    best_solution = best_solution_tuple[0]
+                    model_weights_dict_node = torchga.model_weights_as_dict(
+                        model=node_model,
+                        weights_vector=best_solution[:node_edge_cutoff]
+                    )
+                    torch.save(model_weights_dict_node,
+                               f'best_model_{evolution_type}_{problem}_{qubo_size}_node')
+                    model_weights_dict_edge = torchga.model_weights_as_dict(
+                        model=edge_model,
+                        weights_vector=best_solution[node_edge_cutoff:]
+                    )
+                    torch.save(
+                        model_weights_dict_edge,
+                        f'best_model_{evolution_type}_{problem}_{qubo_size}_edge'
+                    )
                 node_model.load_state_dict(model_weights_dict_node)
-
-                model_weights_dict_edge = torchga.model_weights_as_dict(model=edge_model,
-                                                                        weights_vector=best_solution[node_edge_cutoff:])
                 edge_model.load_state_dict(model_weights_dict_edge)
                 print('After evaluation: ', node_model)
             else:
@@ -420,7 +434,7 @@ if plot_evol_results:
 
             evol_results = []
             for metric, results in enumerate(solution_quality_list):
-                evol_results.append((np.mean(approx_percent), np.mean(results)))
+                evol_results.append((approx_percent, np.mean(results)))
             evol_data.append((evol_results, evaluation_models[model_descr]['name'],
                               evaluation_models[model_descr]['evolution_type']))
 
@@ -429,7 +443,7 @@ if plot_evol_results:
         if compare_types:
             visualize_evol_results_models(aggregated_problems,
                                           approx_percent_array,
-                                          evol_data, solver, qubo_size, problem)
+                                          evol_data, solver, qubo_size, problem, boxplot=True)
             visualize_evol_results_models(aggregated_problems,
                                           approx_percent_array,
                                           evol_data, solver, qubo_size, problem, metric=2)
