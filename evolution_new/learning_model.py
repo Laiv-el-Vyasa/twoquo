@@ -25,3 +25,7 @@ class LearningModel:
     def get_initial_population(self):
         """Returns an initial population for training purposes"""
         raise NotImplementedError
+
+    @abstractmethod
+    def get_training_dataset(self, config: dict) -> dict:
+        raise NotImplementedError
