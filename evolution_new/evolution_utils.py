@@ -14,36 +14,35 @@ cfg = load_cfg(cfg_id='test_evol_m3sat')
 qubo_size = cfg['pipeline']['problems']['qubo_size']
 problem = cfg['pipeline']['problems']['problems'][0]
 engine = RecommendationEngine(cfg=cfg)
-generator = QUBOGenerator(cfg)
 
 solver = 'qbsolv_simulated_annealing'
 
 
-def get_training_dataset(n_problems, include_loops=True):
-    linearized_qubo_list, qubo_list, energy_list, \
-        solutions_list, problem_list, edge_index_list, \
-        edge_weight_list = get_linearized_qubos(n_problems, include_loops=include_loops)
-    #return torch.from_numpy(np.array(linearized_qubo_list).astype(np.float32)), qubo_list, \
-    return linearized_qubo_list, qubo_list, \
-                energy_list, solutions_list, problem_list, edge_index_list, edge_weight_list
+def get_training_dataset(config: dict) -> dict:
+    qubo_list, problem_list = get_problem_qubos(config)
+    energy_list, solutions_list = get_qubo_solutions(qubo_list)
+    return {
+        'qubo_list': qubo_list,
+        'energy_list': energy_list,
+        'solutions_list': solutions_list,
+        'problem_list': problem_list
+    }
 
 
-def get_linearized_qubos(n_problems, include_loops=True):
-    qubo_list, problem_list = get_problem_qubos(n_problems)
-    linarized_qubo_list = []
-    energy_list = []
+def get_qubo_solutions(qubo_list: list) -> (list, list):
     solutions_list = []
-    edge_index_list = []
-    edge_weight_list = []
+    energy_list = []
     for qubo in qubo_list:
         best_solution, solutions, min_energy = solve_qubo(qubo)
-        linarized_qubo_list.append(linearize_qubo(qubo))
-        edge_index, edge_weights = get_edge_data(qubo, include_loops=include_loops)
-        edge_index_list.append(edge_index)
-        edge_weight_list.append(edge_weights)
-        energy_list.append(min_energy)
         solutions_list.append(solutions)
-    return linarized_qubo_list, qubo_list, energy_list, solutions_list, problem_list, edge_index_list, edge_weight_list
+        energy_list.append(min_energy)
+    return solutions_list, energy_list
+
+
+def get_problem_qubos(config: dict):
+    generator = QUBOGenerator(config)
+    qubos, labels, problems = generator.generate()
+    return qubos, problems
 
 
 def get_quality_of_approxed_qubo(linearized_approx, qubo, solutions, print_solutions=False):
@@ -52,7 +51,7 @@ def get_quality_of_approxed_qubo(linearized_approx, qubo, solutions, print_solut
     if print_solutions:
         print(best_solutions_approx)
     return get_min_solution_quality(best_solutions_approx, qubo, solutions), best_solutions_approx, true_approx, \
-        true_approx / get_nonzero_count(linearize_qubo(qubo))
+           true_approx / get_nonzero_count(linearize_qubo(qubo))
 
 
 def linearize_qubo(qubo):
@@ -147,22 +146,19 @@ def get_tensor_of_structure(ndarray, np_type=np.float32):
     return torch.from_numpy(np.array(ndarray).astype(np_type))
 
 
-def get_problem_qubos(n_problems):
-    qubos, labels, problems = generator.generate()
-    return qubos[:n_problems], problems[:n_problems]
 
 
 def solve_qubo(qubo):  # Returns the best solution / min energy (provided values and order is not always to be trusted)
     metadata = engine.recommend(qubo)
-    #print('Metadata solutions: ', metadata.solutions[solver][0])
-    #print('Metadata energies: ', metadata.energies[solver][0])
+    # print('Metadata solutions: ', metadata.solutions[solver][0])
+    # print('Metadata energies: ', metadata.energies[solver][0])
     solution_list = metadata.solutions[solver][0]
     energy_list = metadata.energies[solver][0]
     calc_energies = []
     for solution in solution_list:
         calc_energies.append(solution.dot(qubo.dot(solution)))
-    #print('Calc energies: ', calc_energies)
-    #print(metadata.solutions[solver], metadata.energies[solver])
+    # print('Calc energies: ', calc_energies)
+    # print(metadata.solutions[solver], metadata.energies[solver])
     return solution_list[np.argmin(calc_energies)], solution_list, np.min(calc_energies)
 
 
@@ -174,12 +170,12 @@ def get_min_solution_quality(approx_solutions, qubo, solutions):
     solution_quality_array = []
     for approx_solution in approx_solutions:
         approx_energy = approx_solution.dot(qubo.dot(approx_solution))
-        #if approx_energy < np.min(min_energy_list):
+        # if approx_energy < np.min(min_energy_list):
         #    print('APPROX BETTER THAN ORIGINAL')
         #    print('Min energy list: ', min_energy_list)
         #    print('Approx energy: ', approx_energy)
         solution_quality = get_solution_quality(approx_energy, min_energy)
-        #print('Solution quality: ', solution_quality)
+        # print('Solution quality: ', solution_quality)
         solution_quality_array.append(solution_quality)
     return np.min(solution_quality_array), approx_solutions[np.argmin(solution_quality_array)]
 
@@ -219,15 +215,15 @@ def get_fitness_value(linearized_approx_list, qubo_list, min_energy_list, soluti
         # print('Qubo:', qubo)
         # print('Non-Zero:', get_nonzero_count(linearize_qubo(qubo)))
         # print('Problem solving time: ', time.time() - problem_time)
-        #print('True approx %: ', true_approx_percent)
-        if not true_approx_percent > min_approx:# or true_approx_percent == 1:
+        # print('True approx %: ', true_approx_percent)
+        if not true_approx_percent > min_approx:  # or true_approx_percent == 1:
             fitness = 0
         fitness_list.append(fitness)
     return np.mean(fitness_list)
 
 
 def aggregate_saved_problems(database, true_approx=False):
-    #database = engine.get_database()
+    # database = engine.get_database()
     qubo_entries = (qubo_size) * (qubo_size + 1) / 2
     aggregation_array = []
     approx_percent_array = []
@@ -447,7 +443,7 @@ def check_m3sat_problem(approx_solutions, problem):
 def evaluate_clause(solution, clause):
     clause_bool = False
     for variable, bool in clause:
-        if (solution[variable] + int(bool)) % 2 == 0:       # literal in clause is positive
+        if (solution[variable] + int(bool)) % 2 == 0:  # literal in clause is positive
             clause_bool = True
             break
     return clause_bool
