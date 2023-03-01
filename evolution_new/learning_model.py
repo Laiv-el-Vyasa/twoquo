@@ -31,4 +31,3 @@ class LearningModel:
     def load_best_model(self, model_name: str):
         """Returns an initial population for training purposes"""
         raise NotImplementedError
-

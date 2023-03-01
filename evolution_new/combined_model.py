@@ -76,13 +76,13 @@ class CombinedModel(LearningModel):
 
     def save_best_model(self, pygad_chromosome: list, model_name: str):
         node_weights, edge_weights = self.get_model_weight_dicts(pygad_chromosome)
-        torch.save(node_weights, f'{model_name}_node')
-        torch.save(edge_weights, f'{model_name}_edge')
+        torch.save(node_weights, f'best_models/{model_name}_node')
+        torch.save(edge_weights, f'best_models/{model_name}_edge')
 
     def load_best_model(self, model_name: str):
         try:
-            node_weights = torch.load(f'{model_name}_node')
-            edge_weights = torch.load(f'{model_name}_edge')
+            node_weights = torch.load(f'best_models/{model_name}_node')
+            edge_weights = torch.load(f'best_models/{model_name}_edge')
             self.apply_weights_to_models(node_weights, edge_weights)
         except FileNotFoundError:
             print('Model hasn`t been trained yet!')
