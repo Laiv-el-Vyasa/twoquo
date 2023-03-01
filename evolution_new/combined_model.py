@@ -6,8 +6,7 @@ import torch
 
 from multiprocessing import Pool
 
-from evolution_utils import get_edge_data, get_diagonal_of_qubo, get_tensor_of_structure, apply_approximation_to_qubo, \
-    linearize_qubo
+from evolution_utils import get_edge_data, get_diagonal_of_qubo, get_tensor_of_structure
 from learning_model import LearningModel
 from neural_networks import CombinedNodeFeaturesUwu, CombinedEdgeDecisionUwu
 

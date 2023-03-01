@@ -30,4 +30,3 @@ learning_parameters['training_name'] = training_name
 # Construct pygad learner
 pygad_learner = PygadLearner(model, learning_parameters, fitness_function)
 pygad_learner.learn_model()
-

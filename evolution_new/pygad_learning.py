@@ -1,4 +1,3 @@
-import numpy as np
 import pygad
 
 from config import load_cfg
@@ -7,15 +6,6 @@ from typing import Callable
 
 from evolution_utils import get_training_dataset
 from visualisation import plot_average_fitness
-
-learning_parameters = {
-    'config_name': 'test_evol_m3sat',
-    'training_name': 'M3SAT_128_1_05_10_01_005',
-    'population': 100,
-    'num_generations': 50,
-    'keep_elitism': 5,
-    'percent_of_parents_mating': 0.2
-}
 
 
 class PygadLearner:
@@ -39,7 +29,7 @@ class PygadLearner:
             ga_instance = pygad.load(f'pygad_trainings/{self.training_name}')
         except FileNotFoundError:
             num_parents_mating = self.learning_parameters['population'] * \
-                                 learning_parameters['percent_of_parents_mating']
+                                 self.learning_parameters['percent_of_parents_mating']
             ga_instance = pygad.GA(num_generations=self.learning_parameters['num_generations'],
                                    # parent_selection_type='rws',
                                    keep_elitism=self.learning_parameters['keep_elitism'],
