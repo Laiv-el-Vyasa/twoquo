@@ -1,18 +1,34 @@
+from training_config import training_config, learning_parameters_config, model_config, \
+    fitness_function_generation_config
 from combined_model import CombinedModel
 from config import load_cfg
 from pygad_learning import PygadLearner
-from evolution_utils import fitness_params_to_string
+from evolution_utils import fitness_params_to_string, construct_fitness_function
 
-config_name = 'test_evol_m3sat'
+# Select training config for training
+training_config = training_config['combined_m3sat']
+
+# Extract all necessary information from config
+config_name = training_config['config_name']
+training_name = training_config['training_name']
 config = load_cfg(config_name)
-fitness_parameters = {
-    'a': 1,
-    'b': 0.5,
-    'c': 10,
-    'd': 0.1,
-    'z': 0.05
-}
 problem = config["pipeline"]["problems"]["problems"][0]
 size = config['pipeline']['problems']['qubo_size']
-training_name = f'combined_{problem}_{size}{fitness_params_to_string(fitness_parameters)}'
+fitness_parameters = training_config['fitness_parameters']
+training_name = f'{training_name}_{problem}_{size}{fitness_params_to_string(fitness_parameters)}'
+
+# Get fitness function
+fitness_function = fitness_function_generation_config[training_config['fitness_function']](fitness_parameters)
+
+# Get network model
+model = model_config[training_config['network_type']](training_config['network_information'])
+
+# Get learning parameters
+learning_parameters = learning_parameters_config[training_config['learning_parameters']]
+learning_parameters['config_name'] = config_name
+learning_parameters['training_name'] = training_name
+
+# Construct pygad learner
+pygad_learner = PygadLearner(model, learning_parameters, fitness_function)
+pygad_learner.learn_model()
 

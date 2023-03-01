@@ -193,7 +193,11 @@ def get_nonzero_count(nparray: np.array) -> int:
     return np.count_nonzero(nparray)
 
 
-def construct_fitness_function(fitness_params: dict) -> Callable[[list, list, list], float]:
+def construct_fitness_function(function_name: str, fitness_params: dict) -> Callable[[list, list, list], float]:
+    return construct_standard_fitness_function(fitness_params)
+
+
+def construct_standard_fitness_function(fitness_params: dict) -> Callable[[list, list, list], float]:
     def get_new_fitness_value(qubo_list: list, approxed_qubo_list: list, problem_list: list) -> float:
         a, b, c, d, cutoff = extract_fitness_params_from_dict(fitness_params)
         fitness_list = []
