@@ -1,9 +1,8 @@
 from training_config import training_config, learning_parameters_config, model_config, \
     fitness_function_generation_config
-from combined_model import CombinedModel
 from config import load_cfg
 from pygad_learning import PygadLearner
-from evolution_utils import fitness_params_to_string, construct_fitness_function
+from evolution_utils import fitness_params_to_string
 
 # Select training config for training
 training_config = training_config['combined_m3sat']
