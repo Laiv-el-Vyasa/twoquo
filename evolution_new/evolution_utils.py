@@ -3,24 +3,24 @@ import time
 import numpy as np
 import torch
 
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 from config import load_cfg
 from pipeline_util import QUBOGenerator
 from recommendation import RecommendationEngine
+from typing import Callable
 
 cuda = torch.device('cuda')
 
 cfg = load_cfg(cfg_id='test_evol_m3sat')
 qubo_size = cfg['pipeline']['problems']['qubo_size']
 problem = cfg['pipeline']['problems']['problems'][0]
-engine = RecommendationEngine(cfg=cfg)
 
 solver = 'qbsolv_simulated_annealing'
 
 
 def get_training_dataset(config: dict) -> dict:
     qubo_list, problem_list = get_problem_qubos(config)
-    energy_list, solutions_list = get_qubo_solutions(qubo_list)
+    energy_list, solutions_list = get_qubo_solutions(qubo_list, config)
     return {
         'qubo_list': qubo_list,
         'energy_list': energy_list,
@@ -29,11 +29,11 @@ def get_training_dataset(config: dict) -> dict:
     }
 
 
-def get_qubo_solutions(qubo_list: list) -> (list, list):
+def get_qubo_solutions(qubo_list: list, config: dict) -> (list, list):
     solutions_list = []
     energy_list = []
     for qubo in qubo_list:
-        best_solution, solutions, min_energy = solve_qubo(qubo)
+        best_solution, solutions, min_energy = solve_qubo(qubo, config)
         solutions_list.append(solutions)
         energy_list.append(min_energy)
     return solutions_list, energy_list
@@ -45,7 +45,7 @@ def get_problem_qubos(config: dict):
     return qubos, problems
 
 
-def get_quality_of_approxed_qubo(linearized_approx, qubo, solutions, print_solutions=False):
+def get_quality_of_approxed_qubo(qubo, approxed_qubo, solutions, print_solutions=False):
     approxed_qubo, true_approx = apply_approximation_to_qubo(linearized_approx, qubo)
     best_solution_approx, best_solutions_approx, min_energy_approx = solve_qubo(approxed_qubo)
     if print_solutions:
@@ -146,9 +146,9 @@ def get_tensor_of_structure(ndarray, np_type=np.float32):
     return torch.from_numpy(np.array(ndarray).astype(np_type))
 
 
-
-
-def solve_qubo(qubo):  # Returns the best solution / min energy (provided values and order is not always to be trusted)
+# Returns the best solution / min energy (provided values and order is not always to be trusted)
+def solve_qubo(qubo: np.array, config: dict):
+    engine = RecommendationEngine(config)
     metadata = engine.recommend(qubo)
     # print('Metadata solutions: ', metadata.solutions[solver][0])
     # print('Metadata energies: ', metadata.energies[solver][0])
@@ -189,10 +189,27 @@ def get_solution_quality(energy, min_energy):  # 0: perfect result, 1: worst res
     return solution_quality
 
 
-def get_nonzero_count(nparray):
-    # print('Linearized approx, to calc approx_qual: ', nparray)
+def get_nonzero_count(nparray: np.array) -> int:
     return np.count_nonzero(nparray)
 
+
+def construct_fitness_function(fitness_params: dict) -> Callable[[list, list, list], float]:
+    def get_new_fitness_value(qubo_list: list, approxed_qubo_list: list, problem_list: list) -> float:
+        a, b, c, d, cutoff = extract_fitness_params_from_dict(fitness_params)
+        fitness_list = []
+        for qubo, approximation, problem in zip(qubo_list, approxed_qubo_list, problem_list):
+            pass
+        return 0.0
+    return get_new_fitness_value
+
+
+def extract_fitness_params_from_dict(fitness_params: dict) -> tuple[float, float, float, float, float]:
+    a = fitness_params['a']
+    b = fitness_params['b']
+    c = fitness_params['c']
+    d = fitness_params['d']
+    z = fitness_params['z']
+    return a, b, c, d, z
 
 def get_fitness_value(linearized_approx_list, qubo_list, min_energy_list, solutions_list, fitness_parameters, problems,
                       min_approx=0):
@@ -309,6 +326,19 @@ def get_param_value(param_string):
     else:
         return_value = int(param_string)
     return return_value
+
+
+def fitness_params_to_string(fitness_params: dict) -> str:
+    fitness_param_string = ''
+    for key in fitness_params:
+        fitness_param_string = fitness_param_string + f'_{fitness_param_to_string(fitness_params[key])}'
+    return fitness_param_string
+
+
+def fitness_param_to_string(param: float) -> str:
+    param_string = str(param)
+    param_string = param_string.replace('.', '')
+    return param_string
 
 
 def check_pipeline_necessity(n_problems, database):

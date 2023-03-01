@@ -28,7 +28,7 @@ class PygadLearner:
         self.training_name = parameters['training_name']
         self.learning_parameters = parameters
         self.config = load_cfg(parameters['config_name'])
-        self.fitness_function = fitness_function
+        self.get_fitness_value = fitness_function
         self.best_fitness = 0
         self.avg_fitness_list = []
         self.avg_fitness_generation = 0
@@ -66,7 +66,7 @@ class PygadLearner:
             qubo_list = problem_dict['qubo_list']
             problem_list = problem_dict['problem_list']
             approxed_qubo_list = self.model.get_approximation(qubo_list, problem_list)
-            fitness = self.fitness_function(qubo_list, approxed_qubo_list, problem_list)
+            fitness = self.get_fitness_value(qubo_list, approxed_qubo_list, problem_list)
             if fitness > self.best_fitness:
                 self.best_fitness = fitness
             self.set_avg_generation_fitness(fitness, solution_idx)
