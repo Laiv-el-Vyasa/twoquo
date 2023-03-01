@@ -21,3 +21,14 @@ class LearningModel:
     def get_initial_population(self, population_size: int) -> list:
         """Returns an initial population for training purposes"""
         raise NotImplementedError
+
+    @abstractmethod
+    def save_best_model(self, pygad_chromosome: list, model_name: str):
+        """Returns an initial population for training purposes"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def load_best_model(self, model_name: str):
+        """Returns an initial population for training purposes"""
+        raise NotImplementedError
+

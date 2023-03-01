@@ -2,6 +2,7 @@ import numpy as np
 from pygad import pygad
 from pygad import torchga
 import pygad.torchga
+import torch
 
 from multiprocessing import Pool
 
@@ -65,17 +66,35 @@ class CombinedModel(LearningModel):
         return return_node_model, return_node_features
 
     def set_model_weights_from_pygad(self, pygad_chromosome: list):
-        model_weights_dict_node = torchga.model_weights_as_dict(model=self.node_model,
-                                                                weights_vector=pygad_chromosome[:self.node_edge_cutoff])
-        self.node_model.load_state_dict(model_weights_dict_node)
-        self.node_model_normalized.load_state_dict(model_weights_dict_node)
-
-        model_weights_dict_edge = torchga.model_weights_as_dict(model=self.edge_model,
-                                                                weights_vector=pygad_chromosome[self.node_edge_cutoff:])
-        self.edge_model.load_state_dict(model_weights_dict_edge)
+        node_weights, edge_weights = self.get_model_weight_dicts(pygad_chromosome)
+        self.apply_weights_to_models(node_weights, edge_weights)
 
     def get_initial_population(self, population_size: int) -> list:
         torch_ga_node = pygad.torchga.TorchGA(model=self.node_model, num_solutions=population_size)
         torch_ga_edge = pygad.torchga.TorchGA(model=self.edge_model, num_solutions=population_size)
         return np.append(torch_ga_node.population_weights, torch_ga_edge.population_weights, axis=-1)
 
+    def save_best_model(self, pygad_chromosome: list, model_name: str):
+        node_weights, edge_weights = self.get_model_weight_dicts(pygad_chromosome)
+        torch.save(node_weights, f'{model_name}_node')
+        torch.save(edge_weights, f'{model_name}_edge')
+
+    def load_best_model(self, model_name: str):
+        try:
+            node_weights = torch.load(f'{model_name}_node')
+            edge_weights = torch.load(f'{model_name}_edge')
+            self.apply_weights_to_models(node_weights, edge_weights)
+        except FileNotFoundError:
+            print('Model hasn`t been trained yet!')
+
+    def get_model_weight_dicts(self, pygad_chromosome: list) -> tuple[dict, dict]:
+        model_weights_dict_node = torchga.model_weights_as_dict(model=self.node_model,
+                                                                weights_vector=pygad_chromosome[:self.node_edge_cutoff])
+        model_weights_dict_edge = torchga.model_weights_as_dict(model=self.edge_model,
+                                                                weights_vector=pygad_chromosome[self.node_edge_cutoff:])
+        return model_weights_dict_node, model_weights_dict_edge
+
+    def apply_weights_to_models(self, node_weights: dict, edge_weights: dict):
+        self.node_model.load_state_dict(node_weights)
+        self.node_model_normalized.load_state_dict(node_weights)
+        self.edge_model.load_state_dict(edge_weights)
