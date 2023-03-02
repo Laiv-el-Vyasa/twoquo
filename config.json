@@ -226,7 +226,7 @@
       "dataset_id": "test_evol_m3sat",
       "problems": {
         "qubo_size": 128,
-        "n_problems": 1000,
+        "n_problems": 100,
         "M3SAT": {
           "size": [16, 128],
           "target_density": 4.27

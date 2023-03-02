@@ -20,7 +20,7 @@ solver = 'qbsolv_simulated_annealing'
 
 def get_training_dataset(config: dict) -> dict:
     qubo_list, problem_list = get_problem_qubos(config)
-    energy_list, solutions_list = get_qubo_solutions(qubo_list, config)
+    solutions_list, energy_list = get_qubo_solutions(qubo_list, config)
     return {
         'qubo_list': qubo_list,
         'energy_list': energy_list,
@@ -29,7 +29,8 @@ def get_training_dataset(config: dict) -> dict:
     }
 
 
-def get_qubo_solutions(qubo_list: list, config: dict) -> (list, list):
+# Solves a list of qubos returning two lists, the first containing the solutions, the second the minimal energies
+def get_qubo_solutions(qubo_list: list, config: dict) -> (list[list], list[float]):
     solutions_list = []
     energy_list = []
     for qubo in qubo_list:
@@ -84,7 +85,6 @@ def apply_approximation_to_qubo(linearized_approx, qubo):
                 if not qubo[i][j] == 0:
                     number_of_true_approx += 1
             linear_index += 1
-    # print('Approxed qubo: ', approxed_qubo.tolist())
     return approxed_qubo, number_of_true_approx
 
 
@@ -156,7 +156,7 @@ def get_tensor_of_structure(ndarray, np_type=np.float32):
 
 # Returns the best solution / min energy (provided values and order is not always to be trusted)
 def solve_qubo(qubo: np.array, config: dict):
-    engine = RecommendationEngine(config)
+    engine = RecommendationEngine(cfg=config)
     metadata = engine.recommend(qubo)
     # print('Metadata solutions: ', metadata.solutions[solver][0])
     # print('Metadata energies: ', metadata.energies[solver][0])
@@ -209,12 +209,12 @@ def construct_fitness_function(function_name: str, fitness_params: dict) -> Call
 
 
 def construct_standard_fitness_function(fitness_params: dict) -> Callable[[list, list, list], float]:
-    def get_new_fitness_value(qubo_list: list, approxed_qubo_list: list, solution_list: list) -> float:
+    def get_new_fitness_value(qubo_list: list, approxed_qubo_list: list, solution_list: list, config: dict) -> float:
         a, b, c, d, min_approx = extract_fitness_params_from_dict(fitness_params)
         fitness_list = []
         for qubo, approximation, solutions in zip(qubo_list, approxed_qubo_list, solution_list):
             solution_quality, best_approx_solution, true_approx_percent = get_quality_of_approxed_qubo(
-                qubo, approximation, solutions, cfg)
+                qubo, approximation, solutions, config)
             fitness = (a * (1 - solution_quality) +
                        b * (1 - np.square(d - true_approx_percent)) +
                        c * np.floor(1 - solution_quality))

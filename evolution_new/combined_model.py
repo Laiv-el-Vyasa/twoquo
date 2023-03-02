@@ -30,10 +30,16 @@ class CombinedModel(LearningModel):
 
     def get_approximation(self, qubo_list: list, problem_list: list) -> list:
         approxed_qubo_list = [None for _ in qubo_list]
+        #approxed_qubo_list = []
         with Pool() as pool:
-            argument_list = [qubo_list, problem_list, [i for i in range(len(qubo_list))]]
+            argument_list = [(qubo, problem, index) for qubo, problem, index in
+                             zip(qubo_list, problem_list, [i for i in range(len(qubo_list))])]
             for approxed_qubo, index in pool.starmap(self.get_approxed_qubo, argument_list):
                 approxed_qubo_list[index] = approxed_qubo
+
+            #for index, (qubo, problem) in enumerate(zip(qubo_list, problem_list)):
+             #   approxed_qubo, _ = self.get_approxed_qubo(qubo, problem, index)
+              #  approxed_qubo_list.append(approxed_qubo)
         return approxed_qubo_list
 
     def get_approxed_qubo(self, qubo, problem, index):
@@ -59,9 +65,7 @@ class CombinedModel(LearningModel):
         return_node_model = self.node_model
         return_node_features = get_diagonal_of_qubo(qubo)
         if 'graph' in problem and 'tsp' in problem:
-            # print('Normalized model choosen!')
             return_node_model = self.node_model_normalized
-        # return_node_features = get_mean_of_qubo_line(qubo)
         return return_node_model, return_node_features
 
     def set_model_weights_from_pygad(self, pygad_chromosome: list):

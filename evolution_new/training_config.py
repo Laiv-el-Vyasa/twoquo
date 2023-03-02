@@ -13,7 +13,7 @@ training_config = {
                 'node_features': 8,
             },
             'fitness_function': 'standard',
-            'fitness_parameters ': {
+            'fitness_parameters': {
                 'a': 1,
                 'b': 0.5,
                 'c': 10,
