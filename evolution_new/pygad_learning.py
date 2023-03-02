@@ -1,3 +1,4 @@
+import numpy as np
 import pygad
 
 from config import load_cfg
@@ -27,6 +28,7 @@ class PygadLearner:
     def initialize_ga_instance(self) -> pygad.GA:
         try:
             ga_instance = pygad.load(f'pygad_trainings/{self.training_name}')
+            self.avg_fitness_list = np.load(f'{self.training_name}_avg_fitness')
         except FileNotFoundError:
             num_parents_mating = self.learning_parameters['population'] * \
                                  self.learning_parameters['percent_of_parents_mating']
@@ -48,6 +50,7 @@ class PygadLearner:
         plot_average_fitness(self.avg_fitness_list)
         self.ga_instance.save(f'pygad_trainings/{self.training_name}')
         self.model.save_best_model(self.ga_instance.best_solution()[0], self.training_name)
+        np.save(f'{self.training_name}_avg_fitness', self.avg_fitness_list)
 
     def get_fitness_function(self) -> Callable[[list, int], float]:
         def fitness_function(solution, solution_idx):
