@@ -29,17 +29,22 @@ class CombinedModel(LearningModel):
         self.node_edge_cutoff = sum(p.numel() for p in self.node_model.parameters() if p.requires_grad)
 
     def get_approximation(self, qubo_list: list, problem_list: list) -> list:
+        approxed_qubo_list = []
+        if len(qubo_list) > 90:
+            approxed_qubo_list = self.get_approximation_multiprocessing(qubo_list, problem_list)
+        else:
+            for index, (qubo, problem) in enumerate(zip(qubo_list, problem_list)):
+                approxed_qubo, _ = self.get_approxed_qubo(qubo, problem, index)
+                approxed_qubo_list.append(approxed_qubo)
+        return approxed_qubo_list
+
+    def get_approximation_multiprocessing(self, qubo_list: list, problem_list: list) -> list:
         approxed_qubo_list = [None for _ in qubo_list]
-        #approxed_qubo_list = []
         with Pool() as pool:
             argument_list = [(qubo, problem, index) for qubo, problem, index in
                              zip(qubo_list, problem_list, [i for i in range(len(qubo_list))])]
             for approxed_qubo, index in pool.starmap(self.get_approxed_qubo, argument_list):
                 approxed_qubo_list[index] = approxed_qubo
-
-            #for index, (qubo, problem) in enumerate(zip(qubo_list, problem_list)):
-             #   approxed_qubo, _ = self.get_approxed_qubo(qubo, problem, index)
-              #  approxed_qubo_list.append(approxed_qubo)
         return approxed_qubo_list
 
     def get_approxed_qubo(self, qubo, problem, index):
