@@ -51,7 +51,7 @@ class PygadLearner:
         plot_average_fitness(self.avg_fitness_list)
         self.ga_instance.save(f'pygad_trainings/{self.training_name}')
         self.model.save_best_model(self.ga_instance.best_solution()[0], self.training_name)
-        np.save(f'{self.training_name}_avg_fitness', self.avg_fitness_list)
+        np.save(f'pygad_trainings/{self.training_name}_avg_fitness', self.avg_fitness_list)
 
     def get_fitness_function(self) -> Callable[[list, int], float]:
         def fitness_function(solution, solution_idx):
