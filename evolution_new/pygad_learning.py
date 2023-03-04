@@ -29,7 +29,7 @@ class PygadLearner:
     def initialize_ga_instance(self) -> pygad.GA:
         try:
             ga_instance = pygad.load(f'pygad_trainings/{self.training_name}')
-            self.avg_fitness_list = np.load(f'{self.training_name}_avg_fitness')
+            self.avg_fitness_list = np.load(f'pygad_trainings/{self.training_name}_avg_fitness.npy')
         except FileNotFoundError:
             num_parents_mating = int(self.learning_parameters['population'] *
                                      self.learning_parameters['percent_of_parents_mating'])
@@ -43,6 +43,7 @@ class PygadLearner:
                                    ),
                                    fitness_func=self.get_fitness_function(),
                                    on_generation=self.callback_generation)
+            print('new training created')
         return ga_instance
 
     def learn_model(self):
