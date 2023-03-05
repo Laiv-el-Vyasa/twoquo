@@ -235,6 +235,21 @@
           "M3SAT"
         ]
       }
+    },
+    "test_evol_m3sat_test": {
+      "base_cfg": "1",
+      "dataset_id": "test_evol_m3sat",
+      "problems": {
+        "qubo_size": 32,
+        "n_problems": 10,
+        "M3SAT": {
+          "size": [4, 32],
+          "target_density": 4.27
+        },
+        "problems": [
+          "M3SAT"
+        ]
+      }
     }
   }
 }
