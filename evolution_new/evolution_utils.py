@@ -2,6 +2,8 @@ import time
 
 import numpy as np
 import torch
+import os
+import shutil
 
 from torch.utils.data import Dataset
 from config import load_cfg
@@ -16,6 +18,17 @@ qubo_size = cfg['pipeline']['problems']['qubo_size']
 problem = cfg['pipeline']['problems']['problems'][0]
 
 solver = 'qbsolv_simulated_annealing'
+
+
+def delete_data():
+    try:
+        os.chdir('../data/')
+        current_dirctory = os.getcwd()
+        for data in os.listdir(current_dirctory):
+            shutil.rmtree(current_dirctory + '/' + data)
+        os.chdir('../evolution_new/')
+    except OSError as e:
+        print("Error: %s" % e.strerror)
 
 
 def get_training_dataset(config: dict) -> dict:

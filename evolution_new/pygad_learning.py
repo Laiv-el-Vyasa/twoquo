@@ -5,7 +5,7 @@ from config import load_cfg
 from learning_model import LearningModel
 from typing import Callable
 
-from evolution_utils import get_training_dataset
+from evolution_utils import get_training_dataset, delete_data
 from visualisation import plot_average_fitness
 
 
@@ -15,21 +15,25 @@ class PygadLearner:
                  parameters: dict,
                  fitness_function: Callable[[list, list, list, dict], float]
                  ):
+        delete_data()
         self.model = model
         self.training_name = parameters['training_name']
         self.learning_parameters = parameters
         self.config = load_cfg(cfg_id=parameters['config_name'])
-        self.get_fitness_value = fitness_function
         self.best_fitness = 0
         self.avg_fitness_list = []
         self.avg_fitness_generation = 0
+        self.avg_fitness_generation_count = 0
         self.avg_duration = []
+        self.get_fitness_value = fitness_function
         self.ga_instance = self.initialize_ga_instance()
 
     def initialize_ga_instance(self) -> pygad.GA:
         try:
             ga_instance = pygad.load(f'pygad_trainings/{self.training_name}')
             self.avg_fitness_list = np.load(f'pygad_trainings/avg_fitness_lists/{self.training_name}_avg_fitness.npy')
+            print('Loaded data: ', np.load(f'pygad_trainings/avg_fitness_lists/{self.training_name}_avg_fitness.npy'))
+            print('Loaded avg fitness list: ', self.avg_fitness_list)
         except FileNotFoundError:
             num_parents_mating = int(self.learning_parameters['population'] *
                                      self.learning_parameters['percent_of_parents_mating'])
@@ -47,11 +51,13 @@ class PygadLearner:
         return ga_instance
 
     def learn_model(self):
+        print('Avg fitness list bevor run: ', self.avg_fitness_list)
         self.ga_instance.run()
         self.model.save_best_model(self.ga_instance.best_solution()[0], self.training_name)
         self.ga_instance.save(f'pygad_trainings/{self.training_name}')
         np.save(f'pygad_trainings/avg_fitness_lists/{self.training_name}_avg_fitness', self.avg_fitness_list)
         self.ga_instance.plot_fitness(title="PyGAD & PyTorch - Iteration vs. Fitness")
+        print('Avg fitness list before print: ', self.avg_fitness_list)
         plot_average_fitness(self.avg_fitness_list)
 
     def get_fitness_function(self) -> Callable[[list, int], float]:
@@ -77,12 +83,16 @@ class PygadLearner:
         print("Generation   = {generation}".format(generation=ga_instance.generations_completed))
         # print("Fitness      = {fitness}".format(fitness=ga_instance.best_solution()[1]))
         print("Fitness      = {fitness}".format(fitness=self.best_fitness))
-        # print(avg_fitness_generation)
+        print('Avg fit generation: ', self.avg_fitness_generation)
         self.avg_fitness_list.append(self.avg_fitness_generation)
+        print('Avg fitness list: ', self.avg_fitness_list)
         print("Avg. Fitness = {fitness}".format(fitness=self.avg_fitness_generation))
         self.avg_fitness_generation = 0
+        self.avg_fitness_generation_count = 0
         print("Avg. Runtime = {time}".format(time=np.mean(self.avg_duration)))
         self.avg_duration = []
 
     def set_avg_generation_fitness(self, fitness: float, solution_id: int):
-        self.avg_fitness_generation = (self.avg_fitness_generation * (solution_id - 1) + fitness) / (solution_id + 1)
+        self.avg_fitness_generation_count += 1
+        self.avg_fitness_generation = (self.avg_fitness_generation * (self.avg_fitness_generation_count - 1) +
+                                       fitness) / self.avg_fitness_generation_count

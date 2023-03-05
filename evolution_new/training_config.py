@@ -42,7 +42,7 @@ training_config = {
         },
     'combined_test':
         {
-            'config_name': 'test_evol_m3sat',
+            'config_name': 'test_evol_m3sat_test',
             'training_name': 'combined_model',
             'learning_parameters': 'test',
             'network_type': 'combined',
