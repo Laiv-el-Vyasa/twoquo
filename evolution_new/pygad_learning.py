@@ -29,7 +29,7 @@ class PygadLearner:
     def initialize_ga_instance(self) -> pygad.GA:
         try:
             ga_instance = pygad.load(f'pygad_trainings/{self.training_name}')
-            self.avg_fitness_list = np.load(f'pygad_trainings/{self.training_name}_avg_fitness.npy')
+            self.avg_fitness_list = np.load(f'pygad_trainings/avg_fitness_lists/{self.training_name}_avg_fitness.npy')
         except FileNotFoundError:
             num_parents_mating = int(self.learning_parameters['population'] *
                                      self.learning_parameters['percent_of_parents_mating'])
@@ -48,11 +48,11 @@ class PygadLearner:
 
     def learn_model(self):
         self.ga_instance.run()
+        self.model.save_best_model(self.ga_instance.best_solution()[0], self.training_name)
+        self.ga_instance.save(f'pygad_trainings/{self.training_name}')
+        np.save(f'pygad_trainings/avg_fitness_lists/{self.training_name}_avg_fitness', self.avg_fitness_list)
         self.ga_instance.plot_fitness(title="PyGAD & PyTorch - Iteration vs. Fitness")
         plot_average_fitness(self.avg_fitness_list)
-        self.ga_instance.save(f'pygad_trainings/{self.training_name}')
-        self.model.save_best_model(self.ga_instance.best_solution()[0], self.training_name)
-        np.save(f'pygad_trainings/{self.training_name}_avg_fitness', self.avg_fitness_list)
 
     def get_fitness_function(self) -> Callable[[list, int], float]:
         def fitness_function(solution, solution_idx):
