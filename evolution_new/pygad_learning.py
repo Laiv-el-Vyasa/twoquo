@@ -13,7 +13,7 @@ class PygadLearner:
     def __init__(self,
                  model: LearningModel,
                  parameters: dict,
-                 fitness_function: Callable[[list, list, list, dict], float]
+                 fitness_function: Callable[[dict, dict], float]
                  ):
         delete_data()
         self.model = model
@@ -62,12 +62,8 @@ class PygadLearner:
         def fitness_function(solution, solution_idx):
             time = ttime()
             self.model.set_model_weights_from_pygad(solution)
-            problem_dict = get_training_dataset(self.config)
-            qubo_list = problem_dict['qubo_list']
-            problem_list = problem_dict['problem_list']
-            solution_list = problem_dict['solutions_list']
-            approxed_qubo_list = self.model.get_approximation(qubo_list, problem_list)
-            fitness = self.get_fitness_value(qubo_list, approxed_qubo_list, solution_list, self.config)
+            problem_dict = self.model.get_approximation(self.model.get_training_dataset(self.config))
+            fitness = self.get_fitness_value(problem_dict, self.config)
             if fitness > self.best_fitness:
                 self.best_fitness = fitness
             self.set_avg_generation_fitness(fitness, solution_idx)

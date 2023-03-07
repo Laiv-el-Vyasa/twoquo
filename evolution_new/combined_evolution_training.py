@@ -5,7 +5,7 @@ from pygad_learning import PygadLearner
 from evolution_utils import fitness_params_to_string
 
 # Select training config for training
-training_config = training_config['combined_mc']
+training_config = training_config['combined_npp']
 
 # Extract all necessary information from config
 config_name = training_config['config_name']

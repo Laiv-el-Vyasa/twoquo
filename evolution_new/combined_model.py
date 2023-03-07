@@ -6,7 +6,7 @@ import torch
 
 from multiprocessing import Pool
 
-from evolution_utils import get_edge_data, get_diagonal_of_qubo, get_tensor_of_structure
+from evolution_utils import get_edge_data, get_diagonal_of_qubo, get_tensor_of_structure, get_training_dataset
 from learning_model import LearningModel
 from neural_networks import CombinedNodeFeaturesUwu, CombinedEdgeDecisionUwu
 
@@ -20,15 +20,18 @@ combined_model_list = {
 
 class CombinedModel(LearningModel):
     def __init__(self, network_information: dict):
-        network_name = network_information['network_name']
-        node_features = network_information['node_features']
+        network_name, node_features = network_information['network_name'], network_information['node_features']
         self.node_model = combined_model_list[network_name][0](node_features, False)
         self.node_model_normalized = combined_model_list[network_name][0](node_features, True)
         self.edge_model = combined_model_list[network_name][1](node_features)
         # Get the cutoff point, where the pygad string has to be sliced
         self.node_edge_cutoff = sum(p.numel() for p in self.node_model.parameters() if p.requires_grad)
 
-    def get_approximation(self, qubo_list: list, problem_list: list) -> list:
+    def get_training_dataset(self, config: dict) -> dict:
+        return get_training_dataset(config)
+
+    def get_approximation(self, problem_dict: dict) -> dict:
+        problem_list, qubo_list = problem_dict['problem_list'], problem_dict['qubo_list']
         approxed_qubo_list = []
         if len(qubo_list) > 90:
             approxed_qubo_list = self.get_approximation_multiprocessing(qubo_list, problem_list)
@@ -36,7 +39,8 @@ class CombinedModel(LearningModel):
             for index, (qubo, problem) in enumerate(zip(qubo_list, problem_list)):
                 approxed_qubo, _ = self.get_approxed_qubo(qubo, problem, index)
                 approxed_qubo_list.append(approxed_qubo)
-        return approxed_qubo_list
+        problem_dict['approxed_qubo_list'] = approxed_qubo_list
+        return problem_dict
 
     def get_approximation_multiprocessing(self, qubo_list: list, problem_list: list) -> list:
         approxed_qubo_list = [None for _ in qubo_list]
