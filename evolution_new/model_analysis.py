@@ -6,6 +6,7 @@ from evolution_new.combined_evolution_training import get_data_from_training_con
 from evolution_new.evolution_utils import get_quality_of_approxed_qubo
 from evolution_new.pygad_learning import PygadLearner
 from evolution_new.learning_model import LearningModel
+from new_visualisation import visualize_evol_results
 
 
 class TrainingAnalysis:
@@ -22,6 +23,11 @@ class TrainingAnalysis:
     def run_analysis(self):
         mean_solution_quality, approx_percent_list = self.get_model_approximation_quality()
         analysis_baseline = self.get_analysis_baseline()
+        visualize_evol_results(analysis_baseline[0], analysis_baseline[1],
+                               (mean_solution_quality, approx_percent_list), self.analysis_name,
+                               self.config["pipeline"]["problems"]["problems"][0],
+                               self.config['pipeline']['problems']['qubo_size'], 'qbsolv_simulated_annealing',
+                               self.analysis_parameters['steps'], boxplot=self.analysis_parameters['boxplot'])
 
     def get_model_approximation_quality(self) -> tuple[float, list]:
         solution_quality_list = []

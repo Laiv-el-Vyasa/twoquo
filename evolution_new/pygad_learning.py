@@ -5,8 +5,8 @@ from config import load_cfg
 from learning_model import LearningModel
 from typing import Callable
 
-from evolution_utils import get_training_dataset, delete_data
-from visualisation import plot_average_fitness
+from evolution_utils import delete_data
+from new_visualisation import plot_average_fitness
 
 
 class PygadLearner:
