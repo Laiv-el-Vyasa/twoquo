@@ -8,9 +8,9 @@ from learning_model import LearningModel
 from evolution_utils import fitness_params_to_string
 
 
-def get_data_from_training_config(config_name: str) -> tuple[LearningModel, dict, Callable[[dict, dict], float]]:
+def get_data_from_training_config(tr_config_name: str) -> tuple[LearningModel, dict, Callable[[dict, dict], float]]:
     # Select training config for training
-    tr_config = training_config[config_name]
+    tr_config = training_config[tr_config_name]
 
     # Extract all necessary information from config
     config_name = tr_config['config_name']
