@@ -55,7 +55,7 @@ class PygadLearner:
         self.ga_instance.save(f'pygad_trainings/{self.training_name}')
         self.ga_instance.plot_fitness(title="PyGAD & PyTorch - Iteration vs. Fitness")
         plot_average_fitness(self.avg_fitness_list)
-        self.model.save_best_model(self.ga_instance.best_solution()[0], self.training_name)
+        self.save_best_model()
         np.save(f'pygad_trainings/avg_fitness_lists/{self.training_name}_avg_fitness', self.avg_fitness_list)
 
     def get_fitness_function(self) -> Callable[[list, int], float]:
@@ -89,3 +89,6 @@ class PygadLearner:
         self.avg_fitness_generation_count += 1
         self.avg_fitness_generation = (self.avg_fitness_generation * (self.avg_fitness_generation_count - 1) +
                                        fitness) / self.avg_fitness_generation_count
+
+    def save_best_model(self):
+        self.model.save_best_model(self.ga_instance.best_solution()[0], self.training_name)
