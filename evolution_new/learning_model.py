@@ -35,6 +35,6 @@ class LearningModel:
         raise NotImplementedError
 
     @abstractmethod
-    def load_best_model(self, model_name: str):
+    def load_best_model(self, model_name: str) -> bool:
         """Returns an initial population for training purposes"""
         raise NotImplementedError

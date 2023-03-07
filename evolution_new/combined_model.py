@@ -91,13 +91,16 @@ class CombinedModel(LearningModel):
         torch.save(node_weights, f'best_models/{model_name}_node')
         torch.save(edge_weights, f'best_models/{model_name}_edge')
 
-    def load_best_model(self, model_name: str):
+    def load_best_model(self, model_name: str) -> bool:
+        loading_successfull = True
         try:
             node_weights = torch.load(f'best_models/{model_name}_node')
             edge_weights = torch.load(f'best_models/{model_name}_edge')
             self.apply_weights_to_models(node_weights, edge_weights)
         except FileNotFoundError:
             print('Model hasn`t been trained yet!')
+            loading_successfull = False
+        return loading_successfull
 
     def get_model_weight_dicts(self, pygad_chromosome: list) -> tuple[dict, dict]:
         model_weights_dict_node = torchga.model_weights_as_dict(model=self.node_model,
