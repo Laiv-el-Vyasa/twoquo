@@ -24,7 +24,7 @@ class TrainingAnalysis:
         mean_solution_quality, approx_percent_list = self.get_model_approximation_quality()
         analysis_baseline = self.get_analysis_baseline()
         visualize_evol_results(analysis_baseline[0], analysis_baseline[1],
-                               (mean_solution_quality, approx_percent_list), self.analysis_name,
+                               (approx_percent_list, mean_solution_quality), self.analysis_name,
                                self.config["pipeline"]["problems"]["problems"][0],
                                self.config['pipeline']['problems']['qubo_size'], 'qbsolv_simulated_annealing',
                                self.analysis_parameters['steps'], boxplot=self.analysis_parameters['boxplot'])
@@ -33,9 +33,10 @@ class TrainingAnalysis:
         solution_quality_list = []
         approx_percent_list = []
         problem_dict = self.model.get_approximation(self.model.get_training_dataset(self.config))
-        approx_qubo_list, solutions_list, qubo_list = problem_dict['approx_qubo_list'], \
+        approx_qubo_list, solutions_list, qubo_list = problem_dict['approxed_qubo_list'], \
                                                       problem_dict['solutions_list'], problem_dict['qubo_list']
-        for qubo, approx_qubo, solutions in zip(qubo_list, approx_qubo_list, solutions_list):
+        for idx, (qubo, approx_qubo, solutions) in enumerate(zip(qubo_list, approx_qubo_list, solutions_list)):
+            print(f'Approximating problem {idx} via model')
             min_solution_quality, _, approx_percent = get_quality_of_approxed_qubo(qubo, approx_qubo,
                                                                                    solutions, self.config)
             solution_quality_list.append((np.floor(1 - min_solution_quality)))
@@ -44,32 +45,35 @@ class TrainingAnalysis:
 
     def get_analysis_baseline(self) -> list[list, list]:
         try:
-            analysis_baseline = np.load(f'analysis_baseline/{self.analysis_name}.npk')
+            analysis_baseline = np.load(f'analysis_baseline/{self.analysis_name}.npy')
+            print('Analysis baseline loaded')
         except FileNotFoundError:
             analysis_baseline = self.get_new_analysis_baseline()
             np.save(f'analysis_baseline/{self.analysis_name}', analysis_baseline)
+        print(analysis_baseline)
         return analysis_baseline
 
     def get_new_analysis_baseline(self) -> list[list, list]:
-        analysis_baseline = np.array([])
+        analysis_baseline = [[], []]
         problem_dict = self.model.get_training_dataset(self.config)
-        stepwise_approx_quality = np.array(self.get_stepwise_approx_quality(problem_dict))
+        stepwise_approx_quality = self.get_stepwise_approx_quality(problem_dict)
         # Prepare array for saving and display
-        analysis_baseline = np.append(analysis_baseline, stepwise_approx_quality)
+        analysis_baseline[0] = stepwise_approx_quality
         step_list = [n / (self.analysis_parameters['steps'] + 1) for n in range(self.analysis_parameters['steps'] + 1)]
-        analysis_baseline = np.append(analysis_baseline, step_list)
+        analysis_baseline[1] = step_list
         return analysis_baseline
 
     def get_stepwise_approx_quality(self, problem_dict: dict) -> list:
         qubo_list, solutions_list = problem_dict['qubo_list'], problem_dict['solutions_list']
         solution_quality_list = []
-        for qubo, solutions in zip(qubo_list, solutions_list):
+        for idx, (qubo, solutions) in enumerate(zip(qubo_list, solutions_list)):
+            print(f'Approximating problem {idx} for baseline')
             solution_quality_list.append(self.get_stepwise_approx_quality_for_qubo(qubo, solutions))
         return self.rotate_solution_quality_list(solution_quality_list)
 
     def get_stepwise_approx_quality_for_qubo(self, qubo: list, solutions: list) -> list:
         stepwise_approx_quality = [1.]
-        approximation_dict = get_approximated_qubos(qubo, False, True, self.analysis_parameters['steps'],
+        approximation_dict, _ = get_approximated_qubos(qubo, False, True, self.analysis_parameters['steps'],
                                                     sorted_approx=self.analysis_parameters['sorted'])
         for i in range(self.analysis_parameters['steps']):
             approx_qubo = approximation_dict[str(i + 1)]['qubo']

@@ -4,7 +4,7 @@ import random
 import numpy as np
 
 
-def get_approximated_qubos(qubo, single_entry_approx, fixed, approximation_steps, sorted_approx=True):
+def get_approximated_qubos(qubo, single_entry_approx, fixed, approximation_steps, sorted_approx=True) -> dict:
     approx_qubos = {}
     qubodict = get_sorted_qubodict(qubo, sorted_approx)
     #print(qubodict)
