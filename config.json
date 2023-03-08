@@ -195,7 +195,7 @@
       "dataset_id": "test_evol_npp",
       "problems": {
         "qubo_size": 64,
-        "n_problems": 1000,
+        "n_problems": 100,
         "NP": {
           "size": [16, 64],
           "transition": 31.0106,
@@ -211,7 +211,7 @@
       "dataset_id": "test_evol_mc",
       "problems": {
         "qubo_size": 128,
-        "n_problems": 10,
+        "n_problems": 1000,
         "MC": {
           "size": [16, 128],
           "edge_node_factor": 0.5

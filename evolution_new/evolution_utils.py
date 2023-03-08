@@ -226,7 +226,7 @@ def construct_standard_fitness_function(fitness_params: dict) -> Callable[[dict,
         a, b, c, d, min_approx = extract_fitness_params_from_dict(fitness_params)
         fitness_list = []
         qubo_list, approxed_qubo_list, solution_list = problem_dict['qubo_list'], problem_dict['approxed_qubo_list'], \
-                                                       problem_dict['solution_list']
+                                                       problem_dict['solutions_list']
         for qubo, approximation, solutions in zip(qubo_list, approxed_qubo_list, solution_list):
             solution_quality, best_approx_solution, true_approx_percent = get_quality_of_approxed_qubo(
                 qubo, approximation, solutions, config)
