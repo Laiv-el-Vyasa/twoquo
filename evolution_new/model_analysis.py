@@ -3,10 +3,10 @@ import numpy as np
 from approximation import get_approximated_qubos
 from config import load_cfg
 from evolution_new.combined_evolution_training import get_data_from_training_config
-from evolution_new.evolution_utils import get_quality_of_approxed_qubo
+from evolution_new.evolution_utils import get_quality_of_approxed_qubo, get_qubo_approx_mask
 from evolution_new.pygad_learning import PygadLearner
 from evolution_new.learning_model import LearningModel
-from new_visualisation import visualize_evol_results
+from new_visualisation import visualize_evol_results, qubo_heatmap
 
 
 class TrainingAnalysis:
@@ -37,6 +37,9 @@ class TrainingAnalysis:
                                                       problem_dict['solutions_list'], problem_dict['qubo_list']
         for idx, (qubo, approx_qubo, solutions) in enumerate(zip(qubo_list, approx_qubo_list, solutions_list)):
             print(f'Approximating problem {idx} via model')
+            if idx < self.analysis_parameters['show_qubo_mask']:
+                qubo_heatmap(qubo)
+                qubo_heatmap(get_qubo_approx_mask(approx_qubo, qubo))
             min_solution_quality, _, approx_percent = get_quality_of_approxed_qubo(qubo, approx_qubo,
                                                                                    solutions, self.config)
             solution_quality_list.append((np.floor(1 - min_solution_quality)))

@@ -101,16 +101,14 @@ def apply_approximation_to_qubo(linearized_approx, qubo):
     return approxed_qubo, number_of_true_approx
 
 
-def get_qubo_approx_mask(linearized_approx, qubo):
+def get_qubo_approx_mask(approxed_qubo, qubo):
     qubo_mask = np.zeros((len(qubo), len(qubo)))
-    linear_index = 0
     for i in range(len(qubo)):
         for j in range(i + 1):
-            if linearized_approx[linear_index] > 0:
+            if not qubo[i][j] == 0 and approxed_qubo[i][j] == 0:
                 qubo_mask[i][j] = 1
                 if not i == j:
                     qubo_mask[j][i] = 1
-            linear_index += 1
     return qubo_mask
 
 

@@ -40,6 +40,25 @@ training_config = {
                 'z': 0.05
             }
         },
+    'combined_gc':
+        {
+            'config_name': 'test_evol_gc',
+            'training_name': 'combined_model',
+            'learning_parameters': 'small',
+            'network_type': 'combined',
+            'network_information': {
+                'network_name': 'combinedModelUwU',
+                'node_features': 8,
+            },
+            'fitness_function': 'standard',
+            'fitness_parameters': {
+                'a': 1,
+                'b': 0.5,
+                'c': 10,
+                'd': 0.1,
+                'z': 0.05
+            }
+        },
     'combined_npp':
         {
             'config_name': 'test_evol_npp',
@@ -98,6 +117,12 @@ learning_parameters_config = {
     'test': {
         'population': 10,
         'num_generations': 5,
+        'keep_elitism': 5,
+        'percent_of_parents_mating': 0.2
+    },
+    'small': {
+        'population': 100,
+        'num_generations': 25,
         'keep_elitism': 5,
         'percent_of_parents_mating': 0.2
     }

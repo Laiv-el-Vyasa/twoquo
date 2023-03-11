@@ -57,6 +57,7 @@ class CombinedModel(LearningModel):
         node_features = node_model.forward(get_tensor_of_structure(node_features),
                                            get_tensor_of_structure(edge_index).long(),
                                            get_tensor_of_structure(edge_weight)).detach()
+        print(f'Problem {index}, node_features: {node_features}')
         approx_mask = np.ones((len(qubo), len(qubo)))
         node_mean_tensor_list = []
         for edge_0, edge_1 in zip(edge_index[0], edge_index[1]):
