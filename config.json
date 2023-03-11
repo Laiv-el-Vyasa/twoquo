@@ -226,7 +226,7 @@
       "dataset_id": "test_evol_gc",
       "problems": {
         "qubo_size": 64,
-        "n_problems": 1000,
+        "n_problems": 10,
         "GC": {
           "size": [16, 32],
           "n_colors": 4,

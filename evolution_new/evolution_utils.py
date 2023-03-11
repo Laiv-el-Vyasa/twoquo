@@ -101,7 +101,7 @@ def apply_approximation_to_qubo(linearized_approx, qubo):
     return approxed_qubo, number_of_true_approx
 
 
-def get_qubo_approx_mask(approxed_qubo, qubo):
+def get_qubo_approx_mask(approxed_qubo: list, qubo: list) -> list:
     qubo_mask = np.zeros((len(qubo), len(qubo)))
     for i in range(len(qubo)):
         for j in range(i + 1):
@@ -110,6 +110,11 @@ def get_qubo_approx_mask(approxed_qubo, qubo):
                 if not i == j:
                     qubo_mask[j][i] = 1
     return qubo_mask
+
+
+def get_small_qubo(qubo: list, n_colors: int) -> list:
+
+    pass
 
 
 def get_edge_data(qubo, include_loops=True):
