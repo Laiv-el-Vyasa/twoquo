@@ -1,13 +1,40 @@
 import copy
 import itertools
+
 import numpy as np
+from numpy import random
+from networkx import erdos_renyi_graph
 
 from transformator.generalizations.graph_based.include_graph_structure import include_graph_structure
 from transformator.generalizations.graph_based.include_edges import \
     include_edges
-from transformator.problems.max_cut import generate_random_edge_number
 from transformator.problems.problem import Problem
 from transformator.common.util import gen_graph
+
+critical_connectivities = {
+    3: 4.69,
+    4: 8.27,
+    5: 13.69
+}
+
+
+def get_random_coloring() -> int:
+    rng = random.default_rng()
+    return rng.integers(3, 5)
+
+
+def get_random_node_number(size: tuple[int, int]) -> int:
+    rng = random.default_rng()
+    return rng.integers(size[0], size[1])
+
+
+def get_random_edge_probability(nodes: int, n_colors: int) -> float:
+    rng = random.default_rng()
+    critical_connectivity = critical_connectivities[n_colors]
+    connectivity = 0
+    while 0 < connectivity < nodes:
+        connectivity = rng.normal(critical_connectivity, critical_connectivity / 2)
+    return connectivity / (nodes - 1)
 
 
 class GraphColoring(Problem):
@@ -63,12 +90,13 @@ class GraphColoring(Problem):
     @classmethod
     def gen_problems(self, cfg, n_problems, size, n_colors, seed=None, **kwargs):
         graphs = []
-        adapted_size = copy.deepcopy(size)
+        n_colors_list = []
         for i in range(n_problems):
-            if cfg['problems']['GC']['random_edges']:
-                adapted_size[1] = generate_random_edge_number(size)
-            graphs.extend(gen_graph(1, adapted_size, seed))
+            n_colors = get_random_coloring()
+            n_colors_list.append(n_colors)
+            nodes = get_random_node_number(size)
+            graphs.extend(erdos_renyi_graph(nodes, get_random_edge_probability(nodes, n_colors)))
         return [
             {"graph": graph, "n_colors": n_colors}
-            for graph in graphs
+            for (graph, n_colors) in zip(graphs, n_colors_list)
         ]
