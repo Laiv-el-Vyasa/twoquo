@@ -20,6 +20,10 @@ combined_model_list = {
 
 
 def get_node_mean_tensor_entry(edge_0: int, edge_1: int, node_features: list, problem: dict) -> list:
+    if 'n_colors' in problem:
+        n_colors = problem['n_colors']
+        edge_0 = int(np.floor(edge_0 / n_colors))
+        edge_1 = int(np.floor(edge_1 / n_colors))
     node_features_0 = np.array(node_features[edge_0].numpy())
     node_features_1 = np.array(node_features[edge_1].numpy())
     return np.mean([node_features_0, node_features_1], axis=0)
