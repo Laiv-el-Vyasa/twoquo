@@ -31,6 +31,29 @@ def delete_data():
         print("Error: %s" % e.strerror)
 
 
+def get_file_name(base_name: str, config: dict, fitness_params: dict) -> str:
+    name = base_name
+    problems = config['pipeline']['problems']['problems']
+    for prob in problems:
+        name = name + '_' + prob
+    name = name + '_' + config['pipeline']['problems']['qubo_size']
+    name = name + fitness_params_to_string(fitness_params)
+    return name
+
+
+def fitness_params_to_string(fitness_params: dict) -> str:
+    fitness_param_string = ''
+    for key in fitness_params:
+        fitness_param_string = fitness_param_string + f'_{fitness_param_to_string(fitness_params[key])}'
+    return fitness_param_string
+
+
+def fitness_param_to_string(param: float) -> str:
+    param_string = str(param)
+    param_string = param_string.replace('.', '')
+    return param_string
+
+
 def get_training_dataset(config: dict) -> dict:
     qubo_list, problem_list = get_problem_qubos(config)
     solutions_list, energy_list = get_qubo_solutions(qubo_list, config)
@@ -375,19 +398,6 @@ def get_param_value(param_string):
     else:
         return_value = int(param_string)
     return return_value
-
-
-def fitness_params_to_string(fitness_params: dict) -> str:
-    fitness_param_string = ''
-    for key in fitness_params:
-        fitness_param_string = fitness_param_string + f'_{fitness_param_to_string(fitness_params[key])}'
-    return fitness_param_string
-
-
-def fitness_param_to_string(param: float) -> str:
-    param_string = str(param)
-    param_string = param_string.replace('.', '')
-    return param_string
 
 
 def check_pipeline_necessity(n_problems, database):

@@ -18,8 +18,6 @@ def get_data_from_training_config(tr_config_name: str) -> tuple[LearningModel, d
     config = load_cfg(cfg_id=config_name)
     problem = config["pipeline"]["problems"]["problems"][0]
     size = config['pipeline']['problems']['qubo_size']
-    fitness_parameters = tr_config['fitness_parameters']
-    training_name = f'{training_name}_{problem}_{size}{fitness_params_to_string(fitness_parameters)}'
 
     # Get fitness function
     fitness_function = fitness_function_generation_config[tr_config['fitness_function']](fitness_parameters)
@@ -29,6 +27,7 @@ def get_data_from_training_config(tr_config_name: str) -> tuple[LearningModel, d
 
     # Get learning parameters
     learning_parameters = learning_parameters_config[tr_config['learning_parameters']]
+    learning_parameters['fitness_parameters'] = tr_config['fitness_parameters']
     learning_parameters['config_name'] = config_name
     learning_parameters['training_name'] = training_name
 

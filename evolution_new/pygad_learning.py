@@ -5,7 +5,7 @@ from config import load_cfg
 from learning_model import LearningModel
 from typing import Callable
 
-from evolution_utils import delete_data
+from evolution_utils import delete_data, get_file_name
 from new_visualisation import plot_average_fitness
 
 
@@ -17,9 +17,10 @@ class PygadLearner:
                  ):
         delete_data()
         self.model = model
-        self.training_name = parameters['training_name']
         self.learning_parameters = parameters
         self.config = load_cfg(cfg_id=parameters['config_name'])
+        self.training_name = get_file_name(parameters['training_name'], self.config,
+                                           self.learning_parameters['fitness_function'])
         self.best_fitness = 0
         self.avg_fitness_list = np.array([])
         self.avg_fitness_generation = 0

@@ -3,7 +3,7 @@ import numpy as np
 from approximation import get_approximated_qubos
 from config import load_cfg
 from evolution_new.combined_evolution_training import get_data_from_training_config
-from evolution_new.evolution_utils import get_quality_of_approxed_qubo, get_qubo_approx_mask
+from evolution_new.evolution_utils import get_quality_of_approxed_qubo, get_qubo_approx_mask, get_file_name
 from evolution_new.pygad_learning import PygadLearner
 from evolution_new.learning_model import LearningModel
 from new_visualisation import visualize_evol_results, qubo_heatmap
@@ -13,8 +13,10 @@ class TrainingAnalysis:
     def __init__(self, config_name: str, analysis_parameters: dict):
         self.model, learning_parameters, fitness_func = get_data_from_training_config(config_name)
         self.pygad_learner = PygadLearner(self.model, learning_parameters, fitness_func)
-        self.analysis_name = analysis_parameters['analysis_name']
         self.config = load_cfg(cfg_id=learning_parameters['config_name'])
+        self.analysis_name = get_file_name(analysis_parameters['analysis_name'], self.config,
+                                           learning_parameters['fitness_parameters'])
+        self.config['pipeline']['problems']['n_problems'] *= 10
         self.analysis_parameters = analysis_parameters
         if not self.model.load_best_model(learning_parameters['training_name']):
             self.pygad_learner.save_best_model()
