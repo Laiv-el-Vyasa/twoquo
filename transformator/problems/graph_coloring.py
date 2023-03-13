@@ -32,8 +32,9 @@ def get_random_edge_probability(nodes: int, n_colors: int) -> float:
     rng = random.default_rng()
     critical_connectivity = critical_connectivities[n_colors]
     connectivity = 0
-    while 0 < connectivity < nodes:
+    while not 0 < connectivity < nodes:
         connectivity = rng.normal(critical_connectivity, critical_connectivity / 2)
+    print(connectivity)
     return connectivity / (nodes - 1)
 
 
@@ -96,6 +97,7 @@ class GraphColoring(Problem):
             n_colors_list.append(n_colors)
             nodes = get_random_node_number(size)
             one_graph = erdos_renyi_graph(nodes, get_random_edge_probability(nodes, n_colors))
+            print(one_graph)
             graphs.append(one_graph)
         return [
             {"graph": graph, "n_colors": n_colors}
