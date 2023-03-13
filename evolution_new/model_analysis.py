@@ -15,7 +15,7 @@ class TrainingAnalysis:
         self.pygad_learner = PygadLearner(self.model, learning_parameters, fitness_func)
         self.config = load_cfg(cfg_id=learning_parameters['config_name'])
         self.analysis_name = get_file_name(analysis_parameters['analysis_name'], self.config,
-                                           learning_parameters['fitness_parameters'])
+                                           learning_parameters['fitness_parameters'], analysis=True)
         self.config['pipeline']['problems']['n_problems'] *= 10
         self.analysis_parameters = analysis_parameters
         if not self.model.load_best_model(learning_parameters['training_name']):

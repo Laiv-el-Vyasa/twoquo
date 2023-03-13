@@ -2,7 +2,7 @@ from model_analysis import TrainingAnalysis
 
 analysis_parameters = {
     'steps': 100,
-    'analysis_name': 'combined_analysis_100_steps_NP',
+    'analysis_name': 'combined_analysis',
     'boxplot': True,
     'sorted': True,
     'show_qubo_mask': 5
