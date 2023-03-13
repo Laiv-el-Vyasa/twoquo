@@ -40,11 +40,11 @@ training_config = {
                 'z': 0.05
             }
         },
-    'combined_gc':
+    'combined_gc_small':
         {
-            'config_name': 'test_evol_gc',
+            'config_name': 'test_evol_gc_small',
             'training_name': 'combined_model',
-            'learning_parameters': 'standard',
+            'learning_parameters': 'small',
             'network_type': 'combined',
             'network_information': {
                 'network_name': 'combinedModelUwU',

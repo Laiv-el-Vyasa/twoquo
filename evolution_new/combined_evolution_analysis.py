@@ -9,6 +9,6 @@ analysis_parameters = {
 }
 
 if __name__ == "__main__":
-    config_name = 'combined_gc'
+    config_name = 'combined_gc_small'
     training_analysis = TrainingAnalysis(config_name, analysis_parameters)
     training_analysis.run_analysis()
