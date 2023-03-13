@@ -113,11 +113,11 @@ def get_qubo_approx_mask(approxed_qubo: list, qubo: list) -> list:
 
 
 def get_small_qubo(qubo: list, n_colors: int) -> list:
-    if len(qubo) % n_colors is not 0:
+    if len(qubo) % n_colors != 0:
         print('QUBO not reducabe!')
         return qubo
     new_size = int(len(qubo) / n_colors)
-    small_qubo = np.zeros(new_size, new_size)
+    small_qubo = np.zeros((new_size, new_size))
     for i in range(new_size):
         for j in range(new_size):
             small_qubo[i][j] = qubo[i * n_colors][j * n_colors]

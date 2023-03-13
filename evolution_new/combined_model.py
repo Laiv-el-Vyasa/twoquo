@@ -65,7 +65,7 @@ class CombinedModel(LearningModel):
     def get_approxed_qubo(self, qubo: list, problem: dict, index: int) -> tuple[list, int]:
         edge_index, edge_weight = get_edge_data(qubo)
         node_features = self.get_node_features(qubo, problem, edge_index, edge_weight)
-        print(f'Problem {index}, node_features: {node_features}')
+        #print(f'Problem {index}, node_features: {node_features}')
         approx_mask = np.ones((len(qubo), len(qubo)))
         node_mean_tensor_list = []
         for edge_0, edge_1 in zip(edge_index[0], edge_index[1]):

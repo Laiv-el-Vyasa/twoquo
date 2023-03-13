@@ -95,7 +95,8 @@ class GraphColoring(Problem):
             n_colors = get_random_coloring()
             n_colors_list.append(n_colors)
             nodes = get_random_node_number(size)
-            graphs.extend(erdos_renyi_graph(nodes, get_random_edge_probability(nodes, n_colors)))
+            one_graph = erdos_renyi_graph(nodes, get_random_edge_probability(nodes, n_colors))
+            graphs.append(one_graph)
         return [
             {"graph": graph, "n_colors": n_colors}
             for (graph, n_colors) in zip(graphs, n_colors_list)

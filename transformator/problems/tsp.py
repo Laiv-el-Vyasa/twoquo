@@ -11,7 +11,6 @@ from transformator.common.util import gen_graph
 from transformator.generalizations.graph_based.include_graph_structure import include_graph_structure
 from transformator.generalizations.graph_based.include_edges import \
     include_edges
-from transformator.problems.max_cut import generate_random_edge_number
 from transformator.problems.problem import Problem
 
 
@@ -82,10 +81,10 @@ class TSP(Problem):
         graphs = []
         adapted_size = copy.deepcopy(size)
         for i in range(n_problems):
-            if cfg['problems']['TSP']['random_edges']:
-                adapted_size[1] = generate_random_edge_number(size)
-                while adapted_size[1] < adapted_size[0]:
-                    adapted_size[1] = generate_random_edge_number(size)
+            #if cfg['problems']['TSP']['random_edges']:
+                #adapted_size[1] = generate_random_edge_number(size)
+                #while adapted_size[1] < adapted_size[0]:
+                    #adapted_size[1] = generate_random_edge_number(size)
             graphs.extend(gen_graph(1, adapted_size, weight_range=weight_range, tsp=True))
         #graphs: List[Graph] = gen_graph(
         #    n_problems=n_problems, size=size, weight_range=weight_range

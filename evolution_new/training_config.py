@@ -44,7 +44,7 @@ training_config = {
         {
             'config_name': 'test_evol_gc',
             'training_name': 'combined_model',
-            'learning_parameters': 'small',
+            'learning_parameters': 'standard',
             'network_type': 'combined',
             'network_information': {
                 'network_name': 'combinedModelUwU',
