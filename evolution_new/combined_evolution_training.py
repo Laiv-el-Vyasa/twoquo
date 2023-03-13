@@ -5,7 +5,7 @@ from training_config import training_config, learning_parameters_config, model_c
 from config import load_cfg
 from pygad_learning import PygadLearner
 from learning_model import LearningModel
-from evolution_utils import fitness_params_to_string
+from evolution_utils import fitness_params_to_string, get_file_name
 
 
 def get_data_from_training_config(tr_config_name: str) -> tuple[LearningModel, dict, Callable[[dict, dict], float]]:
@@ -16,10 +16,9 @@ def get_data_from_training_config(tr_config_name: str) -> tuple[LearningModel, d
     config_name = tr_config['config_name']
     training_name = tr_config['training_name']
     config = load_cfg(cfg_id=config_name)
-    problem = config["pipeline"]["problems"]["problems"][0]
-    size = config['pipeline']['problems']['qubo_size']
 
     # Get fitness function
+    fitness_parameters = tr_config['fitness_parameters']
     fitness_function = fitness_function_generation_config[tr_config['fitness_function']](fitness_parameters)
 
     # Get network model
@@ -27,9 +26,9 @@ def get_data_from_training_config(tr_config_name: str) -> tuple[LearningModel, d
 
     # Get learning parameters
     learning_parameters = learning_parameters_config[tr_config['learning_parameters']]
-    learning_parameters['fitness_parameters'] = tr_config['fitness_parameters']
+    learning_parameters['fitness_parameters'] = fitness_parameters
     learning_parameters['config_name'] = config_name
-    learning_parameters['training_name'] = training_name
+    learning_parameters['training_name'] = get_file_name(training_name, config, fitness_parameters)
 
     return model, learning_parameters, fitness_function
 

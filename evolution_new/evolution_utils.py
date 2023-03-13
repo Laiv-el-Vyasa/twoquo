@@ -36,7 +36,7 @@ def get_file_name(base_name: str, config: dict, fitness_params: dict, analysis=F
     problems = config['pipeline']['problems']['problems']
     for prob in problems:
         name = name + '_' + prob
-    name = name + '_' + config['pipeline']['problems']['qubo_size']
+    name = name + '_' + str(config['pipeline']['problems']['qubo_size'])
     if analysis:
         name = name + '_' + str(steps) + '_steps'
     name = name + fitness_params_to_string(fitness_params)

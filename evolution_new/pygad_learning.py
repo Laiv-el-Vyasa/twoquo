@@ -19,8 +19,7 @@ class PygadLearner:
         self.model = model
         self.learning_parameters = parameters
         self.config = load_cfg(cfg_id=parameters['config_name'])
-        self.training_name = get_file_name(parameters['training_name'], self.config,
-                                           self.learning_parameters['fitness_function'])
+        self.training_name = parameters['training_name']
         self.best_fitness = 0
         self.avg_fitness_list = np.array([])
         self.avg_fitness_generation = 0
