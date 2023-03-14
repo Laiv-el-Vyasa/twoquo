@@ -8,6 +8,7 @@ from multiprocessing import Pool
 
 from torch import nn
 
+from evolution_new.new_visualisation import qubo_heatmap
 from evolution_utils import get_edge_data, get_diagonal_of_qubo, get_tensor_of_structure, get_training_dataset, \
     get_small_qubo
 from learning_model import LearningModel
@@ -86,11 +87,12 @@ class CombinedModel(LearningModel):
         for idx, edge_decision in enumerate(edge_decision_list):
             if edge_decision.detach() <= 0:
                 if 'n_colors' in problem:
-                    approx_mask[edge_index[0][idx]][edge_index[1][idx]] = 0
-                else:
                     n_colors = problem['n_colors']
                     for i in range(n_colors):
                         approx_mask[(edge_index[0][idx] * n_colors) + i][(edge_index[1][idx] * n_colors) + i] = 0
+                else:
+                    approx_mask[edge_index[0][idx]][edge_index[1][idx]] = 0
+        qubo_heatmap(approx_mask)
         return approx_mask
 
     def get_node_model_and_features(self, problem: dict, qubo: list) -> tuple[nn.Module, list]:
