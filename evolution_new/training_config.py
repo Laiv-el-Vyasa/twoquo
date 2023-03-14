@@ -122,7 +122,7 @@ learning_parameters_config = {
     },
     'small': {
         'population': 100,
-        'num_generations': 25,
+        'num_generations': 20,
         'keep_elitism': 5,
         'percent_of_parents_mating': 0.2
     }
