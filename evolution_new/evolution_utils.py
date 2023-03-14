@@ -153,7 +153,7 @@ def get_small_qubo(qubo: list, n_colors: int) -> list:
     return small_qubo
 
 
-def get_edge_data(qubo, include_loops=True):
+def get_edge_data(qubo: list, include_loops=True) -> tuple[list[list, list], list]:
     edge_index = [[], []]
     edge_weight = []
     for i in range(len(qubo)):

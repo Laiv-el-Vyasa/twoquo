@@ -6,6 +6,8 @@ import torch
 
 from multiprocessing import Pool
 
+from torch import nn
+
 from evolution_utils import get_edge_data, get_diagonal_of_qubo, get_tensor_of_structure, get_training_dataset, \
     get_small_qubo
 from learning_model import LearningModel
@@ -17,16 +19,6 @@ combined_model_list = {
         CombinedEdgeDecisionUwu
     ]
 }
-
-
-def get_node_mean_tensor_entry(edge_0: int, edge_1: int, node_features: list, problem: dict) -> list:
-    if 'n_colors' in problem:
-        n_colors = problem['n_colors']
-        edge_0 = int(np.floor(edge_0 / n_colors))
-        edge_1 = int(np.floor(edge_1 / n_colors))
-    node_features_0 = np.array(node_features[edge_0].numpy())
-    node_features_1 = np.array(node_features[edge_1].numpy())
-    return np.mean([node_features_0, node_features_1], axis=0)
 
 
 class CombinedModel(LearningModel):
@@ -63,36 +55,45 @@ class CombinedModel(LearningModel):
         return approxed_qubo_list
 
     def get_approxed_qubo(self, qubo: list, problem: dict, index: int) -> tuple[list, int]:
-        edge_index, edge_weight = get_edge_data(qubo)
-        node_features = self.get_node_features(qubo, problem, edge_index, edge_weight)
-        #print(f'Problem {index}, node_features: {node_features}')
-        approx_mask = np.ones((len(qubo), len(qubo)))
+        edge_index, node_features = self.get_edge_index_and_node_features(qubo, problem)
+        # print(f'Problem {index}, node_features: {node_features}')
         node_mean_tensor_list = []
         for edge_0, edge_1 in zip(edge_index[0], edge_index[1]):
-            node_mean_tensor_list.append(get_node_mean_tensor_entry(edge_0, edge_1, node_features, problem))
+            node_features_0 = np.array(node_features[edge_0].numpy())
+            node_features_1 = np.array(node_features[edge_1].numpy())
+            node_mean_tensor_list.append(np.mean([node_features_0, node_features_1], axis=0))
 
-        edge_descision_list = self.edge_model.forward(get_tensor_of_structure(node_mean_tensor_list)).detach()
-        for idx, edge_descision in enumerate(edge_descision_list):
-            if edge_descision.detach() <= 0:
-                approx_mask[edge_index[0][idx]][edge_index[1][idx]] = 0
+        approx_mask = self.get_approx_mask(edge_index, node_mean_tensor_list, qubo, problem)
         return np.multiply(qubo, approx_mask), index
 
-    def get_node_features(self, qubo: list, problem: dict, edge_index: list, edge_weight: list) -> list:
-        if 'n_colors' not in problem:
-            node_model, node_features = self.get_node_model_and_features(problem, qubo)
-            node_features = node_model.forward(get_tensor_of_structure(node_features),
-                                               get_tensor_of_structure(edge_index).long(),
-                                               get_tensor_of_structure(edge_weight)).detach()
+    def get_edge_index_and_node_features(self, qubo: list, problem: dict) -> tuple[list[list, list], list]:
+        if 'n_colors' in problem:
+            calc_qubo = get_small_qubo(qubo, problem['n_colors'])
         else:
-            small_qubo = get_small_qubo(qubo, problem['n_colors'])
-            small_edge_index, small_edge_weights = get_edge_data(small_qubo)
-            node_model, node_features = self.get_node_model_and_features(problem, small_qubo)
-            node_features = node_model.forward(get_tensor_of_structure(node_features),
-                                               get_tensor_of_structure(small_edge_index).long(),
-                                               get_tensor_of_structure(small_edge_weights)).detach()
-        return node_features
+            calc_qubo = qubo
 
-    def get_node_model_and_features(self, problem, qubo):
+        edge_index, edge_weights = get_edge_data(calc_qubo)
+        node_model, node_features = self.get_node_model_and_features(problem, calc_qubo)
+        node_features = node_model.forward(get_tensor_of_structure(node_features),
+                                           get_tensor_of_structure(edge_index).long(),
+                                           get_tensor_of_structure(edge_weights)).detach()
+        return edge_index, node_features
+
+    def get_approx_mask(self, edge_index: list[list, list], node_mean_tensor_list: list,
+                        qubo: list, problem: dict) -> list:
+        approx_mask = np.ones((len(qubo), len(qubo)))
+        edge_decision_list = self.edge_model.forward(get_tensor_of_structure(node_mean_tensor_list)).detach()
+        for idx, edge_decision in enumerate(edge_decision_list):
+            if edge_decision.detach() <= 0:
+                if 'n_colors' in problem:
+                    approx_mask[edge_index[0][idx]][edge_index[1][idx]] = 0
+                else:
+                    n_colors = problem['n_colors']
+                    for i in range(n_colors):
+                        approx_mask[(edge_index[0][idx] * n_colors) + i][(edge_index[1][idx] * n_colors) + i] = 0
+        return approx_mask
+
+    def get_node_model_and_features(self, problem: dict, qubo: list) -> tuple[nn.Module, list]:
         return_node_model = self.node_model
         return_node_features = get_diagonal_of_qubo(qubo)
         if 'graph' in problem and 'tsp' in problem:
