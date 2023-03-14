@@ -31,7 +31,7 @@ def delete_data():
         print("Error: %s" % e.strerror)
 
 
-def get_file_name(base_name: str, config: dict, fitness_params: dict, analysis=False, steps=100) -> str:
+def get_file_name(base_name: str, config: dict, fitness_params: dict, analysis=False, steps=100, ordered=True) -> str:
     name = base_name
     problems = config['pipeline']['problems']['problems']
     for prob in problems:
@@ -39,6 +39,10 @@ def get_file_name(base_name: str, config: dict, fitness_params: dict, analysis=F
     name = name + '_' + str(config['pipeline']['problems']['qubo_size'])
     if analysis:
         name = name + '_' + str(steps) + '_steps'
+        if ordered:
+            name = name + '_ordered'
+        else:
+            name = name + '_random'
     name = name + fitness_params_to_string(fitness_params)
     return name
 
