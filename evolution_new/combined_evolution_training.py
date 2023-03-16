@@ -35,7 +35,7 @@ def get_data_from_training_config(tr_config_name: str) -> tuple[LearningModel, d
 
 # Construct pygad learner
 if __name__ == "__main__":
-    config_name = 'combined_gc_small'
+    config_name = 'combined_gc'
     model, learning_parameters, fitness_func = get_data_from_training_config(config_name)
     pygad_learner = PygadLearner(model, learning_parameters, fitness_func)
     pygad_learner.learn_model()

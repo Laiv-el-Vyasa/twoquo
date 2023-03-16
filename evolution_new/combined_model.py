@@ -37,7 +37,7 @@ class CombinedModel(LearningModel):
     def get_approximation(self, problem_dict: dict) -> dict:
         problem_list, qubo_list = problem_dict['problem_list'], problem_dict['qubo_list']
         approxed_qubo_list = []
-        if len(qubo_list) > 90:
+        if len(qubo_list) > 100:
             approxed_qubo_list = self.get_approximation_multiprocessing(qubo_list, problem_list)
         else:
             for index, (qubo, problem) in enumerate(zip(qubo_list, problem_list)):
@@ -88,11 +88,18 @@ class CombinedModel(LearningModel):
             if edge_decision.detach() <= 0:
                 if 'n_colors' in problem:
                     n_colors = problem['n_colors']
+                    edge_idx_0 = edge_index[0][idx]
+                    edge_idx_1 = edge_index[1][idx]
                     for i in range(n_colors):
-                        approx_mask[(edge_index[0][idx] * n_colors) + i][(edge_index[1][idx] * n_colors) + i] = 0
+                        approx_mask[(edge_idx_0 * n_colors) + i][(edge_idx_1 * n_colors) + i] = 0
+                        if edge_idx_0 == edge_idx_1:
+                            for j in range(i):
+                                approx_mask[(edge_idx_0 * n_colors) + i][(edge_idx_1 * n_colors) + j] = 0
+                                approx_mask[(edge_idx_0 * n_colors) + j][(edge_idx_1 * n_colors) + i] = 0
                 else:
                     approx_mask[edge_index[0][idx]][edge_index[1][idx]] = 0
-        qubo_heatmap(approx_mask)
+        # qubo_heatmap(qubo)
+        # qubo_heatmap(approx_mask)
         return approx_mask
 
     def get_node_model_and_features(self, problem: dict, qubo: list) -> tuple[nn.Module, list]:
