@@ -1,14 +1,62 @@
+from abc import ABC
+
 import numpy as np
+from numpy import random
 
 from transformator.common.util import distance_matrix_to_directed_graph
 from transformator.generalizations.graph_based.include_graph_structure import include_graph_structure
 from transformator.problems.problem import Problem
 
+critical_disorder = 1.07
+scaling_parameter = 0.43
 
-class TSPQuadrants(Problem):
-    def __init__(self, cfg, dist_matrix, constraint, P=10):
+
+def get_random_node_number(size: tuple[int, int]) -> int:
+    rng = random.default_rng()
+    return rng.integers(size[0], size[1])
+
+
+def get_cities_on_circle(N: int) -> list[list[float, float]]:
+    city_coordinates = []
+    radius = N / (2 * np.pi)
+    for i in range(N):
+        city_coordinates.append([radius * np.cos((2 * np.pi) / i), radius * np.sin((2 * np.pi) / i)])
+    return city_coordinates
+
+
+def apply_disorder_to_city(disorder_parameter: float, city_coordinates: list[float, float]) -> list[float, float]:
+    rng = random.default_rng()
+    random_radius = rng.uniform(0, disorder_parameter)
+    random_angle = rng.uniform(0, 2 * np.pi)
+    city_disorder = [random_radius * np.cos(random_angle), random_radius * np.sin(random_angle)]
+    return np.add(city_coordinates, city_disorder)
+
+
+def get_random_disorder_parameter(N: int) -> float:
+    min_value = (0 - critical_disorder) * np.power(N, scaling_parameter)
+    max_value = 40
+    rng = random.default_rng()
+    random_disorder = min_value - 1
+    while not min_value < random_disorder < max_value:
+        rng.normal(critical_disorder, 2 * (critical_disorder - min_value))
+    return random_disorder / np.power(N, scaling_parameter) + critical_disorder
+
+
+def get_distance_matrix(N: int) -> np.ndarray:  # list[list[float]]:
+    random_disorder = get_random_disorder_parameter(N)
+    city_coordinates = [apply_disorder_to_city(random_disorder, city) for city in get_cities_on_circle(N)]
+    dist_matrix = np.zeros(N)
+    for i in range(N):
+        for j in range(i):
+            dist = np.sqrt(np.sum(np.subtract(city_coordinates[i], city_coordinates[j]) ** 2, axis=1))
+            dist_matrix[i][j] = dist
+            dist_matrix[j][i] = dist
+    return dist_matrix
+
+
+class TSPQuadrants(Problem, ABC):
+    def __init__(self, cfg, dist_matrix, P=10):
         self.dist_matrix = dist_matrix
-        self.constraint = constraint
         self.P = 10
 
     def gen_qubo_matrix(self):
@@ -44,8 +92,8 @@ class TSPQuadrants(Problem):
         include_graph_structure(
             qubo_in=Q,
             graph=distance_matrix_to_directed_graph(self.dist_matrix),
-            positions=n,
-            score_edge_weights=1.0
+            positions=n  # ,
+            # score_edge_weights=1.0
         )
 
         print(Q)
@@ -53,12 +101,13 @@ class TSPQuadrants(Problem):
         return Q
 
     @classmethod
-    def gen_problems(self, cfg, n_problems, size=4, **kwargs):
+    def gen_problems(self, cfg, n_problems, size=(4, 4), **kwargs):
         # TODO: 200 and 100 (contraint) is hardcoded !!
         problems = []
         for _ in range(n_problems):
-            dist_matrix = np.random.random(size=(size, size))
+            N = get_random_node_number(size)
+            dist_matrix = get_distance_matrix(N)
+            print(dist_matrix)
             np.fill_diagonal(dist_matrix, 0)
-            constraint = np.random.random() * 200 + 100
-            problems.append({"dist_matrix": dist_matrix.tolist(), "constraint": constraint})
+            problems.append({"dist_matrix": dist_matrix.tolist(), 'tsp': True})
         return problems

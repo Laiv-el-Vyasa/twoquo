@@ -105,7 +105,7 @@ class CombinedModel(LearningModel):
     def get_node_model_and_features(self, problem: dict, qubo: list) -> tuple[nn.Module, list]:
         return_node_model = self.node_model
         return_node_features = get_diagonal_of_qubo(qubo)
-        if 'graph' in problem and 'tsp' in problem:
+        if 'tsp' in problem:
             return_node_model = self.node_model_normalized
         return return_node_model, return_node_features
 
