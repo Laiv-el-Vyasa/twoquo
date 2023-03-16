@@ -266,6 +266,20 @@
         ]
       }
     },
+    "test_evol_tsp": {
+      "base_cfg": "1",
+      "dataset_id": "test_evol_tsp",
+      "problems": {
+        "qubo_size": 121,
+        "n_problems": 10,
+        "TSP": {
+          "size": [4, 5]
+        },
+        "problems": [
+          "TSP"
+        ]
+      }
+    },
     "test_evol_m3sat_test": {
       "base_cfg": "1",
       "dataset_id": "test_evol_m3sat",

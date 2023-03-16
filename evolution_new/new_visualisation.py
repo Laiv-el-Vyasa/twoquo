@@ -51,3 +51,10 @@ def qubo_heatmap(qubo_matrix):
     fig.colorbar(mesh, ax=ax)
     pyplot.gca().invert_yaxis()
     pyplot.show()
+
+
+def plot_points(point_array: list[list[float, float]]):
+    fig, ax = pyplot.subplots()
+    for point in point_array:
+        ax.plot(point[0], point[1], marker='x')
+    pyplot.show()

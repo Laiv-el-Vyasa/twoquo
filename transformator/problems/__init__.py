@@ -37,7 +37,7 @@ PROBLEM_REGISTRY = {
     "QA": QuadraticAssignment,
     #"QK": QuadraticKnapsack,
     "M3SAT": Max3SAT,
-    "TSP": TSP,
+    "TSP": TSPQuadrants,
     "GI": GraphIsomorphism,
     "SGI": SubGraphIsomorphism,
     "MCQ": MaxClique,

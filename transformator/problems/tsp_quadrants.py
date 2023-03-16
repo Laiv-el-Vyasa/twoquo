@@ -3,6 +3,7 @@ from abc import ABC
 import numpy as np
 from numpy import random
 
+from evolution_new.new_visualisation import plot_points
 from transformator.common.util import distance_matrix_to_directed_graph
 from transformator.generalizations.graph_based.include_graph_structure import include_graph_structure
 from transformator.problems.problem import Problem
@@ -13,14 +14,18 @@ scaling_parameter = 0.43
 
 def get_random_node_number(size: tuple[int, int]) -> int:
     rng = random.default_rng()
-    return rng.integers(size[0], size[1])
+    return rng.integers(size[0], size[1] + 1)
 
 
 def get_cities_on_circle(N: int) -> list[list[float, float]]:
     city_coordinates = []
     radius = N / (2 * np.pi)
     for i in range(N):
-        city_coordinates.append([radius * np.cos((2 * np.pi) / i), radius * np.sin((2 * np.pi) / i)])
+        phi = (i / N) * (2 * np.pi)
+        #city_coordinates.append([radius * np.cos((2 * np.pi) / (i + 1)), radius * np.sin((2 * np.pi) / (i + 1))])
+        city_coordinates.append([radius * np.cos(phi), radius * np.sin(phi)])
+    # print(city_coordinates)
+    # plot_points(city_coordinates)
     return city_coordinates
 
 
@@ -38,24 +43,27 @@ def get_random_disorder_parameter(N: int) -> float:
     rng = random.default_rng()
     random_disorder = min_value - 1
     while not min_value < random_disorder < max_value:
-        rng.normal(critical_disorder, 2 * (critical_disorder - min_value))
+        random_disorder = rng.normal(critical_disorder, 2 * (critical_disorder - min_value))
     return random_disorder / np.power(N, scaling_parameter) + critical_disorder
 
 
 def get_distance_matrix(N: int) -> np.ndarray:  # list[list[float]]:
+    print(N)
     random_disorder = get_random_disorder_parameter(N)
+    print(random_disorder)
     city_coordinates = [apply_disorder_to_city(random_disorder, city) for city in get_cities_on_circle(N)]
-    dist_matrix = np.zeros(N)
+    # plot_points(city_coordinates)
+    dist_matrix = np.zeros((N, N))
     for i in range(N):
         for j in range(i):
-            dist = np.sqrt(np.sum(np.subtract(city_coordinates[i], city_coordinates[j]) ** 2, axis=1))
+            dist = np.sqrt(np.sum(np.subtract(city_coordinates[i], city_coordinates[j]) ** 2))
             dist_matrix[i][j] = dist
             dist_matrix[j][i] = dist
     return dist_matrix
 
 
 class TSPQuadrants(Problem, ABC):
-    def __init__(self, cfg, dist_matrix, P=10):
+    def __init__(self, cfg, dist_matrix, tsp=True, P=10):
         self.dist_matrix = dist_matrix
         self.P = 10
 
@@ -102,12 +110,10 @@ class TSPQuadrants(Problem, ABC):
 
     @classmethod
     def gen_problems(self, cfg, n_problems, size=(4, 4), **kwargs):
-        # TODO: 200 and 100 (contraint) is hardcoded !!
         problems = []
         for _ in range(n_problems):
             N = get_random_node_number(size)
             dist_matrix = get_distance_matrix(N)
-            print(dist_matrix)
-            np.fill_diagonal(dist_matrix, 0)
+            print('Dist matrix: ', dist_matrix)
             problems.append({"dist_matrix": dist_matrix.tolist(), 'tsp': True})
         return problems
