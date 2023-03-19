@@ -5,6 +5,7 @@ import numpy as np
 from networkx import Graph
 from numpy.typing import NDArray
 
+from evolution_new.new_visualisation import qubo_heatmap
 from transformator.common.exceptions import BadProblemParametersError, \
     EmptyGraphError
 from transformator.common.util import gen_graph
@@ -66,6 +67,7 @@ class TSP(Problem):
         )
 
         Q = (Q + Q.T) / 2  # make it symmetrical
+        qubo_heatmap(Q)
         return Q
 
     @classmethod

@@ -58,3 +58,22 @@ def plot_points(point_array: list[list[float, float]]):
     for point in point_array:
         ax.plot(point[0], point[1], marker='x')
     pyplot.show()
+
+
+def plot_cities_with_solution(cities, solution):
+    print(solution)
+    fig, ax = pyplot.subplots()
+    for idx, city in enumerate(cities):
+        ax.plot(city[0], city[1], marker=str(idx + 1))
+
+    n = len(cities)
+    path = [0 for i in range(n)]
+    for i in range(n):
+        for j in range(n):
+            if solution[i * n + j]:
+                path[j] = i
+
+    for i in range(n-1):
+        ax.plot([cities[path[i]][0], cities[path[i + 1]][0]], [cities[path[i]][1], cities[path[i + 1]][1]])
+    ax.plot([cities[path[n - 1]][0], cities[path[0]][0]], [cities[path[n - 1]][1], cities[path[0]][1]])
+    pyplot.show()

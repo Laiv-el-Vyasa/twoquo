@@ -19,6 +19,7 @@ def get_random_node_number(size: tuple[int, int]) -> int:
 
 def get_cities(N: int) -> list[list[float, float]]:
     random_disorder = get_random_disorder_parameter(N)
+    # random_disorder = 0
     return [apply_disorder_to_city(random_disorder, city) for city in get_cities_on_circle(N)]
 
 
@@ -64,7 +65,7 @@ def get_distance_matrix(N: int, city_coordinates: list[list[float, float]]) -> n
 
 
 class TSPQuadrants(Problem, ABC):
-    def __init__(self, cfg, dist_matrix, tsp=True, P=20):
+    def __init__(self, cfg, dist_matrix, cities, tsp=True, P=20):
         self.dist_matrix = dist_matrix
         self.P = P
 
@@ -91,7 +92,9 @@ class TSPQuadrants(Problem, ABC):
 
         # add distance submatrices to QUBO
         for i in range(n - 1):
+            print(i)
             Q[i * n: i * n + n, (i + 1) * n: (i + 1) * n + n] += self.dist_matrix
+        qubo_heatmap(Q)
         # for the trip back home from the last city
         Q[:n, -n:] += self.dist_matrix
 

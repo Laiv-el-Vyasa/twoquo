@@ -271,9 +271,9 @@
       "dataset_id": "test_evol_tsp",
       "problems": {
         "qubo_size": 121,
-        "n_problems": 10,
+        "n_problems": 1,
         "TSP": {
-          "size": [4, 4]
+          "size": [5, 5]
         },
         "problems": [
           "TSP"
