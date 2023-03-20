@@ -2,6 +2,7 @@ from matplotlib import pyplot
 import matplotlib.lines as lines
 import numpy as np
 from config import load_cfg
+import itertools
 
 
 def visualize_evol_results(baseline_approx_data, percent_list, evol_results, model_name,
@@ -60,11 +61,12 @@ def plot_points(point_array: list[list[float, float]]):
     pyplot.show()
 
 
-def plot_cities_with_solution(cities, solution):
+def plot_cities_with_solution(cities: list[list[float, float]], solution: list[int], dist_matrix: list[list[float]]):
     print(solution)
     fig, ax = pyplot.subplots()
     for idx, city in enumerate(cities):
-        ax.plot(city[0], city[1], marker=str(idx + 1))
+        ax.plot(city[0], city[1], marker='x')
+        pyplot.text(city[0], city[1], str(idx + 1))
 
     n = len(cities)
     path = [0 for i in range(n)]
@@ -76,4 +78,36 @@ def plot_cities_with_solution(cities, solution):
     for i in range(n-1):
         ax.plot([cities[path[i]][0], cities[path[i + 1]][0]], [cities[path[i]][1], cities[path[i + 1]][1]])
     ax.plot([cities[path[n - 1]][0], cities[path[0]][0]], [cities[path[n - 1]][1], cities[path[0]][1]])
+
+    length = 0
+    for i in range(n-1):
+        length += dist_matrix[path[i]][path[i + 1]]
+    length += dist_matrix[path[0]][path[n - 1]]
+    print(f'The solutions suggests a path length of {length:.4f}!')
     pyplot.show()
+
+
+def bruteforce_verification(cities: list[list[float, float]], distance_matrix: list[list[float]]):
+    print(f'\n\nStarting brute-force verification')
+    # all permutations of city choices
+    permutations = np.array(list(itertools.permutations(range(len(cities)), len(cities))))
+
+    #set up empty total distance vector
+    all_perm_dists = [0]*permutations.shape[0]
+
+    # calculate all distances
+    for i in range(permutations.shape[0]):
+        for j in range(permutations.shape[1]-1):
+            c1 = permutations[i, j]   # choice 1
+            c2 = permutations[i, j+1]  # choice 2
+            all_perm_dists[i] += distance_matrix[c1][c2]
+        all_perm_dists[i] += distance_matrix[permutations[i, 0]][permutations[i, len(cities) - 1]]
+
+    #distances are rounded to 4 decimals because of floating point issues
+    min_dist = round(min(all_perm_dists), 4)
+    min_routes = permutations[np.argwhere(np.around(all_perm_dists, 4) == min_dist).flatten()]
+    min_routes_alph = [[min_routes[i, j] + 1 for j in range(min_routes.shape[1])]
+                       for i in range(min_routes.shape[0])]
+
+    # Note that for the brute force analyses, the final return back to the initial city is included in the displayed output.
+    print(f'The shortest cycle is {min_dist:.4f} units \nFor routes:\n{min_routes_alph}')

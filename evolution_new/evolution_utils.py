@@ -7,7 +7,7 @@ import shutil
 
 from torch.utils.data import Dataset
 from config import load_cfg
-from evolution_new.new_visualisation import plot_cities_with_solution
+from evolution_new.new_visualisation import plot_cities_with_solution, bruteforce_verification
 from pipeline_util import QUBOGenerator
 from recommendation import RecommendationEngine
 from typing import Callable
@@ -64,7 +64,8 @@ def fitness_param_to_string(param: float) -> str:
 def get_training_dataset(config: dict) -> dict:
     qubo_list, problem_list = get_problem_qubos(config)
     solutions_list, energy_list = get_qubo_solutions(qubo_list, config)
-    plot_cities_with_solution(problem_list[0]['cities'], solutions_list[0][0])
+    bruteforce_verification(problem_list[0]['cities'], problem_list[0]['dist_matrix'])
+    plot_cities_with_solution(problem_list[0]['cities'], solutions_list[0][0], problem_list[0]['dist_matrix'])
     return {
         'qubo_list': qubo_list,
         'energy_list': energy_list,

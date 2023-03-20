@@ -20,7 +20,8 @@ def get_random_node_number(size: tuple[int, int]) -> int:
 def get_cities(N: int) -> list[list[float, float]]:
     random_disorder = get_random_disorder_parameter(N)
     # random_disorder = 0
-    return [apply_disorder_to_city(random_disorder, city) for city in get_cities_on_circle(N)]
+    #return [apply_disorder_to_city(random_disorder, city) for city in get_cities_on_circle(N)]
+    return [[0., 0.], [1., 1.], [2., -1.], [3., 0.], [4., -1.]]
 
 
 def get_cities_on_circle(N: int) -> list[list[float, float]]:
