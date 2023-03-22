@@ -174,6 +174,15 @@ def get_small_qubo(qubo: list, n_colors: int) -> list:
     return small_qubo
 
 
+def get_reducability_number(prob: dict) -> int:
+    n = 0
+    if 'n_colors' in prob:
+        n = prob['n_colors']
+    elif 'tsp' in prob:
+        n = len(prob['cities'])
+    return n
+
+
 def get_edge_data(qubo: list, include_loops=True) -> tuple[list[list, list], list]:
     edge_index = [[], []]
     edge_weight = []

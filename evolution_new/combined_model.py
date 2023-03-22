@@ -11,7 +11,7 @@ from torch import nn
 
 from evolution_new.new_visualisation import qubo_heatmap
 from evolution_utils import get_edge_data, get_diagonal_of_qubo, get_tensor_of_structure, get_training_dataset, \
-    get_small_qubo
+    get_small_qubo, get_reducability_number
 from learning_model import LearningModel
 from neural_networks import CombinedNodeFeaturesUwu, CombinedEdgeDecisionUwu
 
@@ -59,7 +59,6 @@ class CombinedModel(LearningModel):
     def get_approxed_qubo(self, qubo: list, problem: dict, index: int) -> tuple[list, int]:
         edge_index, node_features = self.get_edge_index_and_node_features(qubo, problem)
         print(f'Problem {index}, node_features: {node_features}')
-        sys.exit("Error message")
         node_mean_tensor_list = []
         for edge_0, edge_1 in zip(edge_index[0], edge_index[1]):
             node_features_0 = np.array(node_features[edge_0].numpy())
@@ -72,6 +71,8 @@ class CombinedModel(LearningModel):
     def get_edge_index_and_node_features(self, qubo: list, problem: dict) -> tuple[list[list, list], list]:
         if 'n_colors' in problem:
             calc_qubo = get_small_qubo(qubo, problem['n_colors'])
+        elif 'tsp' in problem:
+            calc_qubo = get_small_qubo(qubo, len(problem['cities']))
         else:
             calc_qubo = qubo
 
@@ -89,16 +90,16 @@ class CombinedModel(LearningModel):
         edge_decision_list = self.edge_model.forward(get_tensor_of_structure(node_mean_tensor_list)).detach()
         for idx, edge_decision in enumerate(edge_decision_list):
             if edge_decision.detach() <= 0:
-                if 'n_colors' in problem:
-                    n_colors = problem['n_colors']
+                n = get_reducability_number(problem)
+                if n > 0:
                     edge_idx_0 = edge_index[0][idx]
                     edge_idx_1 = edge_index[1][idx]
-                    for i in range(n_colors):
-                        approx_mask[(edge_idx_0 * n_colors) + i][(edge_idx_1 * n_colors) + i] = 0
+                    for i in range(n):
+                        approx_mask[(edge_idx_0 * n) + i][(edge_idx_1 * n) + i] = 0
                         if edge_idx_0 == edge_idx_1:
                             for j in range(i):
-                                approx_mask[(edge_idx_0 * n_colors) + i][(edge_idx_1 * n_colors) + j] = 0
-                                approx_mask[(edge_idx_0 * n_colors) + j][(edge_idx_1 * n_colors) + i] = 0
+                                approx_mask[(edge_idx_0 * n) + i][(edge_idx_1 * n) + j] = 0
+                                approx_mask[(edge_idx_0 * n) + j][(edge_idx_1 * n) + i] = 0
                 else:
                     approx_mask[edge_index[0][idx]][edge_index[1][idx]] = 0
         # qubo_heatmap(qubo)
