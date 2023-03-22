@@ -273,7 +273,7 @@
         "qubo_size": 121,
         "n_problems": 1,
         "TSP": {
-          "size": [5, 5]
+          "size": [6, 11]
         },
         "problems": [
           "TSP"

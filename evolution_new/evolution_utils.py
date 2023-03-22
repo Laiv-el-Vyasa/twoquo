@@ -7,7 +7,8 @@ import shutil
 
 from torch.utils.data import Dataset
 from config import load_cfg
-from evolution_new.new_visualisation import plot_cities_with_solution, bruteforce_verification
+from evolution_new.new_visualisation import plot_cities_with_solution, bruteforce_verification, qubo_heatmap, \
+    get_best_solution
 from pipeline_util import QUBOGenerator
 from recommendation import RecommendationEngine
 from typing import Callable
@@ -19,6 +20,8 @@ qubo_size = cfg['pipeline']['problems']['qubo_size']
 problem = cfg['pipeline']['problems']['problems'][0]
 
 solver = 'qbsolv_simulated_annealing'
+
+check_tsp = False
 
 
 def delete_data():
@@ -61,11 +64,26 @@ def fitness_param_to_string(param: float) -> str:
     return param_string
 
 
+def check_tsp_solutions(qubo_list:list, problem_list: list, solutions_list: list):
+    for i in range(len(problem_list)):
+        dist1, best_path1 = bruteforce_verification(problem_list[i]['cities'], problem_list[i]['dist_matrix'])
+        dist2, best_path2 = get_best_solution(solutions_list[i], problem_list[i]['dist_matrix'])
+        if not dist2 == dist1:
+            print(dist1, dist2)
+            print("WRONG SOLUTION FOUND")
+            print(solutions_list[i])
+            print(problem_list[i])
+            plot_cities_with_solution(problem_list[i]['cities'], best_path1)
+            plot_cities_with_solution(problem_list[i]['cities'], best_path2)
+            print(qubo_list[i])
+            qubo_heatmap(qubo_list[i])
+
+
 def get_training_dataset(config: dict) -> dict:
     qubo_list, problem_list = get_problem_qubos(config)
     solutions_list, energy_list = get_qubo_solutions(qubo_list, config)
-    bruteforce_verification(problem_list[0]['cities'], problem_list[0]['dist_matrix'])
-    plot_cities_with_solution(problem_list[0]['cities'], solutions_list[0][0], problem_list[0]['dist_matrix'])
+    if 'tsp' in problem_list[0] and check_tsp:
+        check_tsp_solutions(qubo_list, problem_list, solutions_list)
     return {
         'qubo_list': qubo_list,
         'energy_list': energy_list,

@@ -20,8 +20,8 @@ def get_random_node_number(size: tuple[int, int]) -> int:
 def get_cities(N: int) -> list[list[float, float]]:
     random_disorder = get_random_disorder_parameter(N)
     # random_disorder = 0
-    #return [apply_disorder_to_city(random_disorder, city) for city in get_cities_on_circle(N)]
-    return [[0., 0.], [1., 1.], [2., -1.], [3., 0.], [4., -1.]]
+    return [apply_disorder_to_city(random_disorder, city) for city in get_cities_on_circle(N)]
+    #return [[0., 0.], [1., 1.], [2., -1.], [3., 0.], [4., -1.]]
 
 
 def get_cities_on_circle(N: int) -> list[list[float, float]]:
@@ -66,12 +66,13 @@ def get_distance_matrix(N: int, city_coordinates: list[list[float, float]]) -> n
 
 
 class TSPQuadrants(Problem, ABC):
-    def __init__(self, cfg, dist_matrix, cities, tsp=True, P=20):
+    def __init__(self, cfg, dist_matrix, cities, tsp=True, P=40):
         self.dist_matrix = dist_matrix
         self.P = P
 
     def gen_qubo_matrix(self):
         n = len(self.dist_matrix)
+
         Q = np.zeros((n ** 2, n ** 2))
 
         U = - self.P * np.eye(n) + 2 * self.P * np.triu(np.ones((n, n)), k=1)
@@ -85,6 +86,7 @@ class TSPQuadrants(Problem, ABC):
             V = np.diag([self.P] * n * i, k=(n - i) * n)
             Q += V
 
+
         # Setting up distance submatrix
         # D = np.zeros((n_city,n_city))
         # for r in range(len(dist)):
@@ -92,16 +94,25 @@ class TSPQuadrants(Problem, ABC):
         # D = D + D.T
 
         # add distance submatrices to QUBO
-        for i in range(n - 1):
-            print(i)
-            Q[i * n: i * n + n, (i + 1) * n: (i + 1) * n + n] += self.dist_matrix
-        qubo_heatmap(Q)
+        #for i in range(n - 1):
+        #    print(i)
+        #    Q[i * n: i * n + n, (i + 1) * n: (i + 1) * n + n] += self.dist_matrix
+        #qubo_heatmap(Q)
         # for the trip back home from the last city
-        Q[:n, -n:] += self.dist_matrix
-
-        qubo_heatmap(Q)
-        print(Q)
-
+        #Q[:n, -n:] += self.dist_matrix
+        for i in range(n):  # City 1
+            for j in range(i):  # City 2
+                dist = self.dist_matrix[i][j]
+                for k in range(n - 1):  # Fill sub diagonal in city-city quadrant with distance
+                    Q[j * n + k][i * n + k + 1] = dist
+                    Q[j * n + k + 1][i * n + k] = dist
+                Q[j * n + (n - 1)][i * n] = dist  # Distance between last and first
+                Q[j * n][i * n + (n - 1)] = dist
+        D = np.diag(np.diagonal(Q))
+        Q += Q.T
+        Q -= D
+        #qubo_heatmap(Q)
+        #print(Q)
         return Q
 
     @classmethod
@@ -111,6 +122,6 @@ class TSPQuadrants(Problem, ABC):
             N = get_random_node_number(size)
             cities = get_cities(N)
             dist_matrix = get_distance_matrix(N, cities)
-            print('Dist matrix: ', dist_matrix)
+            #print('Dist matrix: ', dist_matrix)
             problems.append({"dist_matrix": dist_matrix.tolist(), 'cities': cities, 'tsp': True})
         return problems

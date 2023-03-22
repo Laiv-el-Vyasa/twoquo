@@ -61,34 +61,49 @@ def plot_points(point_array: list[list[float, float]]):
     pyplot.show()
 
 
-def plot_cities_with_solution(cities: list[list[float, float]], solution: list[int], dist_matrix: list[list[float]]):
-    print(solution)
+def get_best_solution(solutions: list[list[int]], dist_matrix: list[list[float]]):
+    n = len(dist_matrix)
+    paths = [[0 for i in range(n)] for sol in solutions]
+    min_length = np.inf
+    best_path = []
+    for h in range(len(solutions)):
+        for i in range(n):
+            for j in range(n):
+                if solutions[h][i * n + j]:
+                    paths[h][j] = i
+
+    for path in paths:
+        length = 0
+        for i in range(n-1):
+            length += dist_matrix[path[i]][path[i + 1]]
+        length += dist_matrix[path[0]][path[n - 1]]
+        if length < min_length:
+            min_length = length
+            best_path = path
+    #print(f'The solutions suggests a path length of {min_length:.4f}!')
+    return round(min_length, 4), best_path
+
+
+def plot_cities_with_solution(cities: list[list[float, float]], path: list[int]):
+    #print(solution)
     fig, ax = pyplot.subplots()
     for idx, city in enumerate(cities):
         ax.plot(city[0], city[1], marker='x')
         pyplot.text(city[0], city[1], str(idx + 1))
 
     n = len(cities)
-    path = [0 for i in range(n)]
-    for i in range(n):
-        for j in range(n):
-            if solution[i * n + j]:
-                path[j] = i
 
     for i in range(n-1):
-        ax.plot([cities[path[i]][0], cities[path[i + 1]][0]], [cities[path[i]][1], cities[path[i + 1]][1]])
-    ax.plot([cities[path[n - 1]][0], cities[path[0]][0]], [cities[path[n - 1]][1], cities[path[0]][1]])
+        ax.plot([cities[path[i]][0], cities[path[i + 1]][0]],
+                [cities[path[i]][1], cities[path[i + 1]][1]])
+    ax.plot([cities[path[n - 1]][0], cities[path[0]][0]],
+            [cities[path[n - 1]][1], cities[path[0]][1]])
 
-    length = 0
-    for i in range(n-1):
-        length += dist_matrix[path[i]][path[i + 1]]
-    length += dist_matrix[path[0]][path[n - 1]]
-    print(f'The solutions suggests a path length of {length:.4f}!')
-    pyplot.show()
+    #pyplot.show()
 
 
 def bruteforce_verification(cities: list[list[float, float]], distance_matrix: list[list[float]]):
-    print(f'\n\nStarting brute-force verification')
+    # print(f'\n\nStarting brute-force verification')
     # all permutations of city choices
     permutations = np.array(list(itertools.permutations(range(len(cities)), len(cities))))
 
@@ -106,8 +121,9 @@ def bruteforce_verification(cities: list[list[float, float]], distance_matrix: l
     #distances are rounded to 4 decimals because of floating point issues
     min_dist = round(min(all_perm_dists), 4)
     min_routes = permutations[np.argwhere(np.around(all_perm_dists, 4) == min_dist).flatten()]
-    min_routes_alph = [[min_routes[i, j] + 1 for j in range(min_routes.shape[1])]
+    min_routes_alph = [[min_routes[i, j] for j in range(min_routes.shape[1])]
                        for i in range(min_routes.shape[0])]
 
     # Note that for the brute force analyses, the final return back to the initial city is included in the displayed output.
-    print(f'The shortest cycle is {min_dist:.4f} units \nFor routes:\n{min_routes_alph}')
+    #print(f'The shortest cycle is {min_dist:.4f} units')  # \nFor routes:\n{min_routes_alph}')
+    return min_dist, min_routes_alph[0]
