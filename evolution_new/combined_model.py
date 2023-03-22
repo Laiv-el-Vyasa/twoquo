@@ -60,6 +60,7 @@ class CombinedModel(LearningModel):
         edge_index, node_features = self.get_edge_index_and_node_features(qubo, problem)
         print(f'Problem {index}, node_features: {node_features}')
         node_mean_tensor_list = []
+        sys.exit('Error')
         for edge_0, edge_1 in zip(edge_index[0], edge_index[1]):
             node_features_0 = np.array(node_features[edge_0].numpy())
             node_features_1 = np.array(node_features[edge_1].numpy())
@@ -71,8 +72,6 @@ class CombinedModel(LearningModel):
     def get_edge_index_and_node_features(self, qubo: list, problem: dict) -> tuple[list[list, list], list]:
         if 'n_colors' in problem:
             calc_qubo = get_small_qubo(qubo, problem['n_colors'])
-        elif 'tsp' in problem:
-            calc_qubo = get_small_qubo(qubo, len(problem['cities']))
         else:
             calc_qubo = qubo
 

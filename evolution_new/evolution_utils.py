@@ -178,8 +178,6 @@ def get_reducability_number(prob: dict) -> int:
     n = 0
     if 'n_colors' in prob:
         n = prob['n_colors']
-    elif 'tsp' in prob:
-        n = len(prob['cities'])
     return n
 
 
