@@ -37,14 +37,18 @@ class PygadLearner:
         except FileNotFoundError:
             num_parents_mating = int(self.learning_parameters['population'] *
                                      self.learning_parameters['percent_of_parents_mating'])
+            initial_population = self.model.get_initial_population(self.learning_parameters['population'])
+            if 'load_population' in self.learning_parameters:
+                try:
+                    initial_population = np.load(self.learning_parameters['pop_location'])
+                except FileNotFoundError:
+                    pass
             ga_instance = pygad.GA(num_generations=self.learning_parameters['num_generations'],
                                    # parent_selection_type='rws',
                                    keep_elitism=self.learning_parameters['keep_elitism'],
                                    # crossover_type='scattered',
                                    num_parents_mating=num_parents_mating,
-                                   initial_population=self.model.get_initial_population(
-                                       self.learning_parameters['population']
-                                   ),
+                                   initial_population=initial_population,
                                    fitness_func=self.get_fitness_function(),
                                    on_generation=self.callback_generation)
             print('New training created')
