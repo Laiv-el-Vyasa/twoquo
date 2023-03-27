@@ -29,13 +29,16 @@ def get_data_from_training_config(tr_config_name: str) -> tuple[LearningModel, d
     learning_parameters['fitness_parameters'] = fitness_parameters
     learning_parameters['config_name'] = config_name
     learning_parameters['training_name'] = get_file_name(training_name, config, fitness_parameters)
+    if 'load_population' in tr_config:
+        learning_parameters['load_population'] = True
+        learning_parameters['pop_location'] = tr_config['pop_location']
 
     return model, learning_parameters, fitness_function
 
 
 # Construct pygad learner
 if __name__ == "__main__":
-    config_name = 'combined_gc'
+    config_name = 'combined_gc_2'
     model, learning_parameters, fitness_func = get_data_from_training_config(config_name)
     pygad_learner = PygadLearner(model, learning_parameters, fitness_func)
     pygad_learner.learn_model()

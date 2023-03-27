@@ -59,6 +59,27 @@ training_config = {
                 'z': 0.05
             }
         },
+    'combined_gc_2':
+        {
+            'config_name': 'test_evol_gc',
+            'training_name': 'combined_model_load',
+            'learning_parameters': 'standard',
+            'network_type': 'combined',
+            'load_population': True,
+            'pop_location': 'initial_populations/saved_population_combined_GC_48.npy',
+            'network_information': {
+                'network_name': 'combinedModelUwU',
+                'node_features': 8,
+            },
+            'fitness_function': 'standard',
+            'fitness_parameters': {
+                'a': 1,
+                'b': 0.5,
+                'c': 10,
+                'd': 0.1,
+                'z': 0.05
+            }
+        },
     'combined_tsp':
         {
             'config_name': 'test_evol_tsp',

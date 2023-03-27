@@ -41,6 +41,7 @@ class PygadLearner:
             if 'load_population' in self.learning_parameters:
                 try:
                     initial_population = np.load(self.learning_parameters['pop_location'])
+                    print('Initial population loaded')
                 except FileNotFoundError:
                     pass
             ga_instance = pygad.GA(num_generations=self.learning_parameters['num_generations'],
