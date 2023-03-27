@@ -10,7 +10,7 @@ from recommendation import RecommendationEngine
 
 cuda = torch.device('cuda')
 
-cfg = load_cfg(cfg_id='test_evol_m3sat')
+cfg = load_cfg(cfg_id='test_evol_gc_small')
 qubo_size = cfg['pipeline']['problems']['qubo_size']
 problem = cfg['pipeline']['problems']['problems'][0]
 engine = RecommendationEngine(cfg=cfg)

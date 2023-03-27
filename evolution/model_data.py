@@ -35,6 +35,16 @@ evaluation_models = {
             'independence': True,
             'model_name': '_uwu',
             'evolution_type': 'combined',
+            'display': False
+        },
+    'uniform_problem_generation/combined_evolution_GC_48_uwu_1_05_10_01_005_old':
+        {
+            'name': 'combined model, GC, 48, compression',
+            'fitness_params': (1, .5, 10, .1),
+            'min_approx': 0.05,
+            'independence': True,
+            'model_name': '_uwu',
+            'evolution_type': 'combined',
             'display': True
         }
 }
@@ -74,7 +84,7 @@ evaluation_models_old = {
         'independence': True,
         'model_name': '_uwu',
         'evolution_type': 'combined',
-        'display': True
+        'display': False
         },
     'combined_evolution_NP_24_uwu_1_05_10_02_01': {
         'name': 'combined model, 24, compression',
@@ -92,7 +102,7 @@ evaluation_models_old = {
         'independence': True,
         'model_name': '_uwu',
         'evolution_type': 'combined',
-        'display': False
+        'display': True
     },
     'combined_evolution_M3SAT_48_uwu_1_05_10_01_005': {
         'name': 'combined model, M3SAT, 48, compression',

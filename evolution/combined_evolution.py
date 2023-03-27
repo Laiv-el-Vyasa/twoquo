@@ -359,14 +359,14 @@ if test_case_study and evaluation_models[test_model] and \
 evol_data = []
 
 if plot_evol_results:
-    if True: #check_pipeline_necessity(problem_count):
+    if False: #check_pipeline_necessity(problem_count):
         approx_single_entries = True
         if qubo_size > 24:
             approx_single_entries = False
         pipeline_db = pipeline_run(cfg, True, approx_single_entries, False, True, False,
                                    check_pipeline_necessity_bool=True, approximation_steps=99)
     for model_descr in evaluation_models:
-        fitting_model = check_model_config_fit(model_descr, evaluation_models[model_descr]['independence'])
+        fitting_model = True#check_model_config_fit(model_descr, evaluation_models[model_descr]['independence'])
         if fitting_model and evaluation_models[model_descr]['display']:
             fitness_parameters = evaluation_models[model_descr]['fitness_params']
             min_approx = evaluation_models[model_descr]['min_approx']
@@ -385,6 +385,8 @@ if plot_evol_results:
                     model_weights_dict_edge = torch.load(f'best_model_{evolution_type}_{problem}_{qubo_size}_edge')
                     print('Stored models loaded')
                 except FileNotFoundError:
+                    print(loaded_ga_instance.population)
+                    np.save(f'saved_population_{evolution_type}_{problem}_{qubo_size}', loaded_ga_instance.population)
                     best_solution_tuple = loaded_ga_instance.best_solution()
                     # print(best_solution_tuple)
                     best_solution = best_solution_tuple[0]
