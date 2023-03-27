@@ -17,7 +17,7 @@ def get_element_number(size: tuple[int, int]) -> int:
 
 def get_element_subset_factor(size: tuple[float, float], center: float) -> float:
     rng = random.default_rng()
-    std_deviation = np.min([np.abs(center - i) for i in size])
+    std_deviation = np.mean([np.abs(center - i) for i in size]) / 2
     r = 0.
     while not size[0] < r < size[1]:
         r = rng.normal(center, std_deviation)
@@ -31,7 +31,7 @@ def get_subset_number(m: int, r: float) -> int:
 # List of elements with subsets they are represented in
 def get_subset_matrix(elements: int, subsets: int) -> list[list[int]]:
     # Create list with three times all elements
-    print('m: ', elements, 'n: ', subsets)
+    #print('m: ', elements, 'n: ', subsets)
     element_list = []
     for i in range(elements):
         element_list.extend([i, i, i])  # Every Element in three subsets
@@ -116,7 +116,7 @@ class ExactCover(Problem):
 
     def gen_qubo_matrix(self):
         # get_pygubo_matrix(self.subset_matrix, self.subset_matrix.shape[0], self.subset_matrix.shape[1])
-        print('subsets: ',  self.subset_matrix)
+        # print('subsets: ',  self.subset_matrix)
         n = self.subset_matrix.shape[1]
         Q = np.zeros((n, n))
 
@@ -178,6 +178,6 @@ class ExactCover(Problem):
         problems = []
         for i in range(n_problems):
             m = get_element_number(size)
-            n = get_subset_number(m, get_element_subset_factor((0.5, 2.0), 0.62))
+            n = get_subset_number(m, get_element_subset_factor((0.34, 6.0), 0.62))
             problems.append(get_subset_matrix(m, n))
         return [{"subset_matrix": matrix} for matrix in problems]

@@ -282,12 +282,12 @@
     },
     "test_evol_ec": {
       "base_cfg": "1",
-      "dataset_id": "test_evol_tsp",
+      "dataset_id": "test_evol_ec",
       "problems": {
-        "qubo_size": 121,
-        "n_problems": 1,
+        "qubo_size": 120,
+        "n_problems": 100,
         "EC": {
-          "size": [6, 7]
+          "size": [24, 25]
         },
         "problems": [
           "EC"
