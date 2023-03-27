@@ -1,8 +1,57 @@
 import itertools
 import numpy as np
+from numpy import random
+
+from evolution_new.new_visualisation import qubo_heatmap
 from transformator.problems.problem import Problem
 from transformator.common.util import gen_subsets_matrix
 from transformator.common.util import gen_subset_problems
+import pyqubo
+
+
+def get_element_number(size: tuple[int, int]) -> int:
+    rng = random.default_rng()
+    return rng.integers(size[0], size[1])
+
+
+def get_element_subset_factor(size: tuple[float, float], center: float) -> float:
+    rng = random.default_rng()
+    std_deviation = np.min([np.abs(center - i) for i in size])
+    r = 0.
+    while not size[0] < r < size[1]:
+        r = rng.normal(center, std_deviation)
+    return r
+
+
+def get_subset_number(m: int, r: float) -> int:
+    return int(m / r)
+
+
+def get_subset_matrix(elements: int, subsets: int) -> list[list[int]]:
+    # Create list with three times all elements
+    element_list = []
+    for i in range(elements):
+        element_list.extend([i, i, i])  # Every Element in three subsets
+    random.shuffle(element_list)
+
+    # Create subset_list
+    subset_list = [[] for _ in range(subsets)]
+    subset_matrix = np.zeros((subsets, elements))
+
+    # Fill each subset with at least one element
+    for i in range(subsets):
+        j = element_list.pop(0)
+        subset_matrix[i][j] = 1
+
+    # Distribute to remaining elements on subsets
+    rng = random.default_rng()
+    for element in element_list:
+        i = rng.integers(0, subsets)
+        while subset_matrix[i][element] == 1:
+            i = rng.integers(0, subsets)
+        subset_matrix[i][element] = 1
+
+    return subset_matrix
 
 
 class ExactCover(Problem):
@@ -63,6 +112,7 @@ class ExactCover(Problem):
 
         # Define the QUBO
         Q = np.outer(C, C) + np.dot(np.dot(B, A), B.T)
+        qubo_heatmap(Q)
         return Q
 
     @classmethod
@@ -70,5 +120,10 @@ class ExactCover(Problem):
         return gen_subsets_matrix(ExactCover, set_, subsets)
 
     @classmethod
-    def gen_problems(cls, cfg, n_problems, size=(20, 25), **kwargs):
-        return gen_subset_problems(ExactCover, "EC", cfg, n_problems, size, **kwargs)
+    def gen_problems(cls, cfg, n_problems, size=(16, 64), **kwargs):
+        problems = []
+        for i in range(n_problems):
+            m = get_element_number(size)
+            n = get_subset_number(m, get_element_subset_factor((0.2, 4.0), 0.62))
+            problems.append(get_subset_matrix(m, n))
+        return [{"subset_matrix": matrix} for matrix in problems]
