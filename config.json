@@ -303,10 +303,11 @@
         "qubo_size": 120,
         "n_problems": 1,
         "SGI": {
-          "size": [24, 25]
+          "size1": [4, 2],
+          "size2": [16, 20]
         },
         "problems": [
-          "EC"
+          "SGI"
         ]
       }
     },

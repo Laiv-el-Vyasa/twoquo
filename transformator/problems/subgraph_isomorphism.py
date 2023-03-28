@@ -57,7 +57,11 @@ class SubGraphIsomorphism(Problem):
     def gen_problems(self, cfg, n_problems, size1, size2, seed=None, **kwargs):
         # NOTE: size1 should be smaller than size2 or equal to it.
         graphs1 = gen_graph(n_problems, size1, seed)
+        print('G1 nodes: ', graphs1[0].nodes)
+        print('G1 edges: ', graphs1[0].edges)
         graphs2 = gen_graph(n_problems, size2, seed)
+        print('G2 nodes: ', graphs2[0].nodes)
+        print('G2 edges: ', graphs2[0].edges)
         return [
             {"graph1": graph1, "graph2": graph2}
             for graph1, graph2 in zip(graphs1, graphs2)

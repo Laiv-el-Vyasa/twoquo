@@ -82,8 +82,8 @@ def check_tsp_solutions(qubo_list:list, problem_list: list, solutions_list: list
 def get_training_dataset(config: dict) -> dict:
     qubo_list, problem_list = get_problem_qubos(config)
     solutions_list, energy_list = get_qubo_solutions(qubo_list, config)
-    #print(solutions_list)
-    #qubo_heatmap(qubo_list[0])
+    print(solutions_list)
+    qubo_heatmap(qubo_list[0])
     if 'tsp' in problem_list[0] and check_tsp:
         check_tsp_solutions(qubo_list, problem_list, solutions_list)
     return {
