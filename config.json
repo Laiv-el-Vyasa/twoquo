@@ -284,9 +284,25 @@
       "base_cfg": "1",
       "dataset_id": "test_evol_ec",
       "problems": {
-        "qubo_size": 120,
+        "qubo_size": 126,
         "n_problems": 100,
         "EC": {
+          "size": [42, 43],
+          "target": 0.62,
+          "target_boundary": [0.34, 2.0]
+        },
+        "problems": [
+          "EC"
+        ]
+      }
+    },
+    "test_evol_sgi": {
+      "base_cfg": "1",
+      "dataset_id": "test_evol_sgi",
+      "problems": {
+        "qubo_size": 120,
+        "n_problems": 1,
+        "SGI": {
           "size": [24, 25]
         },
         "problems": [

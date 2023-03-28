@@ -15,7 +15,7 @@ def get_element_number(size: tuple[int, int]) -> int:
     return rng.integers(size[0], size[1])
 
 
-def get_element_subset_factor(size: tuple[float, float], center: float) -> float:
+def get_element_subset_factor(size: list[float, float], center: float) -> float:
     rng = random.default_rng()
     std_deviation = np.mean([np.abs(center - i) for i in size])
     r = 0.
@@ -175,9 +175,11 @@ class ExactCover(Problem):
 
     @classmethod
     def gen_problems(cls, cfg, n_problems, size=(16, 64), **kwargs):
+        target = cfg["problems"]["EC"].get("target_factor", 0.62)
+        target_boundary = cfg["problems"]["M3SAT"].get("target_boundary", [0.34, 2.0])
         problems = []
         for i in range(n_problems):
             m = get_element_number(size)
-            n = get_subset_number(m, get_element_subset_factor((0.34, 1.0), 0.62))
+            n = get_subset_number(m, get_element_subset_factor(target_boundary, target))
             problems.append(get_subset_matrix(m, n))
         return [{"subset_matrix": matrix} for matrix in problems]
