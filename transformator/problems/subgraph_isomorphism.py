@@ -15,10 +15,13 @@ def get_random_node_number(size: list[int, int]) -> int:
 
 
 def get_critical_value(n1: int, n2: int, e2: float) -> float:
-    # <Sol> = t_ * e1 ^ (e2 * (n1 over 2)) -> <Sol> = 1
+    # <Sol> = t_ * e2 ^ (e1 * (n1 over 2)) -> <Sol> = 1
+    # e1 = log_e2(1 / t_) * (1 / (n1 over 2)
     t_ = get_possible_assignments(n1, n2)
     n1_2 = math.comb(n1, 2)
-    e1_critival = np.power((1 / t_), (1 / (n1_2 * e2)))
+    e1_critival = (np.log(1 / t_) / np.log(e2)) * (1 / n1_2)
+    if e1_critival > 1:  # Fallback when critical value to big
+        e1_critival = 1.
     return e1_critival
 
 
@@ -26,8 +29,10 @@ def choose_edge_probability(n1: int, n2: int, e2: float) -> float:
     e1_critical = get_critical_value(n1, n2, e2)
     e1 = 0
     rng = random.default_rng()
-    while not 0 < e1 <1:
+    print('Critical value: ', e1_critical)
+    while not 0 < e1 < 1:
         e1 = rng.normal(e1_critical, 0.2)
+    print('Edge probability: ', e1)
     return e1
 
 
@@ -97,10 +102,12 @@ class SubGraphIsomorphism(Problem):
         for i in range(n_problems):
             n1 = get_random_node_number(size1)
             n2 = get_random_node_number(size2)
+            if n1 > n2:
+                n1, n2 = n2, n1
             e2 = cfg["problems"]["SGI"].get("edge_p2", 0.4)
             e1 = choose_edge_probability(n1, n2, e2)
             graphs1.append(erdos_renyi_graph(n1, e1))
-            graphs1.append(erdos_renyi_graph(n2, e2))
+            graphs2.append(erdos_renyi_graph(n2, e2))
 
 
         #graphs1 = gen_graph(n_problems, size1, seed)
