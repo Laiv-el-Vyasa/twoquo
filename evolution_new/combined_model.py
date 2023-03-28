@@ -58,7 +58,7 @@ class CombinedModel(LearningModel):
 
     def get_approxed_qubo(self, qubo: list, problem: dict, index: int) -> tuple[list, int]:
         edge_index, node_features = self.get_edge_index_and_node_features(qubo, problem)
-        print(f'Problem {index}, node_features: {node_features}')
+        #print(f'Problem {index}, node_features: {node_features}')
         node_mean_tensor_list = []
         for edge_0, edge_1 in zip(edge_index[0], edge_index[1]):
             node_features_0 = np.array(node_features[edge_0].numpy())
