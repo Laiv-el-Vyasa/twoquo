@@ -44,24 +44,27 @@ def visualize_two_result_points(baseline_approx_data, percent_list, evol_results
 
     marker_size = 4
     color = 'green'
+    print(evol_results_1)
     evol_x_1, evol_y_1 = evol_results_1
-    if len(evol_y_1) is 1:
+    if isinstance(evol_y_1, list):
+        for x, y in zip(evol_x_1, evol_y_1):
+            ax.plot(x, y, color=color, marker=(marker_size, 2), markersize=12)
+    else:
         for x in evol_x_1:
             ax.plot(x, evol_y_1, color=color, marker=(marker_size, 2), markersize=12)
-    else:
-        ax.plot(evol_x_1, evol_y_1, color=color, marker=(marker_size, 2), markersize=12)
-
+    pyplot.show()
+    fig, ax = pyplot.subplots()
     color = 'red'
     evol_x_2, evol_y_2 = evol_results_2
-    if len(evol_y_2) is 1:
+    if isinstance(evol_y_2, list):
+        ax.plot(evol_x_2, evol_y_2, color=color, marker=(marker_size, 2), markersize=12)
+    else:
         for x in evol_x_2:
             ax.plot(x, evol_y_2, color=color, marker=(marker_size, 2), markersize=12)
-    else:
-        ax.plot(evol_x_2, evol_y_2, color=color, marker=(marker_size, 2), markersize=12)
 
     ax.set_xlabel(f'approximated qubo entries in percent')
     ax.set_title(title)
-    pyplot.show()
+    #pyplot.show()
 
 
 def plot_average_fitness(avg_fitness_list):

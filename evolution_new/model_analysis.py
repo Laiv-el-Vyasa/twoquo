@@ -25,7 +25,7 @@ class TrainingAnalysis:
 
     def run_analysis(self):
         mean_solution_quality, approx_percent_list, correct_approx_list, incorrect_approx_list, \
-            correct_approx_size, incorrect_approx_size = self.get_model_approximation_quality()
+        correct_approx_size, incorrect_approx_size = self.get_model_approximation_quality()
         analysis_baseline = self.get_analysis_baseline()
         visualize_evol_results(analysis_baseline[0], analysis_baseline[1],
                                (approx_percent_list, mean_solution_quality), self.analysis_name,
@@ -38,8 +38,8 @@ class TrainingAnalysis:
                                     steps=self.analysis_parameters['steps'], baseline=True,
                                     title='Correct and incorrect approximations')
         visualize_two_result_points(analysis_baseline[0], analysis_baseline[1],
-                                    (correct_approx_size, mean_solution_quality),
-                                    (incorrect_approx_size, mean_solution_quality), baseline=False,
+                                    (correct_approx_list, correct_approx_size),
+                                    (incorrect_approx_list, incorrect_approx_size), baseline=False,
                                     title='Relative size of approximated entries')
 
     def get_model_approximation_quality(self) -> tuple[float, list, list, list, list, list]:
@@ -61,7 +61,10 @@ class TrainingAnalysis:
                                                                                    solutions, self.config)
             solution_quality_list.append((np.floor(1 - min_solution_quality)))
             approx_size = get_relative_size_of_approxed_entries(approx_qubo, qubo)
-            if min_solution_quality is 0 and approx_percent is not 0:
+            print('approx size: ', approx_size)
+            print(min_solution_quality, approx_percent)
+            if min_solution_quality <= 0 and approx_percent != 0:
+                print('True solution found')
                 correct_approx_list.append(approx_percent)
                 correct_approx_size.append(approx_size)
             else:

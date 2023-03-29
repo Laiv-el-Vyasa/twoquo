@@ -14,7 +14,7 @@ scaling_parameter = 0.43
 
 def get_random_node_number(size: tuple[int, int]) -> int:
     rng = random.default_rng()
-    return rng.integers(size[0], size[1] + 1)
+    return 5 #rng.integers(size[0], size[1] + 1)
 
 
 def get_cities(N: int) -> list[list[float, float]]:
@@ -66,7 +66,7 @@ def get_distance_matrix(N: int, city_coordinates: list[list[float, float]]) -> n
 
 
 class TSPQuadrants(Problem, ABC):
-    def __init__(self, cfg, dist_matrix, cities, tsp=True, P=40):
+    def __init__(self, cfg, dist_matrix, cities, tsp=True, P=10):
         self.dist_matrix = dist_matrix
         self.P = P
 

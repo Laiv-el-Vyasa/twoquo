@@ -83,7 +83,7 @@ def get_training_dataset(config: dict) -> dict:
     qubo_list, problem_list = get_problem_qubos(config)
     solutions_list, energy_list = get_qubo_solutions(qubo_list, config)
     #print(solutions_list)
-    #qubo_heatmap(qubo_list[0])
+    qubo_heatmap(qubo_list[0])
     if 'tsp' in problem_list[0] and check_tsp:
         check_tsp_solutions(qubo_list, problem_list, solutions_list)
     return {
@@ -324,8 +324,11 @@ def get_relative_size_of_approxed_entries(approxed_qubo: list, qubo: list) -> fl
     approxed_entries_qubo = np.subtract(qubo, approxed_qubo)
     approxed_entry_count = get_nonzero_count(approxed_entries_qubo)
     min_sum = get_sum_of_array(get_n_extreme_entries(approxed_entry_count, qubo, True))
+    print('Min sum: ', min_sum)
     max_sum = get_sum_of_array(get_n_extreme_entries(approxed_entry_count, qubo, False))
-    actual_sum = get_sum_of_array(approxed_entries_qubo)
+    print('Max sum: ', max_sum)
+    actual_sum = get_sum_of_array(np.abs(approxed_entries_qubo.flatten()))
+    print('act_sum: ', actual_sum)
     return (actual_sum - min_sum) / (max_sum - min_sum)
 
 
@@ -336,6 +339,7 @@ def get_n_extreme_entries(n: int, qubo: list, ascending: bool) -> list:
         np.sort(flat_qubo)
     else:
         flat_qubo[::-1].sort()
+    np.trim_zeros(flat_qubo)
     return flat_qubo[:n]
 
 
