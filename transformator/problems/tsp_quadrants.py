@@ -14,7 +14,7 @@ scaling_parameter = 0.43
 
 def get_random_node_number(size: tuple[int, int]) -> int:
     rng = random.default_rng()
-    return 5 #rng.integers(size[0], size[1] + 1)
+    return rng.integers(size[0], size[1] + 1)
 
 
 def get_cities(N: int) -> list[list[float, float]]:
