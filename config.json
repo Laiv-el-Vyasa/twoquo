@@ -287,7 +287,7 @@
         "qubo_size": 126,
         "n_problems": 100,
         "EC": {
-          "size": [42, 43],
+          "size": [16, 43],
           "target": 0.62,
           "target_boundary": [0.34, 2.0]
         },

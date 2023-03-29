@@ -25,13 +25,13 @@ def get_element_subset_factor(size: list[float, float], center: float) -> float:
 
 
 def get_subset_number(m: int, r: float) -> int:
-    return int(m / r)
+    return int(m / r) + 1
 
 
 # List of elements with subsets they are represented in
 def get_subset_matrix(elements: int, subsets: int) -> list[list[int]]:
     # Create list with three times all elements
-    #print('m: ', elements, 'n: ', subsets)
+    # print('m: ', elements, 'n: ', subsets)
     element_list = []
     for i in range(elements):
         element_list.extend([i, i, i])  # Every Element in three subsets
@@ -86,26 +86,6 @@ def get_subset_matrix2(elements: int, subsets: int) -> list[list[int]]:
     return subset_matrix
 
 
-def get_pygubo_matrix(subset_matrix: list[list[int]], n: int, m: int):  # -> list[list[float]]:
-    x = pyqubo.Array.create("x", shape=len(subset_matrix), vartype='BINARY')
-
-    # Constraint one: each variable abgedeckt
-    def f(z):
-        z = 5.25 * z ** 2 - 15.25 * z + 10
-        return z
-
-    H = 4 * sum(f(sum(x[j] * subset_matrix[j][i])) for j in range(n) for i in range(m))
-
-    # Contraint two: as few subsets as possible
-    H = H + sum(x[i] for i in range(n))
-
-    model = H.compile()
-
-    qubo = model.to_qubo()
-
-    print(qubo)
-
-
 class ExactCover(Problem):
     def __init__(self, cfg, subset_matrix, A=2, B=2):
         #print('SubsetMatrix: ' + str(subset_matrix))
@@ -137,36 +117,6 @@ class ExactCover(Problem):
             if len(idx) == 1:
                 Q[idx[0]][idx[0]] -= self.A
         #qubo_heatmap(Q)
-        return Q
-
-    def gen_qubo_matrix2(self):
-        subsets = np.array(self.subset_matrix)
-        print('subsets: ', subsets)
-        M = subsets.shape[0]
-        N = subsets.shape[1]
-        print(M, N)
-
-        A = np.zeros((M, M))
-        B = np.zeros((N, M))
-        C = np.zeros(M)
-
-        # Fill the matrix A
-        for i in range(M):
-            for j in range(i+1, M):
-                common = 0
-                for k in range(N):
-                    common += subsets[i][k] * subsets[j][k]
-                A[i][j] = common
-                A[j][i] = common
-
-        # Fill the matrix B
-        for i in range(N):
-            for j in range(M):
-                B[i][j] = subsets[j][i]
-
-        # Define the QUBO
-        Q = np.outer(C, C) + np.dot(np.dot(B, A), B.T)
-        qubo_heatmap(Q)
         return Q
 
     @classmethod
