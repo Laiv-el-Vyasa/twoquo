@@ -300,10 +300,10 @@
       "base_cfg": "1",
       "dataset_id": "test_evol_sgi",
       "problems": {
-        "qubo_size": 192,
-        "n_problems": 1,
+        "qubo_size": 128,
+        "n_problems": 100,
         "SGI": {
-          "size1": [4, 8],
+          "size1": [4, 12],
           "size2": [8, 16],
           "edge_p2": 0.4
         },

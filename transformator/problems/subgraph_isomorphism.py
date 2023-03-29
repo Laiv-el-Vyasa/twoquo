@@ -29,10 +29,10 @@ def choose_edge_probability(n1: int, n2: int, e2: float) -> float:
     e1_critical = get_critical_value(n1, n2, e2)
     e1 = 0
     rng = random.default_rng()
-    print('Critical value: ', e1_critical)
+    #print('Critical value: ', e1_critical)
     while not 0 < e1 < 1:
         e1 = rng.normal(e1_critical, 0.2)
-    print('Edge probability: ', e1)
+    #print('Edge probability: ', e1)
     return e1
 
 
@@ -111,11 +111,11 @@ class SubGraphIsomorphism(Problem):
 
 
         #graphs1 = gen_graph(n_problems, size1, seed)
-        print('G1 nodes: ', graphs1[0].nodes)
-        print('G1 edges: ', graphs1[0].edges)
+        #print('G1 nodes: ', graphs1[0].nodes)
+        #print('G1 edges: ', graphs1[0].edges)
         #graphs2 = gen_graph(n_problems, size2, seed)
-        print('G2 nodes: ', graphs2[0].nodes)
-        print('G2 edges: ', graphs2[0].edges)
+        #print('G2 nodes: ', graphs2[0].nodes)
+        #print('G2 edges: ', graphs2[0].edges)
         return [
             {"graph1": graph1, "graph2": graph2}
             for graph1, graph2 in zip(graphs1, graphs2)
