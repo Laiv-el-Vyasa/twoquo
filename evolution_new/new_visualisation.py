@@ -6,7 +6,7 @@ import itertools
 
 
 def visualize_evol_results(baseline_approx_data, percent_list, evol_results, model_name,
-                           problem, size, solver, steps, boxplot=False):
+                           problem, size, solver, steps, boxplot=False, title=''):
     fig, ax = pyplot.subplots()
     legend_lines = []
     color = 'black'
@@ -30,6 +30,37 @@ def visualize_evol_results(baseline_approx_data, percent_list, evol_results, mod
     ax.set_xlabel(f'approximated qubo entries in percent')
     ax.set_title(f'Approximation quality, Learned Models, Problem: {problem}, '
                  f'Size: {size}, Solver: {solver}', fontsize=12)
+    pyplot.show()
+
+
+def visualize_two_result_points(baseline_approx_data, percent_list, evol_results_1, evol_results_2,
+                                steps=0, baseline=False, title=''):
+    fig, ax = pyplot.subplots()
+    legend_lines = []
+    if baseline:
+        color = 'black'
+        ax.plot(percent_list, baseline_approx_data, color=color, markersize=8)
+        legend_lines.append(lines.Line2D([], [], color=color, markersize=8, label=f'step-wise approximation, {steps} steps'))
+
+    marker_size = 4
+    color = 'green'
+    evol_x_1, evol_y_1 = evol_results_1
+    if len(evol_y_1) is 1:
+        for x in evol_x_1:
+            ax.plot(x, evol_y_1, color=color, marker=(marker_size, 2), markersize=12)
+    else:
+        ax.plot(evol_x_1, evol_y_1, color=color, marker=(marker_size, 2), markersize=12)
+
+    color = 'red'
+    evol_x_2, evol_y_2 = evol_results_2
+    if len(evol_y_2) is 1:
+        for x in evol_x_2:
+            ax.plot(x, evol_y_2, color=color, marker=(marker_size, 2), markersize=12)
+    else:
+        ax.plot(evol_x_2, evol_y_2, color=color, marker=(marker_size, 2), markersize=12)
+
+    ax.set_xlabel(f'approximated qubo entries in percent')
+    ax.set_title(title)
     pyplot.show()
 
 

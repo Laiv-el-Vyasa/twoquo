@@ -3,10 +3,11 @@ import numpy as np
 from approximation import get_approximated_qubos
 from config import load_cfg
 from evolution_new.combined_evolution_training import get_data_from_training_config
-from evolution_new.evolution_utils import get_quality_of_approxed_qubo, get_qubo_approx_mask, get_file_name
+from evolution_new.evolution_utils import get_quality_of_approxed_qubo, get_qubo_approx_mask, get_file_name, \
+    get_relative_size_of_approxed_entries
 from evolution_new.pygad_learning import PygadLearner
 from evolution_new.learning_model import LearningModel
-from new_visualisation import visualize_evol_results, qubo_heatmap
+from new_visualisation import visualize_evol_results, qubo_heatmap, visualize_two_result_points
 
 
 class TrainingAnalysis:
@@ -23,17 +24,31 @@ class TrainingAnalysis:
             self.model.load_best_model(learning_parameters['training_name'])
 
     def run_analysis(self):
-        mean_solution_quality, approx_percent_list = self.get_model_approximation_quality()
+        mean_solution_quality, approx_percent_list, correct_approx_list, incorrect_approx_list, \
+            correct_approx_size, incorrect_approx_size = self.get_model_approximation_quality()
         analysis_baseline = self.get_analysis_baseline()
         visualize_evol_results(analysis_baseline[0], analysis_baseline[1],
                                (approx_percent_list, mean_solution_quality), self.analysis_name,
                                self.config["pipeline"]["problems"]["problems"][0],
                                self.config['pipeline']['problems']['qubo_size'], 'qbsolv_simulated_annealing',
                                self.analysis_parameters['steps'], boxplot=self.analysis_parameters['boxplot'])
+        visualize_two_result_points(analysis_baseline[0], analysis_baseline[1],
+                                    (correct_approx_list, mean_solution_quality),
+                                    (incorrect_approx_list, mean_solution_quality),
+                                    steps=self.analysis_parameters['steps'], baseline=True,
+                                    title='Correct and incorrect approximations')
+        visualize_two_result_points(analysis_baseline[0], analysis_baseline[1],
+                                    (correct_approx_size, mean_solution_quality),
+                                    (incorrect_approx_size, mean_solution_quality), baseline=False,
+                                    title='Relative size of approximated entries')
 
-    def get_model_approximation_quality(self) -> tuple[float, list]:
+    def get_model_approximation_quality(self) -> tuple[float, list, list, list, list, list]:
         solution_quality_list = []
         approx_percent_list = []
+        correct_approx_list = []
+        incorrect_approx_list = []
+        correct_approx_size = []
+        incorrect_approx_size = []
         problem_dict = self.model.get_approximation(self.model.get_training_dataset(self.config))
         approx_qubo_list, solutions_list, qubo_list = problem_dict['approxed_qubo_list'], \
                                                       problem_dict['solutions_list'], problem_dict['qubo_list']
@@ -45,8 +60,16 @@ class TrainingAnalysis:
             min_solution_quality, _, approx_percent = get_quality_of_approxed_qubo(qubo, approx_qubo,
                                                                                    solutions, self.config)
             solution_quality_list.append((np.floor(1 - min_solution_quality)))
+            approx_size = get_relative_size_of_approxed_entries(approx_qubo, qubo)
+            if min_solution_quality is 0 and approx_percent is not 0:
+                correct_approx_list.append(approx_percent)
+                correct_approx_size.append(approx_size)
+            else:
+                incorrect_approx_list.append(approx_percent)
+                incorrect_approx_size.append(approx_size)
             approx_percent_list.append(approx_percent)
-        return np.mean(solution_quality_list), approx_percent_list
+        return np.mean(solution_quality_list), approx_percent_list, correct_approx_list, incorrect_approx_list, \
+               correct_approx_size, incorrect_approx_size
 
     def get_analysis_baseline(self) -> list[list, list]:
         try:
@@ -79,7 +102,7 @@ class TrainingAnalysis:
     def get_stepwise_approx_quality_for_qubo(self, qubo: list, solutions: list) -> list:
         stepwise_approx_quality = [1.]
         approximation_dict, _ = get_approximated_qubos(qubo, False, True, self.analysis_parameters['steps'],
-                                                    sorted_approx=self.analysis_parameters['sorted'])
+                                                       sorted_approx=self.analysis_parameters['sorted'])
         for i in range(self.analysis_parameters['steps']):
             approx_qubo = approximation_dict[str(i + 1)]['qubo']
             min_solution_quality, *_ = get_quality_of_approxed_qubo(qubo, approx_qubo, solutions, self.config)

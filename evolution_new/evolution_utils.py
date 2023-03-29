@@ -319,6 +319,30 @@ def extract_fitness_params_from_dict(fitness_params: dict) -> tuple[float, float
     return a, b, c, d, z
 
 
+# Return a float between 0 (only the smallest entries have benn approxed) and 1 (the biggest entries have been approxed)
+def get_relative_size_of_approxed_entries(approxed_qubo: list, qubo: list) -> float:
+    approxed_entries_qubo = np.subtract(qubo, approxed_qubo)
+    approxed_entry_count = get_nonzero_count(approxed_entries_qubo)
+    min_sum = get_sum_of_array(get_n_extreme_entries(approxed_entry_count, qubo, True))
+    max_sum = get_sum_of_array(get_n_extreme_entries(approxed_entry_count, qubo, False))
+    actual_sum = get_sum_of_array(approxed_entries_qubo)
+    return (actual_sum - min_sum) / (max_sum - min_sum)
+
+
+def get_n_extreme_entries(n: int, qubo: list, ascending: bool) -> list:
+    abs_qubo = np.abs(qubo)
+    flat_qubo = abs_qubo.flatten()
+    if ascending:
+        np.sort(flat_qubo)
+    else:
+        flat_qubo[::-1].sort()
+    return flat_qubo[:n]
+
+
+def get_sum_of_array(array: np.ndarray) -> float:
+    return sum(array)
+
+
 def get_fitness_value(linearized_approx_list, qubo_list, min_energy_list, solutions_list, fitness_parameters, problems,
                       min_approx=0):
     a, b, c, d = fitness_parameters
