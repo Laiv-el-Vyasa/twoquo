@@ -19,7 +19,7 @@ class TrainingAnalysis:
         self.config = load_cfg(cfg_id=learning_parameters['config_name'])
         self.analysis_name = get_file_name(analysis_parameters['analysis_name'], self.config,
                                            learning_parameters['fitness_parameters'], analysis=True)
-        # self.config['pipeline']['problems']['n_problems'] *= 10
+        self.config['pipeline']['problems']['n_problems'] *= 10
         self.analysis_parameters = analysis_parameters
         if not self.model.load_best_model(learning_parameters['training_name']):
             self.pygad_learner.save_best_model()
@@ -51,10 +51,10 @@ class TrainingAnalysis:
                                                                                    solutions, self.config)
             return_dict['solution_quality_list'].append((np.floor(1 - min_solution_quality)))
             approx_size = get_relative_size_of_approxed_entries(approx_qubo, qubo)
-            print('approx size: ', approx_size)
-            print(min_solution_quality, approx_percent)
+            #print('approx size: ', approx_size)
+            #print(min_solution_quality, approx_percent)
             if min_solution_quality <= 0 and approx_percent != 0:
-                print('True solution found')
+                #print('True solution found')
                 return_dict['correct_approx_list'].append(approx_percent)
                 return_dict['correct_approx_size'].append(approx_size)
             else:
@@ -171,14 +171,14 @@ class TrainingAnalysis:
             visualisation_pipeline({
                 'evaluation_results': [
                     {
-                        'color': 'green',
+                        'color': 'blue',
                         'marker': 4,
                         'evol_y': approximation_quality_dict['correct_approx_size'],
                         'evol_x': approximation_quality_dict['correct_approx_list'],
                         'label': 'Size of approximated entries of correct solutions'
                     },
                     {
-                        'color': 'black',
+                        'color': 'red',
                         'marker': 4,
                         'evol_y': approximation_quality_dict['incorrect_approx_size'],
                         'evol_x': approximation_quality_dict['incorrect_approx_list'],
@@ -187,6 +187,6 @@ class TrainingAnalysis:
                 ],
                 'title': self.get_visualisation_title('Relative size of approximated entries'),
                 'x_label': 'approximated qubo entries in percent',
-                'y_label': 'Cumulated size of approximated entries (1: n biggest, 0: n smallest',
+                'y_label': 'Cumulated size of approximated entries (1: n biggest, 0: n smallest)',
                 'scale_axis': True
             })
