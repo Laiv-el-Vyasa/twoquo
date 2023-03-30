@@ -1,3 +1,4 @@
+import matplotlib.figure
 from matplotlib import pyplot
 import matplotlib.lines as lines
 import numpy as np
@@ -5,32 +6,36 @@ from config import load_cfg
 import itertools
 
 
-def visualize_evol_results(baseline_approx_data, percent_list, evol_results, model_name,
-                           problem, size, solver, steps, boxplot=False, title=''):
+def visualisation_pipeline(evaluation_dict: dict):
     fig, ax = pyplot.subplots()
     legend_lines = []
-    color = 'black'
-    ax.plot(percent_list, baseline_approx_data, color=color, markersize=8)
-    legend_lines.append(lines.Line2D([], [], color=color, markersize=8, label=f'step-wise approximation, {steps} steps'))
-    evol_x, evol_y = evol_results
-    if not boxplot:
-        evol_x = np.mean(evol_x)
-    marker_size = 4
+    if 'baseline_data' in evaluation_dict:
+        ax, legend_lines = add_baseline(ax, evaluation_dict['baseline_data'], legend_lines)
 
-    if not boxplot:
-        ax.plot(evol_x, evol_y, color=color, marker=(marker_size, 2), markersize=12)
-    else:
-        for x in evol_x:
-            ax.plot(x, evol_y, color=color, marker=(marker_size, 2), markersize=12)
-        #pyplot.boxplot(evol_x, positions=np.mean(evol_x), vert=False)
-    legend_lines.append(lines.Line2D([], [], color=color, linestyle='None',
-                                     markersize=12, marker=(marker_size, 2), label=f'{model_name}'))
+    ax, legend_lines = plot_points(ax, evaluation_dict['evaluation_results'],legend_lines)
     ax.legend(handles=legend_lines)
-    ax.set_ylabel(f'best energy found in percent')
-    ax.set_xlabel(f'approximated qubo entries in percent')
-    ax.set_title(f'Approximation quality, Learned Models, Problem: {problem}, '
-                 f'Size: {size}, Solver: {solver}', fontsize=12)
+    ax.set_ylabel(evaluation_dict['ylabel'])
+    ax.set_xlabel(evaluation_dict['xlabel'])
+    ax.set_title(evaluation_dict['title'], fontsize=12)
     pyplot.show()
+
+
+def add_baseline(ax: matplotlib.axes.Axes, baseline_data: dict, legend_lines: list) -> tuple:
+    color = 'black'
+    ax.plot(baseline_data['percent_list'], baseline_data['baseline_approx_data'], color=color, markersize=8)
+    legend_lines.append(lines.Line2D([], [], color=color, markersize=8, label=baseline_data['legend']))
+    return ax, legend_lines
+
+
+def plot_points(ax: matplotlib.axes.Axes, evaluation_results: dict, legend_lines: list) -> tuple:
+    for evol_result in evaluation_results:
+        color = evol_result['color']
+        marker = evol_result['marker']
+        for x, y in zip(evol_result['evol_x'], evol_result['evol_y']):
+            ax.plot(x, y, color=color, marker=(marker, 2), markersize=12)
+            legend_lines.append(lines.Line2D([], [], color=color, linestyle='None',
+                                             markersize=12, marker=(marker, 2), label=evol_result['label']))
+    return ax, legend_lines
 
 
 def visualize_two_result_points(baseline_approx_data, percent_list, evol_results_1, evol_results_2,
@@ -85,13 +90,6 @@ def qubo_heatmap(qubo_matrix):
     ax.set_title("QUBO Heatmap")
     fig.colorbar(mesh, ax=ax)
     pyplot.gca().invert_yaxis()
-    pyplot.show()
-
-
-def plot_points(point_array: list[list[float, float]]):
-    fig, ax = pyplot.subplots()
-    for point in point_array:
-        ax.plot(point[0], point[1], marker='x')
     pyplot.show()
 
 
