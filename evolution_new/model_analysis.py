@@ -10,6 +10,9 @@ from evolution_new.learning_model import LearningModel
 from new_visualisation import visualize_evol_results, qubo_heatmap, visualize_two_result_points
 
 
+solver = 'qbsolv_simulated_annealing'
+
+
 class TrainingAnalysis:
     def __init__(self, config_name: str, analysis_parameters: dict):
         self.model, learning_parameters, fitness_func = get_data_from_training_config(config_name)
@@ -24,8 +27,7 @@ class TrainingAnalysis:
             self.model.load_best_model(learning_parameters['training_name'])
 
     def run_analysis(self):
-        mean_solution_quality, approx_percent_list, correct_approx_list, incorrect_approx_list, \
-        correct_approx_size, incorrect_approx_size = self.get_model_approximation_quality()
+        approximation_quality_dict = self.get_model_approximation_quality()
         analysis_baseline = self.get_analysis_baseline()
         visualize_evol_results(analysis_baseline[0], analysis_baseline[1],
                                (approx_percent_list, mean_solution_quality), self.analysis_name,
@@ -42,13 +44,15 @@ class TrainingAnalysis:
                                     (incorrect_approx_list, incorrect_approx_size), baseline=False,
                                     title='Relative size of approximated entries')
 
-    def get_model_approximation_quality(self) -> tuple[float, list, list, list, list, list]:
-        solution_quality_list = []
-        approx_percent_list = []
-        correct_approx_list = []
-        incorrect_approx_list = []
-        correct_approx_size = []
-        incorrect_approx_size = []
+    def get_model_approximation_quality(self) -> dict:
+        return_dict = {
+            'solution_quality_list': [],
+            'approx_percent_list': [],
+            'correct_approx_list': [],
+            'incorrect_approx_list': [],
+            'correct_approx_size': [],
+            'incorrect_approx_size': []
+        }
         problem_dict = self.model.get_approximation(self.model.get_training_dataset(self.config))
         approx_qubo_list, solutions_list, qubo_list = problem_dict['approxed_qubo_list'], \
                                                       problem_dict['solutions_list'], problem_dict['qubo_list']
@@ -59,20 +63,19 @@ class TrainingAnalysis:
                 qubo_heatmap(get_qubo_approx_mask(approx_qubo, qubo))
             min_solution_quality, _, approx_percent = get_quality_of_approxed_qubo(qubo, approx_qubo,
                                                                                    solutions, self.config)
-            solution_quality_list.append((np.floor(1 - min_solution_quality)))
+            return_dict['solution_quality_list'].append((np.floor(1 - min_solution_quality)))
             approx_size = get_relative_size_of_approxed_entries(approx_qubo, qubo)
             print('approx size: ', approx_size)
             print(min_solution_quality, approx_percent)
             if min_solution_quality <= 0 and approx_percent != 0:
                 print('True solution found')
-                correct_approx_list.append(approx_percent)
-                correct_approx_size.append(approx_size)
+                return_dict['correct_approx_list'].append(approx_percent)
+                return_dict['correct_approx_size'].append(approx_size)
             else:
-                incorrect_approx_list.append(approx_percent)
-                incorrect_approx_size.append(approx_size)
-            approx_percent_list.append(approx_percent)
-        return np.mean(solution_quality_list), approx_percent_list, correct_approx_list, incorrect_approx_list, \
-               correct_approx_size, incorrect_approx_size
+                return_dict['incorrect_approx_list'].append(approx_percent)
+                return_dict['incorrect_approx_size'].append(approx_size)
+            return_dict['approx_percent_list'].append(approx_percent)
+        return return_dict
 
     def get_analysis_baseline(self) -> list[list, list]:
         try:
@@ -121,3 +124,12 @@ class TrainingAnalysis:
         for approx_step_quality_list in rotated_list:
             analysis_baseline.append(np.mean(approx_step_quality_list))
         return analysis_baseline
+
+    def get_visualisation_title(self, evaluation_type, models=False):
+        problems = self.config["pipeline"]["problems"]["problems"]
+        title = f'{evaluation_type}, trained model{"s" if models else ""}, problem{"s" if len(problems) > 1 else ""}: '
+        for problem in problems:
+            title = title + problem + ', '
+        title = title + f'Max-size: {self.config["pipeline"]["problems"]["qubo_size"]}, Solver: ' \
+                        f'{solver}'
+        return title
