@@ -14,8 +14,8 @@ def visualisation_pipeline(evaluation_dict: dict):
 
     ax, legend_lines = plot_points(ax, evaluation_dict['evaluation_results'], legend_lines)
     ax.legend(handles=legend_lines)
-    ax.set_ylabel(evaluation_dict['ylabel'])
-    ax.set_xlabel(evaluation_dict['xlabel'])
+    ax.set_ylabel(evaluation_dict['y_label'])
+    ax.set_xlabel(evaluation_dict['x_label'])
     ax.set_title(evaluation_dict['title'], fontsize=12)
     pyplot.show()
 
@@ -33,8 +33,8 @@ def plot_points(ax: matplotlib.axes.Axes, evaluation_results: dict, legend_lines
         marker = evol_result['marker']
         for x, y in zip(evol_result['evol_x'], evol_result['evol_y']):
             ax.plot(x, y, color=color, marker=(marker, 2), markersize=12)
-            legend_lines.append(lines.Line2D([], [], color=color, linestyle='None',
-                                             markersize=12, marker=(marker, 2), label=evol_result['label']))
+        legend_lines.append(lines.Line2D([], [], color=color, linestyle='None',
+                                         markersize=12, marker=(marker, 2), label=evol_result['label']))
     return ax, legend_lines
 
 

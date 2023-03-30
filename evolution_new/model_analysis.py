@@ -20,7 +20,7 @@ class TrainingAnalysis:
         self.config = load_cfg(cfg_id=learning_parameters['config_name'])
         self.analysis_name = get_file_name(analysis_parameters['analysis_name'], self.config,
                                            learning_parameters['fitness_parameters'], analysis=True)
-        self.config['pipeline']['problems']['n_problems'] *= 10
+        #self.config['pipeline']['problems']['n_problems'] *= 10
         self.analysis_parameters = analysis_parameters
         if not self.model.load_best_model(learning_parameters['training_name']):
             self.pygad_learner.save_best_model()
@@ -137,8 +137,8 @@ class TrainingAnalysis:
                 {
                     'color': 'black',
                     'marker': 4,
-                    'evol_y': np.mean(approximation_quality_dict['solution_quality_list']),
-                    'evol_x': np.mean(approximation_quality_dict['approx_percent_list']),
+                    'evol_y': [np.mean(approximation_quality_dict['solution_quality_list'])],
+                    'evol_x': [np.mean(approximation_quality_dict['approx_percent_list'])],
                     'label': 'Avg. solution quality, avg. approx percent of model'
                 }
             ],
