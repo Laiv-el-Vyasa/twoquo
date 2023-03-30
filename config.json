@@ -284,10 +284,10 @@
       "base_cfg": "1",
       "dataset_id": "test_evol_ec",
       "problems": {
-        "qubo_size": 126,
+        "qubo_size": 172,
         "n_problems": 100,
         "EC": {
-          "size": [16, 43],
+          "size": [16, 65],
           "target": 0.62,
           "target_boundary": [0.34, 2.0]
         },

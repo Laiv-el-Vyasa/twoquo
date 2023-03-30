@@ -25,7 +25,10 @@ def get_element_subset_factor(size: list[float, float], center: float) -> float:
 
 
 def get_subset_number(m: int, r: float) -> int:
-    return int(m / r) + 1
+    subsets = int(m / r)
+    while subsets > 3 * m:
+        subsets -= 1
+    return subsets
 
 
 # List of elements with subsets they are represented in
