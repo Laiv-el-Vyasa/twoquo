@@ -14,6 +14,9 @@ def visualisation_pipeline(evaluation_dict: dict):
 
     ax, legend_lines = plot_points(ax, evaluation_dict['evaluation_results'], legend_lines)
     ax.legend(handles=legend_lines)
+    if 'scale_axis' in evaluation_dict:
+        ax.set_xlim([0, 1])
+        ax.set_ylim([0, 1])
     ax.set_ylabel(evaluation_dict['y_label'])
     ax.set_xlabel(evaluation_dict['x_label'])
     ax.set_title(evaluation_dict['title'], fontsize=12)

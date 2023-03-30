@@ -5,7 +5,8 @@ analysis_parameters = {
     'analysis_name': 'combined_analysis',
     'boxplot': True,
     'sorted': True,
-    'show_qubo_mask': 0
+    'show_qubo_mask': 0,
+    'size_analysis': True
 }
 
 if __name__ == "__main__":

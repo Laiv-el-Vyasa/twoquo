@@ -9,7 +9,6 @@ from evolution_new.pygad_learning import PygadLearner
 from evolution_new.learning_model import LearningModel
 from new_visualisation import visualisation_pipeline, qubo_heatmap, visualize_two_result_points
 
-
 solver = 'qbsolv_simulated_annealing'
 
 
@@ -20,7 +19,7 @@ class TrainingAnalysis:
         self.config = load_cfg(cfg_id=learning_parameters['config_name'])
         self.analysis_name = get_file_name(analysis_parameters['analysis_name'], self.config,
                                            learning_parameters['fitness_parameters'], analysis=True)
-        #self.config['pipeline']['problems']['n_problems'] *= 10
+        # self.config['pipeline']['problems']['n_problems'] *= 10
         self.analysis_parameters = analysis_parameters
         if not self.model.load_best_model(learning_parameters['training_name']):
             self.pygad_learner.save_best_model()
@@ -129,7 +128,7 @@ class TrainingAnalysis:
                       f'{"smallest entries first" if self.analysis_parameters["sorted"] else "random entries"}'
         }
 
-    def create_visualisation_calls(self, analysis_baseline:list[list, list], approximation_quality_dict: dict,
+    def create_visualisation_calls(self, analysis_baseline: list[list, list], approximation_quality_dict: dict,
                                    size_analysis=False):
         visualisation_pipeline({
             'baseline_data': self.create_baseline_data_dict(analysis_baseline),
@@ -168,3 +167,26 @@ class TrainingAnalysis:
             'x_label': 'approximated qubo entries in percent',
             'y_label': 'solution quality'
         })
+        if self.analysis_parameters['size_analysis']:
+            visualisation_pipeline({
+                'evaluation_results': [
+                    {
+                        'color': 'green',
+                        'marker': 4,
+                        'evol_y': approximation_quality_dict['correct_approx_size'],
+                        'evol_x': approximation_quality_dict['correct_approx_list'],
+                        'label': 'Size of approximated entries of correct solutions'
+                    },
+                    {
+                        'color': 'black',
+                        'marker': 4,
+                        'evol_y': approximation_quality_dict['incorrect_approx_size'],
+                        'evol_x': approximation_quality_dict['incorrect_approx_list'],
+                        'label': 'Size of approximated entries of incorrect solutions'
+                    },
+                ],
+                'title': self.get_visualisation_title('Relative size of approximated entries'),
+                'x_label': 'approximated qubo entries in percent',
+                'y_label': 'Cumulated size of approximated entries (1: n biggest, 0: n smallest',
+                'scale_axis': True
+            })
