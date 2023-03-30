@@ -321,25 +321,30 @@ def extract_fitness_params_from_dict(fitness_params: dict) -> tuple[float, float
 
 # Return a float between 0 (only the smallest entries have benn approxed) and 1 (the biggest entries have been approxed)
 def get_relative_size_of_approxed_entries(approxed_qubo: list, qubo: list) -> float:
+    approxed_qubo = np.triu(approxed_qubo)
+    qubo = np.triu(qubo)
     approxed_entries_qubo = np.subtract(qubo, approxed_qubo)
     approxed_entry_count = get_nonzero_count(approxed_entries_qubo)
-    min_sum = get_sum_of_array(get_n_extreme_entries(approxed_entry_count, qubo, True))
-    print('Min sum: ', min_sum)
-    max_sum = get_sum_of_array(get_n_extreme_entries(approxed_entry_count, qubo, False))
-    print('Max sum: ', max_sum)
-    actual_sum = get_sum_of_array(np.abs(approxed_entries_qubo.flatten()))
-    print('act_sum: ', actual_sum)
-    return (actual_sum - min_sum) / (max_sum - min_sum)
+    if approxed_entry_count > 0:
+        n_extreme_min = get_n_extreme_entries(approxed_entry_count, qubo, True)
+        min_sum = get_sum_of_array(n_extreme_min)
+        n_extreme_max = get_n_extreme_entries(approxed_entry_count, qubo, False)
+        max_sum = get_sum_of_array(n_extreme_max)
+        flat_qubo = np.abs(approxed_entries_qubo.flatten())
+        actual_sum = get_sum_of_array(flat_qubo)
+        return (actual_sum - min_sum) / (max_sum - min_sum)
+    else:
+        return 0
 
 
 def get_n_extreme_entries(n: int, qubo: list, ascending: bool) -> list:
     abs_qubo = np.abs(qubo)
     flat_qubo = abs_qubo.flatten()
     if ascending:
-        np.sort(flat_qubo)
+        flat_qubo = np.sort(flat_qubo)
     else:
         flat_qubo[::-1].sort()
-    np.trim_zeros(flat_qubo)
+    flat_qubo = np.trim_zeros(flat_qubo)
     return flat_qubo[:n]
 
 

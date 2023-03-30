@@ -5,7 +5,7 @@ analysis_parameters = {
     'analysis_name': 'combined_analysis',
     'boxplot': True,
     'sorted': True,
-    'show_qubo_mask': 0,
+    'show_qubo_mask': 1,
     'size_analysis': True
 }
 
