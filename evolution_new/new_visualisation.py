@@ -12,7 +12,7 @@ def visualisation_pipeline(evaluation_dict: dict):
     if 'baseline_data' in evaluation_dict:
         ax, legend_lines = add_baseline(ax, evaluation_dict['baseline_data'], legend_lines)
 
-    ax, legend_lines = plot_points(ax, evaluation_dict['evaluation_results'],legend_lines)
+    ax, legend_lines = plot_points(ax, evaluation_dict['evaluation_results'], legend_lines)
     ax.legend(handles=legend_lines)
     ax.set_ylabel(evaluation_dict['ylabel'])
     ax.set_xlabel(evaluation_dict['xlabel'])

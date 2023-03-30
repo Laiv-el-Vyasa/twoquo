@@ -7,7 +7,7 @@ from evolution_new.evolution_utils import get_quality_of_approxed_qubo, get_qubo
     get_relative_size_of_approxed_entries
 from evolution_new.pygad_learning import PygadLearner
 from evolution_new.learning_model import LearningModel
-from new_visualisation import visualize_evol_results, qubo_heatmap, visualize_two_result_points
+from new_visualisation import visualisation_pipeline, qubo_heatmap, visualize_two_result_points
 
 
 solver = 'qbsolv_simulated_annealing'
@@ -29,20 +29,7 @@ class TrainingAnalysis:
     def run_analysis(self):
         approximation_quality_dict = self.get_model_approximation_quality()
         analysis_baseline = self.get_analysis_baseline()
-        visualize_evol_results(analysis_baseline[0], analysis_baseline[1],
-                               (approx_percent_list, mean_solution_quality), self.analysis_name,
-                               self.config["pipeline"]["problems"]["problems"][0],
-                               self.config['pipeline']['problems']['qubo_size'], 'qbsolv_simulated_annealing',
-                               self.analysis_parameters['steps'], boxplot=self.analysis_parameters['boxplot'])
-        visualize_two_result_points(analysis_baseline[0], analysis_baseline[1],
-                                    (correct_approx_list, mean_solution_quality),
-                                    (incorrect_approx_list, mean_solution_quality),
-                                    steps=self.analysis_parameters['steps'], baseline=True,
-                                    title='Correct and incorrect approximations')
-        visualize_two_result_points(analysis_baseline[0], analysis_baseline[1],
-                                    (correct_approx_list, correct_approx_size),
-                                    (incorrect_approx_list, incorrect_approx_size), baseline=False,
-                                    title='Relative size of approximated entries')
+        self.create_visualisation_calls(analysis_baseline, approximation_quality_dict)
 
     def get_model_approximation_quality(self) -> dict:
         return_dict = {
@@ -133,3 +120,51 @@ class TrainingAnalysis:
         title = title + f'Max-size: {self.config["pipeline"]["problems"]["qubo_size"]}, Solver: ' \
                         f'{solver}'
         return title
+
+    def create_baseline_data_dict(self, baseline_data: list[list, list]) -> dict:
+        return {
+            'percent_list': baseline_data[1],
+            'baseline_approx_data': baseline_data[0],
+            'legend': f'stepwise-approximation: {self.analysis_parameters["steps"]} steps, '
+                      f'{"smallest entries first" if self.analysis_parameters["sorted"] else "random entries"}'
+        }
+
+    def create_visualisation_calls(self, analysis_baseline:list[list, list], approximation_quality_dict: dict,
+                                   size_analysis=False):
+        visualisation_pipeline({
+            'baseline_data': self.create_baseline_data_dict(analysis_baseline),
+            'evaluation_results': [
+                {
+                    'color': 'black',
+                    'marker': 4,
+                    'evol_y': np.mean(approximation_quality_dict['solution_quality_list']),
+                    'evol_x': np.mean(approximation_quality_dict['approx_percent_list']),
+                    'label': 'Avg. solution quality, avg. approx percent of model'
+                }
+            ],
+            'title': self.get_visualisation_title('Solution quality'),
+            'x_label': 'approximated qubo entries in percent',
+            'y_label': 'solution quality'
+        })
+        visualisation_pipeline({
+            'baseline_data': self.create_baseline_data_dict(analysis_baseline),
+            'evaluation_results': [
+                {
+                    'color': 'green',
+                    'marker': 4,
+                    'evol_y': [1 for _ in approximation_quality_dict['correct_approx_list']],
+                    'evol_x': approximation_quality_dict['correct_approx_list'],
+                    'label': 'Correct solutions suggested by model'
+                },
+                {
+                    'color': 'black',
+                    'marker': 4,
+                    'evol_y': [0 for _ in approximation_quality_dict['incorrect_approx_list']],
+                    'evol_x': approximation_quality_dict['incorrect_approx_list'],
+                    'label': 'Incorrect solutions suggested by model'
+                },
+            ],
+            'title': self.get_visualisation_title('Solution quality of every solution'),
+            'x_label': 'approximated qubo entries in percent',
+            'y_label': 'solution quality'
+        })
