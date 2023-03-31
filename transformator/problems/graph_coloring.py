@@ -20,7 +20,7 @@ critical_connectivities = {
 
 def get_random_coloring() -> int:
     rng = random.default_rng()
-    return 4  # rng.integers(3, 6)
+    return rng.integers(3, 6)
 
 
 def get_random_node_number(size: tuple[int, int]) -> int:

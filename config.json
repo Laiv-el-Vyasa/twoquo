@@ -303,8 +303,8 @@
         "qubo_size": 128,
         "n_problems": 100,
         "SGI": {
-          "size1": [4, 12],
-          "size2": [8, 16],
+          "size1": [4, 8],
+          "size2": [8, 12],
           "edge_p2": 0.4
         },
         "problems": [
