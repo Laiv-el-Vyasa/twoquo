@@ -29,10 +29,10 @@ def choose_edge_probability(n1: int, n2: int, e2: float) -> float:
     e1_critical = get_critical_value(n1, n2, e2)
     e1 = 0
     rng = random.default_rng()
-    #print('Critical value: ', e1_critical)
+    # print('Critical value: ', e1_critical)
     while not 0 < e1 < 1:
         e1 = rng.normal(e1_critical, 0.2)
-    #print('Edge probability: ', e1)
+    # print('Edge probability: ', e1)
     return e1
 
 
