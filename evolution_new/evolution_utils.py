@@ -64,7 +64,7 @@ def fitness_param_to_string(param: float) -> str:
     return param_string
 
 
-def check_tsp_solutions(qubo_list:list, problem_list: list, solutions_list: list):
+def check_tsp_solutions(qubo_list: list, problem_list: list, solutions_list: list):
     for i in range(len(problem_list)):
         dist1, best_path1 = bruteforce_verification(problem_list[i]['cities'], problem_list[i]['dist_matrix'])
         dist2, best_path2 = get_best_solution(solutions_list[i], problem_list[i]['dist_matrix'])
@@ -82,8 +82,8 @@ def check_tsp_solutions(qubo_list:list, problem_list: list, solutions_list: list
 def get_training_dataset(config: dict) -> dict:
     qubo_list, problem_list = get_problem_qubos(config)
     solutions_list, energy_list = get_qubo_solutions(qubo_list, config)
-    #print(solutions_list)
-    #qubo_heatmap(qubo_list[0])
+    # print(solutions_list)
+    # qubo_heatmap(qubo_list[0])
     if 'tsp' in problem_list[0] and check_tsp:
         check_tsp_solutions(qubo_list, problem_list, solutions_list)
     return {
@@ -212,7 +212,7 @@ def get_adjacency_matrix_of_qubo(qubo):
     return adj_matrix
 
 
-def get_diagonal_of_qubo(qubo):
+def get_diagonal_of_qubo(qubo: list) -> list:
     diagonal = []
     for i in range(len(qubo)):
         diagonal.append([])
@@ -232,6 +232,32 @@ def get_mean_of_qubo_line(qubo):
     for i in range(len(qubo)):
         qubo_line_mean_list[i][0] -= mean_of_lines
     return qubo_line_mean_list
+
+
+def get_min_of_tsp_qubo_line_normalized(qubo: list, n: int) -> list:
+    min_distance_list = [[] for _ in range(n)]
+    distance_collection_list = [[] for _ in range(n)]
+    # Collect distances
+    for i in range(n):
+        for j in range(len(qubo)):
+            # Do not look at diagonal quadrant, all values here are set
+            # Do not look at diagonal in sub quadrant
+            # Skip the zeros
+            if not i * n <= j < (i + 1) * n \
+                   and not j % n == 0\
+                   and not qubo[i][j] == 0:
+                distance_collection_list[i].append(qubo[i][j])
+    # Set distances and get min distance
+    max_min_distance = 0
+    for i in range(n):
+        line_min_dist = np.min(distance_collection_list[i])
+        if line_min_dist > max_min_distance:
+            max_min_distance = line_min_dist
+        min_distance_list[i].append(line_min_dist)
+    # Normalize distances: 1 := longest shortest distance
+    for i in range(n):
+        min_distance_list[i][0] = min_distance_list[i][0] / max_min_distance
+    return min_distance_list
 
 
 def get_tensor_of_structure(ndarray, np_type=np.float32):
