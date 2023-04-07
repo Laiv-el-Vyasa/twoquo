@@ -77,7 +77,7 @@ class CombinedModel(LearningModel):
             calc_qubo = qubo
 
         edge_index, edge_weights = get_edge_data(calc_qubo)
-        node_model, node_features = self.get_node_model_and_features(problem, calc_qubo)
+        node_model, node_features = self.get_node_model_and_features(problem, qubo, calc_qubo)
         node_features = node_model.forward(get_tensor_of_structure(node_features),
                                            get_tensor_of_structure(edge_index).long(),
                                            get_tensor_of_structure(edge_weights)).detach()
@@ -111,9 +111,9 @@ class CombinedModel(LearningModel):
         # qubo_heatmap(approx_mask)
         return approx_mask
 
-    def get_node_model_and_features(self, problem: dict, qubo: list) -> tuple[nn.Module, list]:
+    def get_node_model_and_features(self, problem: dict, qubo: list, calc_qubo: list) -> tuple[nn.Module, list]:
         return_node_model = self.node_model
-        return_node_features = get_diagonal_of_qubo(qubo)
+        return_node_features = get_diagonal_of_qubo(calc_qubo)
         if 'tsp' in problem:
             return_node_model = self.node_model_normalized
         return return_node_model, return_node_features
