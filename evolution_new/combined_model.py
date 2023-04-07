@@ -58,7 +58,7 @@ class CombinedModel(LearningModel):
 
     def get_approxed_qubo(self, qubo: list, problem: dict, index: int) -> tuple[list, int]:
         edge_index, node_features = self.get_edge_index_and_node_features(qubo, problem)
-        #print(f'Problem {index}, node_features: {node_features}')
+        # print(f'Problem {index}, node_features: {node_features}')
         node_mean_tensor_list = []
         for edge_0, edge_1 in zip(edge_index[0], edge_index[1]):
             node_features_0 = np.array(node_features[edge_0].numpy())
@@ -71,6 +71,8 @@ class CombinedModel(LearningModel):
     def get_edge_index_and_node_features(self, qubo: list, problem: dict) -> tuple[list[list, list], list]:
         if 'n_colors' in problem:
             calc_qubo = get_small_qubo(qubo, problem['n_colors'])
+        elif 'tsp' in problem:
+            calc_qubo = get_small_qubo(qubo, len(problem['cities']))
         else:
             calc_qubo = qubo
 
@@ -92,11 +94,17 @@ class CombinedModel(LearningModel):
                     edge_idx_0 = edge_index[0][idx]
                     edge_idx_1 = edge_index[1][idx]
                     for i in range(n):
-                        approx_mask[(edge_idx_0 * n) + i][(edge_idx_1 * n) + i] = 0
-                        if edge_idx_0 == edge_idx_1:
+                        if 'n_colors' in problem:
+                            approx_mask[(edge_idx_0 * n) + i][(edge_idx_1 * n) + i] = 0
+                            if edge_idx_0 == edge_idx_1:
+                                for j in range(i):
+                                    approx_mask[(edge_idx_0 * n) + i][(edge_idx_1 * n) + j] = 0
+                                    approx_mask[(edge_idx_0 * n) + j][(edge_idx_1 * n) + i] = 0
+                        else:
                             for j in range(i):
-                                approx_mask[(edge_idx_0 * n) + i][(edge_idx_1 * n) + j] = 0
-                                approx_mask[(edge_idx_0 * n) + j][(edge_idx_1 * n) + i] = 0
+                                if i != j and edge_idx_0 != edge_idx_1:
+                                    approx_mask[(edge_idx_0 * n) + i][(edge_idx_1 * n) + j] = 0
+                                    approx_mask[(edge_idx_0 * n) + j][(edge_idx_1 * n) + i] = 0
                 else:
                     approx_mask[edge_index[0][idx]][edge_index[1][idx]] = 0
         # qubo_heatmap(qubo)
