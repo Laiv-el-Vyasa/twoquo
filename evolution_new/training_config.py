@@ -1,4 +1,5 @@
 from combined_model import CombinedModel
+from combined_feature_model import CombinedFeatureModel
 from evolution_utils import construct_standard_fitness_function
 
 training_config = {
@@ -137,6 +138,25 @@ training_config = {
                 'z': 0.05
             }
         },
+    'combined_tsp_features':
+        {
+            'config_name': 'test_evol_tsp',
+            'training_name': 'combined_feature_model',
+            'learning_parameters': 'standard',
+            'network_type': 'combined_features',
+            'network_information': {
+                'network_name': 'combinedModelUwU',
+                'node_features': 8,
+            },
+            'fitness_function': 'standard',
+            'fitness_parameters': {
+                'a': 1,
+                'b': 0.5,
+                'c': 10,
+                'd': 0.1,
+                'z': 0.05
+            }
+        },
     'combined_gc_small':
         {
             'config_name': 'test_evol_gc_small',
@@ -197,7 +217,8 @@ training_config = {
 }
 
 model_config = {
-    'combined': CombinedModel
+    'combined': CombinedModel,
+    'combined_features': CombinedFeatureModel
 }
 
 fitness_function_generation_config = {

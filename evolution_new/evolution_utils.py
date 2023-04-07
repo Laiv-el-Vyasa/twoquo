@@ -245,8 +245,8 @@ def get_min_of_tsp_qubo_line_normalized(qubo: list, n: int) -> list:
             # Skip the zeros
             if not i * n <= j < (i + 1) * n \
                    and not j % n == 0\
-                   and not qubo[i][j] == 0:
-                distance_collection_list[i].append(qubo[i][j])
+                   and not qubo[i * n][j] == 0:
+                distance_collection_list[i].append(qubo[i * n][j])
     # Set distances and get min distance
     max_min_distance = 0
     for i in range(n):
@@ -256,7 +256,7 @@ def get_min_of_tsp_qubo_line_normalized(qubo: list, n: int) -> list:
         min_distance_list[i].append(line_min_dist)
     # Normalize distances: 1 := longest shortest distance
     for i in range(n):
-        min_distance_list[i][0] = min_distance_list[i][0] / max_min_distance
+        min_distance_list[i][0] = (min_distance_list[i][0] / max_min_distance) * n
     return min_distance_list
 
 

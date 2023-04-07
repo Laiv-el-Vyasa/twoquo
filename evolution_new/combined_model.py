@@ -78,9 +78,11 @@ class CombinedModel(LearningModel):
 
         edge_index, edge_weights = get_edge_data(calc_qubo)
         node_model, node_features = self.get_node_model_and_features(problem, qubo, calc_qubo)
+        # print('Node features before: ', node_features)
         node_features = node_model.forward(get_tensor_of_structure(node_features),
                                            get_tensor_of_structure(edge_index).long(),
                                            get_tensor_of_structure(edge_weights)).detach()
+        # print('Node features after: ', node_features)
         return edge_index, node_features
 
     def get_approx_mask(self, edge_index: list[list, list], node_mean_tensor_list: list,
