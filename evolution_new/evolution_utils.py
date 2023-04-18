@@ -208,6 +208,8 @@ def remove_hard_constraits_from_qubo(qubo: list, problem: dict) -> list:
                 for k in range(n):
                     return_qubo[n * i + k][n * j + k] = 0
                     return_qubo[n * j + k][n * i + k] = 0
+        # Remove diagonal
+        # qubo -= np.diag(np.diagonal(qubo))
     return return_qubo
 
 
