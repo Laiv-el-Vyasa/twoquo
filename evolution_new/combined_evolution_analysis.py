@@ -2,14 +2,14 @@ from model_analysis import TrainingAnalysis
 
 analysis_parameters = {
     'steps': 100,
-    'analysis_name': 'combined_analysis',
+    'analysis_name': 'combined_feature_analysis',
     'boxplot': True,
     'sorted': True,
-    'show_qubo_mask': 0,
+    'show_qubo_mask': 10,
     'size_analysis': True
 }
 
 if __name__ == "__main__":
-    config_name = 'combined_gc_2'
+    config_name = 'combined_ec'
     training_analysis = TrainingAnalysis(config_name, analysis_parameters)
     training_analysis.run_analysis()

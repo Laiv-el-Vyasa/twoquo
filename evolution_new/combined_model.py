@@ -11,7 +11,7 @@ from torch import nn
 
 from evolution_new.new_visualisation import qubo_heatmap
 from evolution_utils import get_edge_data, get_diagonal_of_qubo, get_tensor_of_structure, get_training_dataset, \
-    get_small_qubo, get_reducability_number
+    get_small_qubo, get_reducability_number, remove_hard_constraits_from_qubo
 from learning_model import LearningModel
 from neural_networks import CombinedNodeFeaturesUwu, CombinedEdgeDecisionUwu
 
@@ -109,8 +109,8 @@ class CombinedModel(LearningModel):
                                     approx_mask[(edge_idx_0 * n) + j][(edge_idx_1 * n) + i] = 0
                 else:
                     approx_mask[edge_index[0][idx]][edge_index[1][idx]] = 0
-        # qubo_heatmap(qubo)
-        # qubo_heatmap(approx_mask)
+        qubo_heatmap(qubo)
+        qubo_heatmap(approx_mask)
         return approx_mask
 
     def get_node_model_and_features(self, problem: dict, qubo: list, calc_qubo: list) -> tuple[nn.Module, list]:

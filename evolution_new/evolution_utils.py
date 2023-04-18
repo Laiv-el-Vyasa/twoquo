@@ -185,6 +185,25 @@ def get_reducability_number(prob: dict) -> int:
     return n
 
 
+def remove_hard_constraits_from_qubo(qubo: list, problem: dict) -> list:
+    return_qubo = qubo
+    if 'tsp' in problem:
+        n = problem['cities']
+        # Remove triangles over main diagonal
+        for i in range(n):
+            for j in range(n - 1):
+                for k in range(j):
+                    return_qubo[i * n + j + 1][i * n + k] = 0
+                    return_qubo[i * n + k][i * n + j + 1] = 0
+        # Remove sub-diagonals
+        for i in range(n - 1):
+            for j in range(i):
+                for k in range(n):
+                    return_qubo[n * (i + 1) + k][n * j + k] = 0
+                    return_qubo[n * j + k][n * (i + 1) + k] = 0
+    return return_qubo
+
+
 def get_edge_data(qubo: list, include_loops=True) -> tuple[list[list, list], list]:
     edge_index = [[], []]
     edge_weight = []
@@ -250,7 +269,7 @@ def get_min_of_tsp_qubo_line_normalized(qubo: list, n: int) -> list:
     # Set distances and get min distance
     max_min_distance = 0
     for i in range(n):
-        line_min_dist = np.min(distance_collection_list[i])
+        line_min_dist = np.mean(np.sort(distance_collection_list[i])[:1])
         if line_min_dist > max_min_distance:
             max_min_distance = line_min_dist
         min_distance_list[i].append(line_min_dist)
