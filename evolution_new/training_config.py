@@ -157,6 +157,25 @@ training_config = {
                 'z': 0.05
             }
         },
+    'combined_tsp_features_long':
+        {
+            'config_name': 'test_evol_tsp',
+            'training_name': 'combined_feature_model_long',
+            'learning_parameters': 'long',
+            'network_type': 'combined_features',
+            'network_information': {
+                'network_name': 'combinedModelUwU',
+                'node_features': 8,
+            },
+            'fitness_function': 'standard',
+            'fitness_parameters': {
+                'a': 1,
+                'b': 0.5,
+                'c': 10,
+                'd': 0.1,
+                'z': 0.05
+            }
+        },
     'combined_gc_small':
         {
             'config_name': 'test_evol_gc_small',
@@ -241,6 +260,12 @@ learning_parameters_config = {
     'small': {
         'population': 100,
         'num_generations': 20,
+        'keep_elitism': 5,
+        'percent_of_parents_mating': 0.2
+    },
+    'long': {
+        'population': 100,
+        'num_generations': 1000,
         'keep_elitism': 5,
         'percent_of_parents_mating': 0.2
     }
