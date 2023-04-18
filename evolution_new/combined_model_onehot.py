@@ -20,14 +20,14 @@ class CombinedOneHotModel(CombinedFeatureModel):
         else:
             calc_qubo = qubo
 
-        qubo_heatmap(calc_qubo)
+        # qubo_heatmap(calc_qubo)
         edge_index, edge_weights = get_edge_data(calc_qubo)
         node_model, node_features = self.get_node_model_and_features(problem, qubo, calc_qubo)
-        print('Node features before: ', node_features)
+        # print('Node features before: ', node_features)
         node_features = node_model.forward(get_tensor_of_structure(node_features),
                                            get_tensor_of_structure(edge_index).long(),
                                            get_tensor_of_structure(edge_weights)).detach()
-        print('Node features after: ', node_features)
+        # print('Node features after: ', node_features)
         return edge_index, node_features
 
     def get_node_model_and_features(self, problem: dict, qubo: list, calc_qubo) -> tuple[nn.Module, list]:
