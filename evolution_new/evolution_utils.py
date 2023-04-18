@@ -185,22 +185,29 @@ def get_reducability_number(prob: dict) -> int:
     return n
 
 
+def get_reducability_number_onehot(prob: dict) -> int:
+    n = 0
+    if 'n_colors' in prob:
+        n = prob['n_colors']
+    return n
+
+
 def remove_hard_constraits_from_qubo(qubo: list, problem: dict) -> list:
     return_qubo = qubo
     if 'tsp' in problem:
-        n = problem['cities']
+        n = len(problem['cities'])
         # Remove triangles over main diagonal
         for i in range(n):
-            for j in range(n - 1):
+            for j in range(n):
                 for k in range(j):
-                    return_qubo[i * n + j + 1][i * n + k] = 0
-                    return_qubo[i * n + k][i * n + j + 1] = 0
+                    return_qubo[i * n + j][i * n + k] = 0
+                    return_qubo[i * n + k][i * n + j] = 0
         # Remove sub-diagonals
-        for i in range(n - 1):
+        for i in range(n):
             for j in range(i):
                 for k in range(n):
-                    return_qubo[n * (i + 1) + k][n * j + k] = 0
-                    return_qubo[n * j + k][n * (i + 1) + k] = 0
+                    return_qubo[n * i + k][n * j + k] = 0
+                    return_qubo[n * j + k][n * i + k] = 0
     return return_qubo
 
 
@@ -269,12 +276,42 @@ def get_min_of_tsp_qubo_line_normalized(qubo: list, n: int) -> list:
     # Set distances and get min distance
     max_min_distance = 0
     for i in range(n):
-        line_min_dist = np.mean(np.sort(distance_collection_list[i])[:1])
+        line_min_dist = np.min(distance_collection_list[i])
         if line_min_dist > max_min_distance:
             max_min_distance = line_min_dist
         min_distance_list[i].append(line_min_dist)
     # Normalize distances: 1 := longest shortest distance
     for i in range(n):
+        min_distance_list[i][0] = (min_distance_list[i][0] / max_min_distance) * n
+    return min_distance_list
+
+
+def get_min_of_tsp_qubo_line_normalized_onehot(qubo: list, n: int) -> list:
+    min_distance_list = [[] for _ in range(len(qubo))]
+    distance_collection_list = [[] for _ in range(len(qubo))]
+    # Collect distances
+    for i in range(len(qubo)):
+        for j in range(len(qubo)):
+            # Do not look at diagonal quadrant, all values here are set
+            # Do not look at diagonal in sub quadrant
+            # Skip the zeros
+            n_ = np.floor(i / n)
+            k_ = i % n
+            if not n_ * n <= j < (n_ * n) + n \
+                    and not j % n == k_ \
+                    and not qubo[i][j] == 0:
+                distance_collection_list[i].append(qubo[i][j])
+
+    # Set distances and get min distance
+    # print('Dist collection list: ', distance_collection_list)
+    max_min_distance = 0
+    for i in range(len(qubo)):
+        line_min_dist = np.mean(np.sort(distance_collection_list[i])[:3])
+        if line_min_dist > max_min_distance:
+            max_min_distance = line_min_dist
+        min_distance_list[i].append(line_min_dist)
+    # Normalize distances: 1 := longest shortest distance
+    for i in range(len(qubo)):
         min_distance_list[i][0] = (min_distance_list[i][0] / max_min_distance) * n
     return min_distance_list
 

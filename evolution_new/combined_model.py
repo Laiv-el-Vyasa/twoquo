@@ -109,8 +109,8 @@ class CombinedModel(LearningModel):
                                     approx_mask[(edge_idx_0 * n) + j][(edge_idx_1 * n) + i] = 0
                 else:
                     approx_mask[edge_index[0][idx]][edge_index[1][idx]] = 0
-        qubo_heatmap(qubo)
-        qubo_heatmap(approx_mask)
+        #qubo_heatmap(qubo)
+        #qubo_heatmap(approx_mask)
         return approx_mask
 
     def get_node_model_and_features(self, problem: dict, qubo: list, calc_qubo: list) -> tuple[nn.Module, list]:
