@@ -192,8 +192,9 @@ def get_reducability_number_onehot(prob: dict) -> int:
     return n
 
 
-def remove_hard_constraits_from_qubo(qubo: list, problem: dict) -> list:
-    return_qubo = qubo
+def remove_hard_constraits_from_qubo(qubo: list, problem: dict, remove_diagonal: bool) -> list:
+    return_qubo = np.zeros((len(qubo), len(qubo)))
+    return_qubo += qubo
     if 'tsp' in problem:
         n = len(problem['cities'])
         # Remove triangles over main diagonal
@@ -209,7 +210,8 @@ def remove_hard_constraits_from_qubo(qubo: list, problem: dict) -> list:
                     return_qubo[n * i + k][n * j + k] = 0
                     return_qubo[n * j + k][n * i + k] = 0
         # Remove diagonal
-        # qubo -= np.diag(np.diagonal(qubo))
+        if remove_diagonal:
+            qubo -= np.diag(np.diagonal(qubo))
     return return_qubo
 
 

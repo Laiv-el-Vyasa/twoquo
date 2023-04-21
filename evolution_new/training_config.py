@@ -1,6 +1,6 @@
 from combined_model import CombinedModel
 from combined_feature_model import CombinedFeatureModel
-from evolution_new.combined_model_onehot import CombinedOneHotModel
+from evolution_new.combined_model_features_onehot import CombinedOneHotFeatureModel
 from evolution_utils import construct_standard_fitness_function
 
 training_config = {
@@ -239,7 +239,7 @@ training_config = {
 model_config = {
     'combined': CombinedModel,
     'combined_features': CombinedFeatureModel,
-    'combined_features_onehot': CombinedOneHotModel
+    'combined_features_onehot': CombinedOneHotFeatureModel
 }
 
 fitness_function_generation_config = {

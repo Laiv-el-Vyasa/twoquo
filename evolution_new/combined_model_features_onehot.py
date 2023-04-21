@@ -9,14 +9,14 @@ from evolution_new.evolution_utils import get_small_qubo, remove_hard_constraits
 from new_visualisation import qubo_heatmap
 
 
-class CombinedOneHotModel(CombinedFeatureModel):
+class CombinedOneHotFeatureModel(CombinedFeatureModel):
 
     def get_edge_index_and_node_features(self, qubo: list, problem: dict) -> tuple[list[list, list], list]:
         if 'n_colors' in problem:
             calc_qubo = get_small_qubo(qubo, problem['n_colors'])
         elif 'tsp' in problem:
             #calc_qubo = get_small_qubo(qubo, len(problem['cities']))
-            calc_qubo = remove_hard_constraits_from_qubo(qubo, problem)
+            calc_qubo = remove_hard_constraits_from_qubo(qubo, problem, False)
         else:
             calc_qubo = qubo
 
