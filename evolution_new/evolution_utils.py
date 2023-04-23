@@ -197,21 +197,30 @@ def remove_hard_constraits_from_qubo(qubo: list, problem: dict, remove_diagonal:
     return_qubo += qubo
     if 'tsp' in problem:
         n = len(problem['cities'])
-        # Remove triangles over main diagonal
-        for i in range(n):
-            for j in range(n):
-                for k in range(j):
-                    return_qubo[i * n + j][i * n + k] = 0
-                    return_qubo[i * n + k][i * n + j] = 0
         # Remove sub-diagonals
         for i in range(n):
             for j in range(i):
                 for k in range(n):
                     return_qubo[n * i + k][n * j + k] = 0
                     return_qubo[n * j + k][n * i + k] = 0
-        # Remove diagonal
-        if remove_diagonal:
-            qubo -= np.diag(np.diagonal(qubo))
+        # Remove triangles over main diagonal
+        for i in range(n):
+            for j in range(n):
+                for k in range(j):
+                    return_qubo[i * n + j][i * n + k] = 0
+                    return_qubo[i * n + k][i * n + j] = 0
+    elif 'n_colors' in problem:
+        n = problem['n_colors']
+        m = int(len(qubo) / n)
+        # Remove triangles over main diagonal
+        for i in range(m):
+            for j in range(n):
+                for k in range(j):
+                    return_qubo[i * n + j][i * n + k] = 0
+                    return_qubo[i * n + k][i * n + j] = 0
+    # Remove diagonal
+    if remove_diagonal:
+        qubo -= np.diag(np.diagonal(qubo))
     return return_qubo
 
 
@@ -274,8 +283,8 @@ def get_min_of_tsp_qubo_line_normalized(qubo: list, n: int) -> list:
             # Do not look at diagonal in sub quadrant
             # Skip the zeros
             if not i * n <= j < (i + 1) * n \
-                   and not j % n == 0\
-                   and not qubo[i * n][j] == 0:
+                    and not j % n == 0 \
+                    and not qubo[i * n][j] == 0:
                 distance_collection_list[i].append(qubo[i * n][j])
     # Set distances and get min distance
     max_min_distance = 0
@@ -318,6 +327,20 @@ def get_min_of_tsp_qubo_line_normalized_onehot(qubo: list, n: int) -> list:
     for i in range(len(qubo)):
         min_distance_list[i][0] = (min_distance_list[i][0] / max_min_distance) * n
     return min_distance_list
+
+
+def get_number_of_edges_for_gc(qubo: list, n: int):
+    line_edge_list = [[] for _ in range(len(qubo))]
+    for i in range(len(qubo)):
+        edge_count = 0
+        for j in range(len(qubo)):
+            n_ = np.floor(i / n)
+            if not n_ * n <= j < (n_ * n) + n \
+                    and qubo[i][j] != 0:
+                edge_count += 1
+        line_edge_list[i].append(edge_count)
+    print(line_edge_list)
+    return line_edge_list
 
 
 def get_tensor_of_structure(ndarray, np_type=np.float32):

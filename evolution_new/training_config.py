@@ -177,6 +177,25 @@ training_config = {
                 'z': 0.05
             }
         },
+    'combined_gc_features_onehot':
+        {
+            'config_name': 'test_evol_gc',
+            'training_name': 'combined_feature_onehot_model',
+            'learning_parameters': 'standard',
+            'network_type': 'combined_features_onehot',
+            'network_information': {
+                'network_name': 'combinedModelUwU',
+                'node_features': 8,
+            },
+            'fitness_function': 'standard',
+            'fitness_parameters': {
+                'a': 1,
+                'b': 0.5,
+                'c': 10,
+                'd': 0.1,
+                'z': 0.05
+            }
+        },
     'combined_gc_small':
         {
             'config_name': 'test_evol_gc_small',
