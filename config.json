@@ -236,6 +236,21 @@
         ]
       }
     },
+    "test_evol_gc_onehot": {
+      "base_cfg": "1",
+      "dataset_id": "test_evol_gc",
+      "problems": {
+        "qubo_size": 128,
+        "n_problems": 100,
+        "GC": {
+          "size": [16, 64],
+          "n_colors": 4
+        },
+        "problems": [
+          "GC"
+        ]
+      }
+    },
     "test_evol_gc_small": {
       "base_cfg": "1",
       "dataset_id": "test_evol_gc_small",

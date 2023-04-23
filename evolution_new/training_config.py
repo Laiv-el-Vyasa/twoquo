@@ -179,7 +179,7 @@ training_config = {
         },
     'combined_gc_features_onehot':
         {
-            'config_name': 'test_evol_gc',
+            'config_name': 'test_evol_gc_onehot',
             'training_name': 'combined_feature_onehot_model',
             'learning_parameters': 'standard',
             'network_type': 'combined_features_onehot',

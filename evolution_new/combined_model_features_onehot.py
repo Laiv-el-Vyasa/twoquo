@@ -21,11 +21,11 @@ class CombinedOneHotFeatureModel(CombinedFeatureModel):
         # qubo_heatmap(calc_qubo)
         edge_index, edge_weights = get_edge_data(calc_qubo)
         node_model, node_features = self.get_node_model_and_features(problem, qubo, calc_qubo)
-        print('Node features before: ', node_features)
+        # print('Node features before: ', node_features)
         node_features = node_model.forward(get_tensor_of_structure(node_features),
                                            get_tensor_of_structure(edge_index).long(),
                                            get_tensor_of_structure(edge_weights)).detach()
-        print('Node features after: ', node_features)
+        # print('Node features after: ', node_features)
         return edge_index, node_features
 
     def get_node_model_and_features(self, problem: dict, qubo: list, calc_qubo) -> tuple[nn.Module, list]:
@@ -44,25 +44,8 @@ class CombinedOneHotFeatureModel(CombinedFeatureModel):
         edge_decision_list = self.edge_model.forward(get_tensor_of_structure(node_mean_tensor_list)).detach()
         for idx, edge_decision in enumerate(edge_decision_list):
             if edge_decision.detach() <= 0:
-                n = get_reducability_number_onehot(problem)
-                if n > 0:
-                    edge_idx_0 = edge_index[0][idx]
-                    edge_idx_1 = edge_index[1][idx]
-                    for i in range(n):
-                        if 'n_colors' in problem:
-                            approx_mask[(edge_idx_0 * n) + i][(edge_idx_1 * n) + i] = 0
-                            if edge_idx_0 == edge_idx_1:
-                                for j in range(i):
-                                    approx_mask[(edge_idx_0 * n) + i][(edge_idx_1 * n) + j] = 0
-                                    approx_mask[(edge_idx_0 * n) + j][(edge_idx_1 * n) + i] = 0
-                        else:
-                            for j in range(i):
-                                if i != j and edge_idx_0 != edge_idx_1:
-                                    approx_mask[(edge_idx_0 * n) + i][(edge_idx_1 * n) + j] = 0
-                                    approx_mask[(edge_idx_0 * n) + j][(edge_idx_1 * n) + i] = 0
-                else:
-                    if 'tsp' not in problem or not edge_index[0][idx] == edge_index[1][idx]:
-                        approx_mask[edge_index[0][idx]][edge_index[1][idx]] = 0
-        #qubo_heatmap(qubo)
-        #qubo_heatmap(approx_mask)
+                if not edge_index[0][idx] == edge_index[1][idx]:
+                    approx_mask[edge_index[0][idx]][edge_index[1][idx]] = 0
+        # qubo_heatmap(qubo)
+        # qubo_heatmap(approx_mask)
         return approx_mask

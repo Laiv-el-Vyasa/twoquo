@@ -187,7 +187,7 @@ def get_reducability_number(prob: dict) -> int:
 
 def get_reducability_number_onehot(prob: dict) -> int:
     n = 0
-    if 'n_colors' in prob:
+    if 'n_colorrs' in prob:
         n = prob['n_colors']
     return n
 
