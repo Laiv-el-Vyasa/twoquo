@@ -240,10 +240,10 @@
       "base_cfg": "1",
       "dataset_id": "test_evol_gc",
       "problems": {
-        "qubo_size": 128,
+        "qubo_size": 192,
         "n_problems": 100,
         "GC": {
-          "size": [16, 64],
+          "size": [16, 48],
           "n_colors": 4
         },
         "problems": [

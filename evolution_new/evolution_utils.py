@@ -185,13 +185,6 @@ def get_reducability_number(prob: dict) -> int:
     return n
 
 
-def get_reducability_number_onehot(prob: dict) -> int:
-    n = 0
-    if 'n_colorrs' in prob:
-        n = prob['n_colors']
-    return n
-
-
 def remove_hard_constraits_from_qubo(qubo: list, problem: dict, remove_diagonal: bool) -> list:
     return_qubo = np.zeros((len(qubo), len(qubo)))
     return_qubo += qubo
@@ -339,7 +332,7 @@ def get_number_of_edges_for_gc(qubo: list, n: int):
                     and qubo[i][j] != 0:
                 edge_count += 1
         line_edge_list[i].append(edge_count)
-    print(line_edge_list)
+    # print(line_edge_list)
     return line_edge_list
 
 
