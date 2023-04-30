@@ -14,7 +14,7 @@ class CombinedOneHotFeatureModel(CombinedFeatureModel):
     def get_edge_index_and_node_features(self, qubo: list, problem: dict) -> tuple[list[list, list], list]:
         if 'tsp' in problem or 'n_colors' in problem:
             #calc_qubo = get_small_qubo(qubo, len(problem['cities']))
-            calc_qubo = remove_hard_constraits_from_qubo(qubo, problem, True)
+            calc_qubo = remove_hard_constraits_from_qubo(qubo, problem, False)
         else:
             calc_qubo = qubo
 

@@ -17,9 +17,11 @@ class TrainingAnalysis:
         self.model, learning_parameters, fitness_func = get_data_from_training_config(config_name)
         self.pygad_learner = PygadLearner(self.model, learning_parameters, fitness_func)
         self.config = load_cfg(cfg_id=learning_parameters['config_name'])
+        self.config["solvers"]['qbsolv_simulated_annealing']['repeats'] = 100
+        print(self.config["solvers"]['qbsolv_simulated_annealing']['repeats'])
         self.analysis_name = get_file_name(analysis_parameters['analysis_name'], self.config,
                                            learning_parameters['fitness_parameters'], analysis=True)
-        self.config['pipeline']['problems']['n_problems'] *= 10
+        self.config['pipeline']['problems']['n_problems'] *= 1
         self.analysis_parameters = analysis_parameters
         if not self.model.load_best_model(learning_parameters['training_name']):
             self.pygad_learner.save_best_model()
@@ -44,11 +46,12 @@ class TrainingAnalysis:
                                                       problem_dict['solutions_list'], problem_dict['qubo_list']
         for idx, (qubo, approx_qubo, solutions) in enumerate(zip(qubo_list, approx_qubo_list, solutions_list)):
             print(f'Approximating problem {idx} via model')
+            # print(solutions)
             if idx < self.analysis_parameters['show_qubo_mask']:
                 qubo_heatmap(qubo)
                 qubo_heatmap(get_qubo_approx_mask(approx_qubo, qubo))
-            min_solution_quality, _, approx_percent = get_quality_of_approxed_qubo(qubo, approx_qubo,
-                                                                                   solutions, self.config)
+            min_solution_quality, _, approx_percent, mean_solution_quality, min_mean_sol_qual, mean_mean_sol_qual\
+                = get_quality_of_approxed_qubo(qubo, approx_qubo, solutions, self.config)
             return_dict['solution_quality_list'].append((np.floor(1 - min_solution_quality)))
             approx_size = get_relative_size_of_approxed_entries(approx_qubo, qubo)
             #print('approx size: ', approx_size)

@@ -114,13 +114,15 @@ def get_problem_qubos(config: dict):
 # Get quality of the approximated qubo, regarding the quality of the solutions and how much approximation occurred
 # Returning quality, best solution and degree of approximation
 def get_quality_of_approxed_qubo(qubo: np.array, approxed_qubo: np.array, solutions: np.array,
-                                 config: dict, print_solutions=False) -> tuple[float, list, float]:
+                                 config: dict, print_solutions=False) -> tuple[float, list, float, float, float, float]:
     absolute_approx_count, relative_approx_count = get_approximation_count(qubo, approxed_qubo)
     _, best_solutions_approx, min_energy_approx = solve_qubo(approxed_qubo, config)
     if print_solutions:
         print(best_solutions_approx)
-    min_solution_quality, best_solution_approx = get_min_solution_quality(best_solutions_approx, qubo, solutions)
-    return min_solution_quality, best_solution_approx, relative_approx_count
+    min_solution_quality, best_solution_approx, mean_solution_quality, min_mean_sol_qual, mean_mean_sol_qual \
+        = get_min_solution_quality(best_solutions_approx, qubo, solutions)
+    return min_solution_quality, best_solution_approx, relative_approx_count, mean_solution_quality,\
+           min_mean_sol_qual, mean_mean_sol_qual
 
 
 def get_approximation_count(qubo: np.array, approxed_qubo: np.array) -> tuple[int, float]:
@@ -346,11 +348,14 @@ def solve_qubo(qubo: np.array, config: dict):
     metadata = engine.recommend(qubo)
     # print('Metadata solutions: ', metadata.solutions[solver][0])
     # print('Metadata energies: ', metadata.energies[solver][0])
-    solution_list = metadata.solutions[solver][0]
-    energy_list = metadata.energies[solver][0]
+    solution_list = []
     calc_energies = []
-    for solution in solution_list:
-        calc_energies.append(solution.dot(qubo.dot(solution)))
+    for solutions in metadata.solutions[solver]:
+        solution_list.append(solutions[0])  # Append first solution given by the solver
+        calc_energies.append(solutions[0].dot(qubo.dot(solutions[0])))
+    #print(solution_list)
+    #for solution in solution_list:
+    #    calc_energies.append(solution.dot(qubo.dot(solution)))
     # print('Calc energies: ', calc_energies)
     # print(metadata.solutions[solver], metadata.energies[solver])
     return solution_list[np.argmin(calc_energies)], solution_list, np.min(calc_energies)
@@ -359,12 +364,15 @@ def solve_qubo(qubo: np.array, config: dict):
 # Calculated solution quality of approximation on qubo:
 # First calculate the min energy of the original solutions, then of the approxed solutions on the original qubo
 # Then calculate solution quality using the results, returning quality and the best approx solution
-def get_min_solution_quality(approx_solutions: np.array, qubo: np.array, solutions: np.array) -> tuple[float, list]:
+def get_min_solution_quality(approx_solutions: np.array, qubo: np.array, solutions: np.array) \
+        -> tuple[float, list, float, float, float]:
     min_energy_list = []
     for solution in solutions:
         min_energy_list.append(solution.dot(qubo.dot(solution)))
     min_energy = np.min(min_energy_list)
+    mean_energy = np.mean(min_energy_list)
     solution_quality_array = []
+    mean_solution_quality_array = []
     for approx_solution in approx_solutions:
         approx_energy = approx_solution.dot(qubo.dot(approx_solution))
         # if approx_energy < np.min(min_energy_list):
@@ -374,7 +382,9 @@ def get_min_solution_quality(approx_solutions: np.array, qubo: np.array, solutio
         solution_quality = get_solution_quality(approx_energy, min_energy)
         # print('Solution quality: ', solution_quality)
         solution_quality_array.append(solution_quality)
-    return np.min(solution_quality_array), approx_solutions[np.argmin(solution_quality_array)]
+        mean_solution_quality_array.append(get_solution_quality(approx_energy, mean_energy))
+    return np.min(solution_quality_array), approx_solutions[np.argmin(solution_quality_array)], \
+           np.mean(solution_quality_array), np.min(mean_solution_quality_array), np.mean(mean_solution_quality_array)
 
 
 def get_solution_quality(energy, min_energy):  # 0: perfect result, 1: worst result
@@ -401,7 +411,7 @@ def construct_standard_fitness_function(fitness_params: dict) -> Callable[[dict,
         qubo_list, approxed_qubo_list, solution_list = problem_dict['qubo_list'], problem_dict['approxed_qubo_list'], \
                                                        problem_dict['solutions_list']
         for qubo, approximation, solutions in zip(qubo_list, approxed_qubo_list, solution_list):
-            solution_quality, best_approx_solution, true_approx_percent = get_quality_of_approxed_qubo(
+            solution_quality, best_approx_solution, true_approx_percent, *_ = get_quality_of_approxed_qubo(
                 qubo, approximation, solutions, config)
             fitness = (a * (1 - solution_quality) +
                        b * (1 - np.square(d - true_approx_percent)) +
@@ -467,7 +477,7 @@ def get_fitness_value(linearized_approx_list, qubo_list, min_energy_list, soluti
         # print('Max qubo entry: ', np.max(qubo))
         # print('Linearized approx: ', linearized_approx)
         problem_time = time.time()
-        solution_quality, best_approx_solution, true_approx_percent = get_quality_of_approxed_qubo(
+        solution_quality, best_approx_solution, true_approx_percent, *_ = get_quality_of_approxed_qubo(
             linearized_approx, qubo, solutions, cfg)
         # approx_quality = get_approx_number(linearized_approx) / len(linearized_approx)
         # approx_quality = true_approx / len(linearized_approx)
