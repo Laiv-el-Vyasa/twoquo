@@ -10,7 +10,8 @@ def visualisation_pipeline(evaluation_dict: dict):
     fig, ax = pyplot.subplots()
     legend_lines = []
     if 'baseline_data' in evaluation_dict:
-        ax, legend_lines = add_baseline(ax, evaluation_dict['baseline_data'], legend_lines)
+        for baseline_data in evaluation_dict['baseline_data']:
+            ax, legend_lines = add_baseline(ax, baseline_data, legend_lines)
 
     ax, legend_lines = plot_points(ax, evaluation_dict['evaluation_results'], legend_lines)
     ax.legend(handles=legend_lines)
@@ -25,8 +26,14 @@ def visualisation_pipeline(evaluation_dict: dict):
 
 def add_baseline(ax: matplotlib.axes.Axes, baseline_data: dict, legend_lines: list) -> tuple:
     color = 'black'
-    ax.plot(baseline_data['percent_list'], baseline_data['baseline_approx_data'], color=color, markersize=8)
-    legend_lines.append(lines.Line2D([], [], color=color, markersize=8, label=baseline_data['legend']))
+    if 'dotted' in baseline_data:
+        linestyle = 'dashed'
+    else:
+        linestyle = 'solid'
+    ax.plot(baseline_data['percent_list'], baseline_data['baseline_approx_data'], color=color, linestyle=linestyle,
+            markersize=8)
+    legend_lines.append(lines.Line2D([], [], color=color, markersize=8, linestyle=linestyle,
+                                     label=baseline_data['legend']))
     return ax, legend_lines
 
 
@@ -34,8 +41,12 @@ def plot_points(ax: matplotlib.axes.Axes, evaluation_results: dict, legend_lines
     for evol_result in evaluation_results:
         color = evol_result['color']
         marker = evol_result['marker']
+        if 'alpha' in evol_result:
+            alpha = evol_result['alpha']
+        else:
+            alpha = 1
         for x, y in zip(evol_result['evol_x'], evol_result['evol_y']):
-            ax.plot(x, y, color=color, marker=(marker, 2), markersize=12)
+            ax.plot(x, y, color=color, marker=(marker, 2), markersize=12, alpha=alpha)
         legend_lines.append(lines.Line2D([], [], color=color, linestyle='None',
                                          markersize=12, marker=(marker, 2), label=evol_result['label']))
     return ax, legend_lines

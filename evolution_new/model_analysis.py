@@ -74,7 +74,7 @@ class TrainingAnalysis:
             return_dict['approx_percent_list'].append(approx_percent)
         return return_dict
 
-    def get_analysis_baseline(self) -> list[list, list]:
+    def get_analysis_baseline(self) -> list[list, list, list, list, list, list, list]:
         try:
             analysis_baseline = np.load(f'analysis_baseline/{self.analysis_name}.npy')
             print('Analysis baseline loaded')
@@ -84,7 +84,7 @@ class TrainingAnalysis:
         print(analysis_baseline)
         return analysis_baseline
 
-    def get_new_analysis_baseline(self) -> list[list, list]:
+    def get_new_analysis_baseline(self) -> list[list, list, list, list, list, list, list]:
         analysis_baseline = [[], []]
         problem_dict = self.model.get_training_dataset(self.config)
         stepwise_approx_quality, stepwise_min_approx_quality, stepwise_mean_approx_quality, \
@@ -163,18 +163,22 @@ class TrainingAnalysis:
                         f'{solver}'
         return title
 
-    def create_baseline_data_dict(self, baseline_data: list[list, list]) -> dict:
+    def create_baseline_data_dict(self, baseline_data: list[list, list, list, list, list, list, list],
+                                  sorted_approx=True, data_index=0, dotted=False, color='black') -> dict:
         return {
             'percent_list': baseline_data[1],
-            'baseline_approx_data': baseline_data[0],
+            'color': color,
+            'dotted': dotted,
+            'baseline_approx_data': baseline_data[data_index],
             'legend': f'stepwise-approximation: {self.analysis_parameters["steps"]} steps, '
-                      f'{"smallest entries first" if self.analysis_parameters["sorted"] else "random entries"}'
+                      f'{"smallest entries first" if sorted_approx else "random entries"},'
+                      f'{"mean" if data_index == 3 or data_index == 6 else "best"}'
         }
 
-    def create_visualisation_calls(self, analysis_baseline: list[list, list], approximation_quality_dict: dict,
-                                   size_analysis=False):
+    def create_visualisation_calls(self, analysis_baseline: list[list, list, list, list, list, list, list],
+                                   approximation_quality_dict: dict, size_analysis=False):
         visualisation_pipeline({
-            'baseline_data': self.create_baseline_data_dict(analysis_baseline),
+            'baseline_data': [self.create_baseline_data_dict(analysis_baseline)],
             'evaluation_results': [
                 {
                     'color': 'black',
@@ -189,7 +193,7 @@ class TrainingAnalysis:
             'y_label': 'solution quality'
         })
         visualisation_pipeline({
-            'baseline_data': self.create_baseline_data_dict(analysis_baseline),
+            'baseline_data': [self.create_baseline_data_dict(analysis_baseline)],
             'evaluation_results': [
                 {
                     'color': 'green',
@@ -209,6 +213,37 @@ class TrainingAnalysis:
             'title': self.get_visualisation_title('Solution quality of every solution'),
             'x_label': 'approximated qubo entries in percent',
             'y_label': 'solution quality'
+        })
+        visualisation_pipeline({  # Sorted/random with min/mean pipeline
+            'baseline_data': [
+                self.create_baseline_data_dict(analysis_baseline, data_index=2),
+                self.create_baseline_data_dict(analysis_baseline, data_index=3, dotted=True),
+                self.create_baseline_data_dict(analysis_baseline, data_index=5, sorted_approx=False,
+                                               color='grey'),
+                self.create_baseline_data_dict(analysis_baseline, data_index=6, sorted_approx=False,
+                                               dotted=True, color='grey')
+            ],
+            'evaluation_results': [
+                {
+                    'color': 'blue',
+                    'marker': 4,
+                    'alpha': 0.7,
+                    'evol_y': approximation_quality_dict['min_solution_quality_list'],
+                    'evol_x': approximation_quality_dict['approx_percent_list'],
+                    'label': 'Min solution quality of approximation suggested by model'
+                },
+                {
+                    'color': 'slateblue',
+                    'marker': 5,
+                    'alpha': 0.7,
+                    'evol_y': approximation_quality_dict['mean_solution_quality_list'],
+                    'evol_x': approximation_quality_dict['approx_percent_list'],
+                    'label': 'Mean solution quality of approximation suggested by model'
+                },
+            ],
+            'title': self.get_visualisation_title('Solution quality of every solution'),
+            'x_label': 'approximated qubo entries in percent',
+            'y_label': 'solution quality (min energy - energy) / min energy'
         })
         if self.analysis_parameters['size_analysis']:
             visualisation_pipeline({
