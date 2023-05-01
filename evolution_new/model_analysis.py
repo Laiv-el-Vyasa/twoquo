@@ -35,6 +35,10 @@ class TrainingAnalysis:
     def get_model_approximation_quality(self) -> dict:
         return_dict = {
             'solution_quality_list': [],
+            'min_solution_quality_list': [],
+            'mean_solution_quality_list': [],
+            'min_mean_solution_quality_list': [],
+            'mean_mean_solution_quality_list': [],
             'approx_percent_list': [],
             'correct_approx_list': [],
             'incorrect_approx_list': [],
@@ -50,14 +54,18 @@ class TrainingAnalysis:
             if idx < self.analysis_parameters['show_qubo_mask']:
                 qubo_heatmap(qubo)
                 qubo_heatmap(get_qubo_approx_mask(approx_qubo, qubo))
-            min_solution_quality, _, approx_percent, mean_solution_quality, min_mean_sol_qual, mean_mean_sol_qual\
+            min_solution_quality, _, approx_percent, mean_solution_quality, min_mean_sol_qual, mean_mean_sol_qual \
                 = get_quality_of_approxed_qubo(qubo, approx_qubo, solutions, self.config)
             return_dict['solution_quality_list'].append((np.floor(1 - min_solution_quality)))
+            return_dict['min_solution_quality_list'].append((1 - min_solution_quality))
+            return_dict['mean_solution_quality_list'].append((1 - mean_solution_quality))
+            return_dict['min_mean_solution_quality_list'].append((1 - min_mean_sol_qual))
+            return_dict['mean_mean_solution_quality_list'].append((1 - min_solution_quality))
             approx_size = get_relative_size_of_approxed_entries(approx_qubo, qubo)
-            #print('approx size: ', approx_size)
-            #print(min_solution_quality, approx_percent)
+            # print('approx size: ', approx_size)
+            # print(min_solution_quality, approx_percent)
             if min_solution_quality <= 0 and approx_percent != 0:
-                #print('True solution found')
+                # print('True solution found')
                 return_dict['correct_approx_list'].append(approx_percent)
                 return_dict['correct_approx_size'].append(approx_size)
             else:
@@ -79,30 +87,62 @@ class TrainingAnalysis:
     def get_new_analysis_baseline(self) -> list[list, list]:
         analysis_baseline = [[], []]
         problem_dict = self.model.get_training_dataset(self.config)
-        stepwise_approx_quality = self.get_stepwise_approx_quality(problem_dict)
+        stepwise_approx_quality, stepwise_min_approx_quality, stepwise_mean_approx_quality, \
+            stepwise_approx_quality_random, stepwise_min_approx_quality_random, stepwise_mean_approx_quality_random \
+            = self.get_stepwise_approx_quality(problem_dict)
         # Prepare array for saving and display
         analysis_baseline[0] = stepwise_approx_quality
         step_list = [n / (self.analysis_parameters['steps'] + 1) for n in range(self.analysis_parameters['steps'] + 1)]
         analysis_baseline[1] = step_list
+        analysis_baseline[3] = stepwise_min_approx_quality
+        analysis_baseline[4] = stepwise_mean_approx_quality
+        analysis_baseline[2] = stepwise_approx_quality_random
+        analysis_baseline[5] = stepwise_min_approx_quality_random
+        analysis_baseline[6] = stepwise_mean_approx_quality_random
         return analysis_baseline
 
-    def get_stepwise_approx_quality(self, problem_dict: dict) -> list:
+    def get_stepwise_approx_quality(self, problem_dict: dict) -> tuple[list, list, list, list, list, list]:
         qubo_list, solutions_list = problem_dict['qubo_list'], problem_dict['solutions_list']
         solution_quality_list = []
+        min_solution_quality_list = []
+        mean_solution_quality_list = []
+        random_solution_quality_list = []
+        random_min_solution_quality_list = []
+        random_mean_solution_quality_list = []
         for idx, (qubo, solutions) in enumerate(zip(qubo_list, solutions_list)):
             print(f'Approximating problem {idx} for baseline')
-            solution_quality_list.append(self.get_stepwise_approx_quality_for_qubo(qubo, solutions))
-        return self.rotate_solution_quality_list(solution_quality_list)
+            sol_qual_sorted, min_sol_qual_sorted, mean_sol_qual_sorted = \
+                self.get_stepwise_approx_quality_for_qubo(qubo, solutions, True)
+            solution_quality_list.append(sol_qual_sorted)
+            min_solution_quality_list.append(min_sol_qual_sorted)
+            mean_solution_quality_list.append(mean_sol_qual_sorted)
+            sol_qual_random, min_sol_qual_random, mean_sol_qual_random = \
+                self.get_stepwise_approx_quality_for_qubo(qubo, solutions, False)
+            random_solution_quality_list.append(sol_qual_random)
+            random_min_solution_quality_list.append(min_sol_qual_random)
+            random_mean_solution_quality_list.append(mean_sol_qual_random)
+        return self.rotate_solution_quality_list(solution_quality_list), \
+               self.rotate_solution_quality_list(min_solution_quality_list), \
+               self.rotate_solution_quality_list(mean_solution_quality_list), \
+               self.rotate_solution_quality_list(random_solution_quality_list), \
+               self.rotate_solution_quality_list(random_min_solution_quality_list), \
+               self.rotate_solution_quality_list(random_mean_solution_quality_list)
 
-    def get_stepwise_approx_quality_for_qubo(self, qubo: list, solutions: list) -> list:
+    def get_stepwise_approx_quality_for_qubo(self, qubo: list, solutions: list, sorted_approx: bool) \
+            -> tuple[list, list, list]:
         stepwise_approx_quality = [1.]
+        stepwise_min_approx_quality = [1.]
+        stepwise_mean_approx_quality = [1.]
         approximation_dict, _ = get_approximated_qubos(qubo, False, True, self.analysis_parameters['steps'],
-                                                       sorted_approx=self.analysis_parameters['sorted'])
+                                                       sorted_approx=sorted_approx)
         for i in range(self.analysis_parameters['steps']):
             approx_qubo = approximation_dict[str(i + 1)]['qubo']
-            min_solution_quality, *_ = get_quality_of_approxed_qubo(qubo, approx_qubo, solutions, self.config)
+            min_solution_quality, _, _, mean_solution_quality, *_ \
+                = get_quality_of_approxed_qubo(qubo, approx_qubo, solutions, self.config)
             stepwise_approx_quality.append(np.floor(1 - min_solution_quality))
-        return stepwise_approx_quality
+            stepwise_min_approx_quality.append((1 - min_solution_quality))
+            stepwise_mean_approx_quality.append((1 - mean_solution_quality))
+        return stepwise_approx_quality, stepwise_min_approx_quality, stepwise_mean_approx_quality
 
     def rotate_solution_quality_list(self, solution_quality_list: list[list]) -> list:
         rotated_list = [[] for n in range(self.analysis_parameters['steps'] + 1)]
