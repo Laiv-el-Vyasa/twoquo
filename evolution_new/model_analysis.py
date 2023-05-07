@@ -4,10 +4,10 @@ from approximation import get_approximated_qubos
 from config import load_cfg
 from evolution_new.combined_evolution_training import get_data_from_training_config
 from evolution_new.evolution_utils import get_quality_of_approxed_qubo, get_qubo_approx_mask, get_file_name, \
-    get_relative_size_of_approxed_entries, get_classical_solution_qualities
+    get_relative_size_of_approxed_entries, get_classical_solution_qualities, get_min_solution_quality
 from evolution_new.pygad_learning import PygadLearner
 from evolution_new.learning_model import LearningModel
-from new_visualisation import visualisation_pipeline, qubo_heatmap, visualize_two_result_points
+from new_visualisation import visualisation_pipeline, qubo_heatmap, visualize_boxplot_comparison
 
 solver = 'qbsolv_simulated_annealing'
 
@@ -86,9 +86,13 @@ class TrainingAnalysis:
                 classical_min_solution_quality, classical_mean_solution_quality = \
                     get_classical_solution_qualities(solutions, qubo, problem,
                                                      self.config["solvers"]['qbsolv_simulated_annealing']['repeats'])
-
                 return_dict['classical_min_solution_quality'].append(classical_min_solution_quality)
                 return_dict['classical_mean_solution_quality'].append(classical_mean_solution_quality)
+
+                repeat_qubo_min_solution_quality, _, repeat_qubo_mean_solution_quality, *_ = \
+                    get_min_solution_quality(solutions, qubo, solutions)
+                return_dict['repeat_qubo_min_solution_quality'].append(repeat_qubo_min_solution_quality)
+                return_dict['repeat_qubo_mean_solution_quality'].append(repeat_qubo_mean_solution_quality)
         return return_dict
 
     def get_analysis_baseline(self) -> list[list, list, list, list, list, list, list]:
@@ -288,4 +292,33 @@ class TrainingAnalysis:
                 'x_label': 'approximated qubo entries in percent',
                 'y_label': 'Cumulated size of approximated entries (1: n biggest, 0: n smallest)',
                 'scale_axis': True
+            })
+        if 'compare_different_approaches' in self.analysis_parameters and \
+                self.analysis_parameters['compare_different_approaches']:
+            visualize_boxplot_comparison({
+                'data_list':
+                    [
+                        {
+                            'min': approximation_quality_dict['min_solution_quality_list'],
+                            'mean': approximation_quality_dict['mean_solution_quality_list'],
+                            'tick_name': 'Model performance'
+                        },
+                        {
+                            'min': approximation_quality_dict['classical_min_solution_quality'],
+                            'mean': approximation_quality_dict['classical_mean_solution_quality'],
+                            'tick_name': 'Classical algorithm'
+                        },
+                        {
+                            'min': approximation_quality_dict['repeat_qubo_min_solution_quality'],
+                            'mean': approximation_quality_dict['repreat_qubo_mean_solution_quality'],
+                            'tick_name': 'Original QUBO'
+                        }
+                    ],
+                'colors':
+                    {
+                        'min': '#D7191C',
+                        'mean': '#2C7BB6'
+                    },
+                'y_label': 'solution quality (min energy - energy) / min energy',
+                'title': self.get_visualisation_title('Comparison of different approaches')
             })

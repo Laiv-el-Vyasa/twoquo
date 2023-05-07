@@ -52,6 +52,36 @@ def plot_points(ax: matplotlib.axes.Axes, evaluation_results: dict, legend_lines
     return ax, legend_lines
 
 
+def visualize_boxplot_comparison(boxplot_data: dict):
+    fig, ax = pyplot.subplots()
+    data_list = boxplot_data['data_list']
+    color_dict = boxplot_data['colors']
+    tick_labels = []
+    for i, data in enumerate(data_list):
+        bxplt = pyplot.boxplot(data['min'], positions=i * 4 - 0.4, widths=0.6)
+        set_box_color(bxplt, color_dict['min'])
+        bxplt = pyplot.boxplot(data['mean'], positions=i * 4 + 0.4, widths=0.6)
+        set_box_color(bxplt, color_dict['mean'])
+        tick_labels.append(data['tick_name'])
+
+    for analysis_name in color_dict:
+        pyplot.plot([], c=color_dict[analysis_name], label=analysis_name)
+    pyplot.legend()
+
+    pyplot.xticks(range(0, len(tick_labels) * 2, 2), tick_labels)
+    pyplot.xlim(-2, len(tick_labels)*2)
+    ax.set_ylabel(boxplot_data['y_label'])
+    ax.set_title(boxplot_data['title'])
+    pyplot.show()
+
+
+def set_box_color(bp, color):
+    pyplot.setp(bp['boxes'], color=color)
+    pyplot.setp(bp['whiskers'], color=color)
+    pyplot.setp(bp['caps'], color=color)
+    pyplot.setp(bp['medians'], color=color)
+
+
 def visualize_two_result_points(baseline_approx_data, percent_list, evol_results_1, evol_results_2,
                                 steps=0, baseline=False, title=''):
     fig, ax = pyplot.subplots()
