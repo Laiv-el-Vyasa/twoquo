@@ -17,11 +17,11 @@ class TrainingAnalysis:
         self.model, learning_parameters, fitness_func = get_data_from_training_config(config_name)
         self.pygad_learner = PygadLearner(self.model, learning_parameters, fitness_func)
         self.config = load_cfg(cfg_id=learning_parameters['config_name'])
-        self.config["solvers"][solver]['repeats'] = 100
+        self.config["solvers"][solver]['repeats'] = 1
         print(self.config["solvers"]['qbsolv_simulated_annealing']['repeats'])
         self.analysis_name = get_file_name(analysis_parameters['analysis_name'], self.config,
                                            learning_parameters['fitness_parameters'], analysis=True)
-        self.config['pipeline']['problems']['n_problems'] *= 1
+        self.config['pipeline']['problems']['n_problems'] = 1
         self.analysis_parameters = analysis_parameters
         if not self.model.load_best_model(learning_parameters['training_name']):
             self.pygad_learner.save_best_model()
@@ -86,13 +86,13 @@ class TrainingAnalysis:
                 classical_min_solution_quality, classical_mean_solution_quality = \
                     get_classical_solution_qualities(solutions, qubo, problem,
                                                      self.config["solvers"]['qbsolv_simulated_annealing']['repeats'])
-                return_dict['classical_min_solution_quality'].append(classical_min_solution_quality)
-                return_dict['classical_mean_solution_quality'].append(classical_mean_solution_quality)
+                return_dict['classical_min_solution_quality'].append(1 - classical_min_solution_quality)
+                return_dict['classical_mean_solution_quality'].append(1 - classical_mean_solution_quality)
 
                 repeat_qubo_min_solution_quality, _, repeat_qubo_mean_solution_quality, *_ = \
                     get_min_solution_quality(solutions, qubo, solutions)
-                return_dict['repeat_qubo_min_solution_quality'].append(repeat_qubo_min_solution_quality)
-                return_dict['repeat_qubo_mean_solution_quality'].append(repeat_qubo_mean_solution_quality)
+                return_dict['repeat_qubo_min_solution_quality'].append(1 - repeat_qubo_min_solution_quality)
+                return_dict['repeat_qubo_mean_solution_quality'].append(1 - repeat_qubo_mean_solution_quality)
         return return_dict
 
     def get_analysis_baseline(self) -> list[list, list, list, list, list, list, list]:
@@ -310,7 +310,7 @@ class TrainingAnalysis:
                         },
                         {
                             'min': approximation_quality_dict['repeat_qubo_min_solution_quality'],
-                            'mean': approximation_quality_dict['repreat_qubo_mean_solution_quality'],
+                            'mean': approximation_quality_dict['repeat_qubo_mean_solution_quality'],
                             'tick_name': 'Original QUBO'
                         }
                     ],

@@ -490,8 +490,11 @@ def get_classical_solutions(problem: dict, reads: int) -> list[list]:
 
 def get_classical_solution_tsp(problem: dict) -> list:
     rng = np_random.default_rng()
-    cities_left = {city for city in problem['cities']}
-    current_city = rng.interger(len(cities_left))
+    cities_left = {i for i in range(len(problem['cities']))}
+    #for city in range(len(problem['cities'])):
+    #    print(city)
+    #    cities_left.add(city)
+    current_city = rng.integers(len(cities_left))
     cities_left.remove(current_city)
     dist_matrix = problem['dist_matrix']
     cities_visited = [current_city]
@@ -501,15 +504,17 @@ def get_classical_solution_tsp(problem: dict) -> list:
         chosen_spot = rng.binomial(len(cities_left) - 1, 1/(2 * len(cities_left)))
         current_city = dist_list[chosen_spot][1]
         cities_visited.append(current_city)
-        cities_visited.remove(current_city)
+        cities_left.remove(current_city)
     return create_solution_from_city_list(cities_visited)
 
 
 def create_solution_from_city_list(city_list: list) -> list:
-    solution_list = [0 for _ in range(len(city_list) ** 2)]
+    #solution_list = [0 for _ in range(len(city_list) ** 2)]
+    solution_list = np.zeros(len(city_list) ** 2)
     for i in range(len(city_list)):
         city = city_list[i]
         solution_list[city * len(city_list) + i] = 1
+    print(solution_list)
     return solution_list
 
 
