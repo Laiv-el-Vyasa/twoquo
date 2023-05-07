@@ -4,7 +4,7 @@ from approximation import get_approximated_qubos
 from config import load_cfg
 from evolution_new.combined_evolution_training import get_data_from_training_config
 from evolution_new.evolution_utils import get_quality_of_approxed_qubo, get_qubo_approx_mask, get_file_name, \
-    get_relative_size_of_approxed_entries
+    get_relative_size_of_approxed_entries, get_classical_solution_qualities
 from evolution_new.pygad_learning import PygadLearner
 from evolution_new.learning_model import LearningModel
 from new_visualisation import visualisation_pipeline, qubo_heatmap, visualize_two_result_points
@@ -17,7 +17,7 @@ class TrainingAnalysis:
         self.model, learning_parameters, fitness_func = get_data_from_training_config(config_name)
         self.pygad_learner = PygadLearner(self.model, learning_parameters, fitness_func)
         self.config = load_cfg(cfg_id=learning_parameters['config_name'])
-        self.config["solvers"]['qbsolv_simulated_annealing']['repeats'] = 100
+        self.config["solvers"][solver]['repeats'] = 100
         print(self.config["solvers"]['qbsolv_simulated_annealing']['repeats'])
         self.analysis_name = get_file_name(analysis_parameters['analysis_name'], self.config,
                                            learning_parameters['fitness_parameters'], analysis=True)
@@ -43,12 +43,20 @@ class TrainingAnalysis:
             'correct_approx_list': [],
             'incorrect_approx_list': [],
             'correct_approx_size': [],
-            'incorrect_approx_size': []
+            'incorrect_approx_size': [],
+            'classical_min_solution_quality': [],
+            'classical_mean_solution_quality': [],
+            'repeat_qubo_min_solution_quality': [],
+            'repeat_qubo_mean_solution_quality': []
         }
         problem_dict = self.model.get_approximation(self.model.get_training_dataset(self.config))
-        approx_qubo_list, solutions_list, qubo_list = problem_dict['approxed_qubo_list'], \
-                                                      problem_dict['solutions_list'], problem_dict['qubo_list']
-        for idx, (qubo, approx_qubo, solutions) in enumerate(zip(qubo_list, approx_qubo_list, solutions_list)):
+        approx_qubo_list, solutions_list, qubo_list, problem_list = problem_dict['approxed_qubo_list'], \
+                                                                    problem_dict['solutions_list'], \
+                                                                    problem_dict['qubo_list'], \
+                                                                    problem_dict['problem_list']
+
+        for idx, (qubo, approx_qubo, solutions, problem) in enumerate(zip(qubo_list, approx_qubo_list,
+                                                                          solutions_list, problem_list)):
             print(f'Approximating problem {idx} via model')
             # print(solutions)
             if idx < self.analysis_parameters['show_qubo_mask']:
@@ -72,6 +80,15 @@ class TrainingAnalysis:
                 return_dict['incorrect_approx_list'].append(approx_percent)
                 return_dict['incorrect_approx_size'].append(approx_size)
             return_dict['approx_percent_list'].append(approx_percent)
+
+            if 'compare_different_approaches' in self.analysis_parameters and \
+                    self.analysis_parameters['compare_different_approaches']:
+                classical_min_solution_quality, classical_mean_solution_quality = \
+                    get_classical_solution_qualities(solutions, qubo, problem,
+                                                     self.config["solvers"]['qbsolv_simulated_annealing']['repeats'])
+
+                return_dict['classical_min_solution_quality'].append(classical_min_solution_quality)
+                return_dict['classical_mean_solution_quality'].append(classical_mean_solution_quality)
         return return_dict
 
     def get_analysis_baseline(self) -> list[list, list, list, list, list, list, list]:

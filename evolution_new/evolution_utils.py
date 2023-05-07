@@ -1,6 +1,8 @@
+import random
 import time
 
 import numpy as np
+from numpy  import random as np_random
 import torch
 import os
 import shutil
@@ -466,6 +468,54 @@ def get_n_extreme_entries(n: int, qubo: list, ascending: bool) -> list:
 def get_sum_of_array(array: np.ndarray) -> float:
     return sum(array)
 
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#                     Algorithms to generate approximate solutions                              #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+def get_classical_solution_qualities(solutions: list, qubo: np.array, problem: dict, reads: int) -> tuple[float, float]:
+    classical_solutions = []
+    classical_solutions = get_classical_solutions(problem, reads)
+    min_solution_quality, _, mean_solution_quality, *_ = get_min_solution_quality(classical_solutions, qubo, solutions)
+    return min_solution_quality, mean_solution_quality
+
+
+def get_classical_solutions(problem: dict, reads: int) -> list[list]:
+    solution_list = []
+    for _ in range(reads):
+        if 'cities' in problem:
+            solution_list.append(get_classical_solution_tsp(problem))
+    return solution_list
+
+
+def get_classical_solution_tsp(problem: dict) -> list:
+    rng = np_random.default_rng()
+    cities_left = {city for city in problem['cities']}
+    current_city = rng.interger(len(cities_left))
+    cities_left.remove(current_city)
+    dist_matrix = problem['dist_matrix']
+    cities_visited = [current_city]
+    while len(cities_left) != 0:
+        dist_list = [(dist_matrix[current_city][i], i) for i in cities_left]
+        dist_list.sort()
+        chosen_spot = rng.binomial(len(cities_left) - 1, 1/(2 * len(cities_left)))
+        current_city = dist_list[chosen_spot][1]
+        cities_visited.append(current_city)
+        cities_visited.remove(current_city)
+    return create_solution_from_city_list(cities_visited)
+
+
+def create_solution_from_city_list(city_list: list) -> list:
+    solution_list = [0 for _ in range(len(city_list) ** 2)]
+    for i in range(len(city_list)):
+        city = city_list[i]
+        solution_list[city * len(city_list) + i] = 1
+    return solution_list
+
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#                               Old and outdated Functions                                      #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 def get_fitness_value(linearized_approx_list, qubo_list, min_energy_list, solutions_list, fitness_parameters, problems,
                       min_approx=0):
