@@ -6,7 +6,7 @@ analysis_parameters = {
     'boxplot': True,
     'sorted': True,
     'show_qubo_mask': 0,
-    'size_analysis': True,
+    'size_analysis': False,
     'compare_different_approaches': True
 }
 

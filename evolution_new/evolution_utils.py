@@ -100,7 +100,10 @@ def get_training_dataset(config: dict) -> dict:
 def get_qubo_solutions(qubo_list: list, config: dict) -> (list[list], list[float]):
     solutions_list = []
     energy_list = []
+    i = 0
     for qubo in qubo_list:
+        print('Solving Qubo ' + str(i))
+        i += 1
         best_solution, solutions, min_energy = solve_qubo(qubo, config)
         solutions_list.append(solutions)
         energy_list.append(min_energy)
@@ -514,7 +517,6 @@ def create_solution_from_city_list(city_list: list) -> list:
     for i in range(len(city_list)):
         city = city_list[i]
         solution_list[city * len(city_list) + i] = 1
-    print(solution_list)
     return solution_list
 
 

@@ -58,9 +58,9 @@ def visualize_boxplot_comparison(boxplot_data: dict):
     color_dict = boxplot_data['colors']
     tick_labels = []
     for i, data in enumerate(data_list):
-        bxplt = pyplot.boxplot(data['min'], positions=[i * 4 - 0.4], widths=0.6)
+        bxplt = pyplot.boxplot(data['min'], positions=[i * 2 - 0.3], widths=0.4)
         set_box_color(bxplt, color_dict['min'])
-        bxplt = pyplot.boxplot(data['mean'], positions=[i * 4 + 0.4], widths=0.6)
+        bxplt = pyplot.boxplot(data['mean'], positions=[i * 2 + 0.3], widths=0.4)
         set_box_color(bxplt, color_dict['mean'])
         tick_labels.append(data['tick_name'])
 
