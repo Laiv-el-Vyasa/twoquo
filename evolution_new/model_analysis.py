@@ -85,7 +85,7 @@ class TrainingAnalysis:
         return analysis_baseline
 
     def get_new_analysis_baseline(self) -> list[list, list, list, list, list, list, list]:
-        analysis_baseline = [[], []]
+        analysis_baseline = [[], [], [], [], [], [], []]
         problem_dict = self.model.get_training_dataset(self.config)
         stepwise_approx_quality, stepwise_min_approx_quality, stepwise_mean_approx_quality, \
             stepwise_approx_quality_random, stepwise_min_approx_quality_random, stepwise_mean_approx_quality_random \
@@ -113,6 +113,7 @@ class TrainingAnalysis:
             print(f'Approximating problem {idx} for baseline')
             sol_qual_sorted, min_sol_qual_sorted, mean_sol_qual_sorted = \
                 self.get_stepwise_approx_quality_for_qubo(qubo, solutions, True)
+            #print(sol_qual_sorted)
             solution_quality_list.append(sol_qual_sorted)
             min_solution_quality_list.append(min_sol_qual_sorted)
             mean_solution_quality_list.append(mean_sol_qual_sorted)
@@ -121,6 +122,7 @@ class TrainingAnalysis:
             random_solution_quality_list.append(sol_qual_random)
             random_min_solution_quality_list.append(min_sol_qual_random)
             random_mean_solution_quality_list.append(mean_sol_qual_random)
+        print('sol_qual_list ', solution_quality_list)
         return self.rotate_solution_quality_list(solution_quality_list), \
                self.rotate_solution_quality_list(min_solution_quality_list), \
                self.rotate_solution_quality_list(mean_solution_quality_list), \
@@ -139,6 +141,8 @@ class TrainingAnalysis:
             approx_qubo = approximation_dict[str(i + 1)]['qubo']
             min_solution_quality, _, _, mean_solution_quality, *_ \
                 = get_quality_of_approxed_qubo(qubo, approx_qubo, solutions, self.config)
+            #print('step ', i)
+            #print(min_solution_quality)
             stepwise_approx_quality.append(np.floor(1 - min_solution_quality))
             stepwise_min_approx_quality.append((1 - min_solution_quality))
             stepwise_mean_approx_quality.append((1 - mean_solution_quality))
@@ -171,7 +175,7 @@ class TrainingAnalysis:
             'dotted': dotted,
             'baseline_approx_data': baseline_data[data_index],
             'legend': f'stepwise-approximation: {self.analysis_parameters["steps"]} steps, '
-                      f'{"smallest entries first" if sorted_approx else "random entries"},'
+                      f'{"smallest entries first" if sorted_approx else "random entries"}, '
                       f'{"mean" if data_index == 3 or data_index == 6 else "best"}'
         }
 
@@ -216,8 +220,8 @@ class TrainingAnalysis:
         })
         visualisation_pipeline({  # Sorted/random with min/mean pipeline
             'baseline_data': [
-                self.create_baseline_data_dict(analysis_baseline, data_index=2),
-                self.create_baseline_data_dict(analysis_baseline, data_index=3, dotted=True),
+                self.create_baseline_data_dict(analysis_baseline, data_index=3),
+                self.create_baseline_data_dict(analysis_baseline, data_index=4, dotted=True),
                 self.create_baseline_data_dict(analysis_baseline, data_index=5, sorted_approx=False,
                                                color='grey'),
                 self.create_baseline_data_dict(analysis_baseline, data_index=6, sorted_approx=False,

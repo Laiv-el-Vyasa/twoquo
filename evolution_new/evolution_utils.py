@@ -383,6 +383,7 @@ def get_min_solution_quality(approx_solutions: np.array, qubo: np.array, solutio
         # print('Solution quality: ', solution_quality)
         solution_quality_array.append(solution_quality)
         mean_solution_quality_array.append(get_solution_quality(approx_energy, mean_energy))
+    # print('Solution quality array', solution_quality_array)
     return np.min(solution_quality_array), approx_solutions[np.argmin(solution_quality_array)], \
            np.mean(solution_quality_array), np.min(mean_solution_quality_array), np.mean(mean_solution_quality_array)
 

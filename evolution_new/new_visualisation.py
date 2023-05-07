@@ -25,8 +25,8 @@ def visualisation_pipeline(evaluation_dict: dict):
 
 
 def add_baseline(ax: matplotlib.axes.Axes, baseline_data: dict, legend_lines: list) -> tuple:
-    color = 'black'
-    if 'dotted' in baseline_data:
+    color = baseline_data['color']
+    if baseline_data['dotted']:
         linestyle = 'dashed'
     else:
         linestyle = 'solid'
