@@ -476,21 +476,32 @@ def get_sum_of_array(array: np.ndarray) -> float:
 #                     Algorithms to generate approximate solutions                              #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-def get_classical_solution_qualities(solutions: list, qubo: np.array, problem: dict, reads: int) -> tuple[float, float]:
-    classical_solutions = []
-    classical_solutions = get_classical_solutions(problem, reads)
+def get_classical_solution_qualities(solutions: list, qubo: np.array, problem: dict, reads: int,
+                                     random_solutions: bool) -> tuple[float, float]:
+    classical_solutions = get_classical_solutions(problem, reads, random_solutions)
     min_solution_quality, _, mean_solution_quality, *_ = get_min_solution_quality(classical_solutions, qubo, solutions)
     return min_solution_quality, mean_solution_quality
 
 
-def get_classical_solutions(problem: dict, reads: int) -> list[list]:
+# Calculating solutions for problems using classical heuristics as well as at random
+def get_classical_solutions(problem: dict, reads: int, random_solutions: bool) -> list[list]:
     solution_list = []
     for _ in range(reads):
         if 'cities' in problem:
-            solution_list.append(get_classical_solution_tsp(problem))
+            if random_solutions:
+                solution_list.append(get_random_city_order_solution(problem))
+            else:
+                solution_list.append(get_classical_solution_tsp(problem))
+        elif 'numbers' in problem:
+            if random_solutions:
+                solution_list.append(get_random_solution_assignment(len(problem['numbers'])))
+            else:
+                solution_list.append(get_random_differencing_solution(problem))
     return solution_list
 
 
+# Classical heuristic algorithm for TSP:
+# Choose one city to start, order the remaining cities regarding the distances and then choose one of the closest
 def get_classical_solution_tsp(problem: dict) -> list:
     rng = np_random.default_rng()
     cities_left = {i for i in range(len(problem['cities']))}
@@ -511,6 +522,7 @@ def get_classical_solution_tsp(problem: dict) -> list:
     return create_solution_from_city_list(cities_visited)
 
 
+# Build a viable solution from an ordered city list
 def create_solution_from_city_list(city_list: list) -> list:
     #solution_list = [0 for _ in range(len(city_list) ** 2)]
     solution_list = np.zeros(len(city_list) ** 2)
@@ -518,6 +530,68 @@ def create_solution_from_city_list(city_list: list) -> list:
         city = city_list[i]
         solution_list[city * len(city_list) + i] = 1
     return solution_list
+
+
+# Use the random differencing heuristic to get a solution for number partitioning
+def get_random_differencing_solution(problem: dict) -> list:
+    rng = np_random.default_rng()
+    numbers = [(number, i) for i, number in enumerate(problem['numbers'])]
+    numbers.sort(reverse=True)
+    backtracking_list = []
+    idx = 0
+    while len(numbers) > 1:
+        idx -= 1
+        biggest = numbers.pop(0)
+        next_number = rng.binomial(len(numbers) - 1, 1/(2 * len(numbers)))
+        second = numbers.pop(next_number)
+        numbers.append((biggest[0] - second[0], idx))
+        backtracking_list.append((biggest, second, (biggest[0] - second[0], idx)))
+        numbers.sort(reverse=True)
+    sorted_numbers = backtracking(backtracking_list, [[numbers.pop()], []])
+    # print('Sorted numbers', sorted_numbers)
+    return get_solution_from_sorted_numbers(sorted_numbers)
+
+
+def backtracking(backtracking_list: list, sorted_numbers: list[list, list]) -> list[list, list]:
+    while len(backtracking_list) > 0:
+        backtracking_item = backtracking_list.pop()
+        idx = backtracking_item[2][1]
+        i, j = get_item_ids_from_sorted_numbers(sorted_numbers, idx)
+        bigger_number, smaller_number = backtracking_item[0], backtracking_item[1]
+        sorted_numbers[i].pop(j)
+        sorted_numbers[i].append(bigger_number)
+        sorted_numbers[(i + 1) % 2].append(smaller_number)
+    return sorted_numbers
+
+
+def get_item_ids_from_sorted_numbers(sorted_numbers: list[list, list], idx: int) -> tuple[int, int]:
+    for i in range(2):
+        for j, item in enumerate(sorted_numbers[i]):
+            if item[1] == idx:
+                return i, j
+
+
+def get_solution_from_sorted_numbers(sorted_numbers: list[list, list]) -> list:
+    solution = np.zeros(len(sorted_numbers[0]) + len(sorted_numbers[1]))
+    for item in sorted_numbers[0]:
+        solution[item[1]] = 1
+    return solution
+
+
+def get_random_city_order_solution(problem: dict) -> list:
+    cities = [i for i in range(len(problem['cities']))]
+    random.shuffle(cities)
+    return create_solution_from_city_list(cities)
+
+
+def get_random_solution_assignment(n: int) -> list:
+    rng = np_random.default_rng()
+    solution = np.zeros(n)
+    p = rng.uniform()
+    for i in range(n):
+        if rng.uniform() < p:
+            solution[i] = 1
+    return solution
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -791,3 +865,9 @@ class Data(Dataset):
 
     def __len__(self):
         return self.len
+
+
+#problem = {'numbers': [120, 75, 74, 73, 71, 60, 56, 54, 46, 15]}
+#for n in range(10):
+    #print(get_random_differencing_solution(problem))
+    #print(get_random_solution_assignment(10))
