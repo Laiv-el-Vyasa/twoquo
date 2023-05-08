@@ -46,6 +46,8 @@ class TrainingAnalysis:
             'incorrect_approx_size': [],
             'classical_min_solution_quality': [],
             'classical_mean_solution_quality': [],
+            'classical_random_min_solution_quality': [],
+            'classical_random_mean_solution_quality': [],
             'repeat_qubo_min_solution_quality': [],
             'repeat_qubo_mean_solution_quality': []
         }
@@ -83,11 +85,16 @@ class TrainingAnalysis:
 
             if 'compare_different_approaches' in self.analysis_parameters and \
                     self.analysis_parameters['compare_different_approaches']:
+                repeats = self.config["solvers"]['qbsolv_simulated_annealing']['repeats']
                 classical_min_solution_quality, classical_mean_solution_quality = \
-                    get_classical_solution_qualities(solutions, qubo, problem,
-                                                     self.config["solvers"]['qbsolv_simulated_annealing']['repeats'])
+                    get_classical_solution_qualities(solutions, qubo, problem, repeats, False)
                 return_dict['classical_min_solution_quality'].append(1 - classical_min_solution_quality)
                 return_dict['classical_mean_solution_quality'].append(1 - classical_mean_solution_quality)
+
+                random_min_solution_quality, random_mean_solution_quality = \
+                    get_classical_solution_qualities(solutions, qubo, problem, repeats, True)
+                return_dict['random_min_solution_quality'].append(1 - random_min_solution_quality)
+                return_dict['random_mean_solution_quality'].append(1 - random_mean_solution_quality)
 
                 repeat_qubo_min_solution_quality, _, repeat_qubo_mean_solution_quality, *_ = \
                     get_min_solution_quality(solutions, qubo, solutions)
@@ -308,6 +315,11 @@ class TrainingAnalysis:
                             'min': approximation_quality_dict['classical_min_solution_quality'],
                             'mean': approximation_quality_dict['classical_mean_solution_quality'],
                             'tick_name': 'Classical algorithm'
+                        },
+                        {
+                            'min': approximation_quality_dict['random_min_solution_quality'],
+                            'mean': approximation_quality_dict['random_mean_solution_quality'],
+                            'tick_name': 'Random solutions'
                         },
                         {
                             'min': approximation_quality_dict['repeat_qubo_min_solution_quality'],
