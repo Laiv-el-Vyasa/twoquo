@@ -620,10 +620,11 @@ def get_solution_conditional_assignments_mc(problem: dict) -> list:
 # DLX-algorithm as a heuristic for EC
 def get_dlx_solution_ec(problem: dict) -> list:
     subset_matrix = problem['subset_matrix']
-    selected_subsets = dlx_algorithm(subset_matrix, [], {i: i for i in range(len(subset_matrix))})
+    selected_subsets = dlx_algorithm(subset_matrix, [], {i: i for i in range(len(subset_matrix[0]))})
     solution = np.zeros(len(subset_matrix[0]))
     for selected_subset in selected_subsets:
         solution[selected_subset] = 1
+    print(solution)
     return solution
 
 
@@ -650,12 +651,10 @@ def reduce_subset_matrix(subset_matrix: list[list], selected_subset: int, subset
     for old_subset in range(len(subset_matrix[0])):
         if keep_subset(subset_matrix, old_subset, selected_elements):
             new_id = len(new_subset_matrix[0])
-            subset_mapping[new_id] = old_subset
+            subset_mapping[new_id] = subset_mapping[old_subset]
             for idx, element in enumerate(remaining_elements):
                 new_subset_matrix[idx].append(subset_matrix[element][old_subset])
     return new_subset_matrix
-
-
 
 
 def keep_subset(subset_matrix: list[list], old_subset: int, selected_elements: set) -> bool:
@@ -958,3 +957,7 @@ class Data(Dataset):
 #for n in range(10):
     #print(get_random_differencing_solution(problem))
     #print(get_random_solution_assignment(10))
+
+problem = {'subset_matrix': [[0,0,1,1,0,0,0],[1,0,0,0,0,0,1],[1,1,0,0,1,0,0],[1,0,0,1,0,0,0],[0,0,1,0,1,1,0],[0,0,0,0,1,0,0]]}
+
+print(get_dlx_solution_ec(problem))
