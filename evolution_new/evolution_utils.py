@@ -504,7 +504,9 @@ def get_classical_solutions(problem: dict, reads: int, random_solutions: bool) -
                 solution_list.append(get_solution_conditional_assignments_mc(problem))
         elif 'subset_matrix' in problem:
             if random_solutions:
-                solution_list.append(get_random_solution_assignment())
+                solution_list.append(get_random_solution_assignment(len(problem['subset_matrix'][0])))
+            else:
+                solution_list.append(get_dlx_solution_ec(problem))
     return solution_list
 
 
@@ -513,7 +515,7 @@ def get_classical_solutions(problem: dict, reads: int, random_solutions: bool) -
 def get_classical_solution_tsp(problem: dict) -> list:
     rng = np_random.default_rng()
     cities_left = {i for i in range(len(problem['cities']))}
-    #for city in range(len(problem['cities'])):
+    # for city in range(len(problem['cities'])):
     #    print(city)
     #    cities_left.add(city)
     current_city = rng.integers(len(cities_left))
@@ -532,7 +534,7 @@ def get_classical_solution_tsp(problem: dict) -> list:
 
 # Build a viable solution from an ordered city list
 def create_solution_from_city_list(city_list: list) -> list:
-    #solution_list = [0 for _ in range(len(city_list) ** 2)]
+    # solution_list = [0 for _ in range(len(city_list) ** 2)]
     solution_list = np.zeros(len(city_list) ** 2)
     for i in range(len(city_list)):
         city = city_list[i]
@@ -586,6 +588,7 @@ def get_solution_from_sorted_numbers(sorted_numbers: list[list, list]) -> list:
     return solution
 
 
+# Simple conditional assignment algorithm as MC heuristic
 def get_solution_conditional_assignments_mc(problem: dict) -> list:
     graph = problem['graph']
     node_list = [i for i in range(len(graph.nodes))]
@@ -614,7 +617,8 @@ def get_solution_conditional_assignments_mc(problem: dict) -> list:
     return solution
 
 
-def get_dlx_solution_ec(problem):
+# DLX-algorithm as a heuristic for EC
+def get_dlx_solution_ec(problem: dict) -> list:
     subset_matrix = problem['subset_matrix']
     selected_subsets = dlx_algorithm(subset_matrix, [], {i: i for i in range(len(subset_matrix))})
     solution = np.zeros(len(subset_matrix[0]))
