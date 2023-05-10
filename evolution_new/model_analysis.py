@@ -17,7 +17,7 @@ class TrainingAnalysis:
         self.model, learning_parameters, fitness_func = get_data_from_training_config(config_name)
         self.pygad_learner = PygadLearner(self.model, learning_parameters, fitness_func)
         self.config = load_cfg(cfg_id=learning_parameters['config_name'])
-        self.config["solvers"][solver]['repeats'] = 100
+        self.config["solvers"][solver]['repeats'] = 1
         print(self.config["solvers"]['qbsolv_simulated_annealing']['repeats'])
         self.analysis_name = get_file_name(analysis_parameters['analysis_name'], self.config,
                                            learning_parameters['fitness_parameters'], analysis=True)
@@ -44,10 +44,12 @@ class TrainingAnalysis:
             'incorrect_approx_list': [],
             'correct_approx_size': [],
             'incorrect_approx_size': [],
+            'classical_solution_quality': [],
             'classical_min_solution_quality': [],
             'classical_mean_solution_quality': [],
-            'classical_random_min_solution_quality': [],
-            'classical_random_mean_solution_quality': [],
+            'random_solution_quality': [],
+            'random_min_solution_quality': [],
+            'random_mean_solution_quality': [],
             'repeat_qubo_min_solution_quality': [],
             'repeat_qubo_mean_solution_quality': []
         }
@@ -88,11 +90,13 @@ class TrainingAnalysis:
                 repeats = self.config["solvers"]['qbsolv_simulated_annealing']['repeats']
                 classical_min_solution_quality, classical_mean_solution_quality = \
                     get_classical_solution_qualities(solutions, qubo, problem, repeats, False)
+                return_dict['classical_solution_quality'].append(np.floor(1 - classical_min_solution_quality))
                 return_dict['classical_min_solution_quality'].append(1 - classical_min_solution_quality)
                 return_dict['classical_mean_solution_quality'].append(1 - classical_mean_solution_quality)
 
                 random_min_solution_quality, random_mean_solution_quality = \
                     get_classical_solution_qualities(solutions, qubo, problem, repeats, True)
+                return_dict['random_solution_quality'].append(np.floor(1 - random_min_solution_quality))
                 return_dict['random_min_solution_quality'].append(1 - random_min_solution_quality)
                 return_dict['random_mean_solution_quality'].append(1 - random_mean_solution_quality)
 
@@ -219,6 +223,20 @@ class TrainingAnalysis:
                     'evol_y': [np.mean(approximation_quality_dict['solution_quality_list'])],
                     'evol_x': [np.mean(approximation_quality_dict['approx_percent_list'])],
                     'label': 'Avg. solution quality, avg. approx percent of model'
+                },
+                {
+                    'color': 'blue',
+                    'marker': 5,
+                    'evol_y': [np.mean(approximation_quality_dict['classical_solution_quality'])],
+                    'evol_x': [np.mean(approximation_quality_dict['approx_percent_list'])],
+                    'label': 'Avg. correct solutions, classical algorithm'
+                },
+                {
+                    'color': 'red',
+                    'marker': 6,
+                    'evol_y': [np.mean(approximation_quality_dict['random_solution_quality'])],
+                    'evol_x': [np.mean(approximation_quality_dict['approx_percent_list'])],
+                    'label': 'Avg. correct solutions, random solution'
                 }
             ],
             'title': self.get_visualisation_title('Solution quality'),

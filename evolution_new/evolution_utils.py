@@ -497,6 +497,14 @@ def get_classical_solutions(problem: dict, reads: int, random_solutions: bool) -
                 solution_list.append(get_random_solution_assignment(len(problem['numbers'])))
             else:
                 solution_list.append(get_random_differencing_solution(problem))
+        elif 'graph' in problem and not 'n_colors' in problem:
+            if random_solutions:
+                solution_list.append(get_random_solution_assignment(len(problem['graph'].nodes)))
+            else:
+                solution_list.append(get_solution_conditional_assignments_mc(problem))
+        elif 'subset_matrix' in problem:
+            if random_solutions:
+                solution_list.append(get_random_solution_assignment())
     return solution_list
 
 
@@ -576,6 +584,81 @@ def get_solution_from_sorted_numbers(sorted_numbers: list[list, list]) -> list:
     for item in sorted_numbers[0]:
         solution[item[1]] = 1
     return solution
+
+
+def get_solution_conditional_assignments_mc(problem: dict) -> list:
+    graph = problem['graph']
+    node_list = [i for i in range(len(graph.nodes))]
+    random.shuffle(node_list)
+    cut = [set(), set()]
+    for node in node_list:
+        count_set0 = 0
+        count_set1 = 0
+        for edge in [e for e in graph.edges if e[0] == node or e[1] == node]:
+            if edge[0] == node:
+                other_node = edge[1]
+            else:
+                other_node = edge[0]
+            if other_node in cut[0]:
+                count_set0 += 1
+            elif other_node in cut[1]:
+                count_set1 += 1
+        if count_set1 > count_set0:
+            cut[0].add(node)
+        else:
+            cut[1].add(node)
+    # print(cut)
+    solution = np.zeros(len(node_list))
+    for node in cut[1]:
+        solution[node] = 1
+    return solution
+
+
+def get_dlx_solution_ec(problem):
+    subset_matrix = problem['subset_matrix']
+    selected_subsets = dlx_algorithm(subset_matrix, [], {i: i for i in range(len(subset_matrix))})
+    solution = np.zeros(len(subset_matrix[0]))
+    for selected_subset in selected_subsets:
+        solution[selected_subset] = 1
+    return solution
+
+
+def dlx_algorithm(subset_matrix: list[list], selected_subsets: list, subset_mapping: dict) -> list:
+    rng = np_random.default_rng()
+    subset = rng.integers(len(subset_matrix[0]))
+    selected_subsets.append(subset_mapping[subset])
+    new_subset_matrix = reduce_subset_matrix(subset_matrix, subset, subset_mapping)
+    if new_subset_matrix and not len(new_subset_matrix[0]) == 0:
+        selected_subsets = dlx_algorithm(new_subset_matrix, selected_subsets, subset_mapping)
+    return selected_subsets
+
+
+def reduce_subset_matrix(subset_matrix: list[list], selected_subset: int, subset_mapping: dict) -> list[list]:
+    selected_elements = set()
+    for element in range(len(subset_matrix)):
+        if subset_matrix[element][selected_subset] == 1:
+            selected_elements.add(element)
+    remaining_elements = [i for i in range(len(subset_matrix)) if i not in selected_elements]
+    if not remaining_elements:
+        return []
+    new_subset_matrix = [[] for _ in remaining_elements]
+    # get the subsets still present and add them to the new subset matrix
+    for old_subset in range(len(subset_matrix[0])):
+        if keep_subset(subset_matrix, old_subset, selected_elements):
+            new_id = len(new_subset_matrix[0])
+            subset_mapping[new_id] = old_subset
+            for idx, element in enumerate(remaining_elements):
+                new_subset_matrix[idx].append(subset_matrix[element][old_subset])
+    return new_subset_matrix
+
+
+
+
+def keep_subset(subset_matrix: list[list], old_subset: int, selected_elements: set) -> bool:
+    for element in selected_elements:
+        if subset_matrix[element][old_subset] == 1:  # subset contains already selected element
+            return False
+    return True
 
 
 def get_random_city_order_solution(problem: dict) -> list:

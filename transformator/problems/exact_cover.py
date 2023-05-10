@@ -56,7 +56,6 @@ def get_subset_matrix(elements: int, subsets: int) -> list[list[int]]:
         while subset_matrix[element][i] == 1:
             i = rng.integers(0, subsets)
         subset_matrix[element][i] = 1
-
     return subset_matrix
 
 
