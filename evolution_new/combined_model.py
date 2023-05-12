@@ -13,12 +13,16 @@ from evolution_new.new_visualisation import qubo_heatmap
 from evolution_utils import get_edge_data, get_diagonal_of_qubo, get_tensor_of_structure, get_training_dataset, \
     get_small_qubo, get_reducability_number, remove_hard_constraits_from_qubo
 from learning_model import LearningModel
-from neural_networks import CombinedNodeFeaturesUwu, CombinedEdgeDecisionUwu
+from neural_networks import CombinedNodeFeaturesUwu, CombinedEdgeDecisionUwu, CombinedScaleEdgeDecisionUwu
 
 combined_model_list = {
     'combinedModelUwU': [
         CombinedNodeFeaturesUwu,
         CombinedEdgeDecisionUwu
+    ],
+    'combinedScaleModelUwU': [
+        CombinedNodeFeaturesUwu,
+        CombinedScaleEdgeDecisionUwu
     ]
 }
 

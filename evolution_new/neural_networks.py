@@ -267,3 +267,25 @@ class CombinedEdgeDecisionUwu(nn.Module):
         x = torch.sigmoid(x)
         x = self.lin5(x)
         return F.relu(x)
+
+
+class CombinedScaleEdgeDecisionUwu(nn.Module):
+    def __init__(self, node_features):
+        super(CombinedScaleEdgeDecisionUwu, self).__init__()
+        self.lin1 = nn.Linear(int(np.power(2, 2) * node_features / 8 + 1), int(np.power(2, 3) * node_features / 8))
+        self.lin2 = nn.Linear(int(np.power(2, 3) * node_features / 8), int(np.power(2, 4) * node_features / 8))
+        self.lin3 = nn.Linear(int(np.power(2, 4) * node_features / 8), int(np.power(2, 3) * node_features / 8))
+        self.lin4 = nn.Linear(int(np.power(2, 3) * node_features / 8), int(np.power(2, 2) * node_features / 8))
+        self.lin5 = nn.Linear(int(np.power(2, 2) * node_features / 8), 1)
+
+    def forward(self, x):
+        x = self.lin1(x)
+        x = F.relu(x)
+        x = self.lin2(x)
+        x = torch.sigmoid(x)
+        x = self.lin3(x)
+        x = F.relu(x)
+        x = self.lin4(x)
+        x = torch.sigmoid(x)
+        x = self.lin5(x)
+        return F.relu(x)

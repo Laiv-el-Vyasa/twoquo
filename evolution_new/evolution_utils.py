@@ -2,7 +2,7 @@ import random
 import time
 
 import numpy as np
-from numpy  import random as np_random
+from numpy import random as np_random
 import torch
 import os
 import shutil
@@ -126,7 +126,7 @@ def get_quality_of_approxed_qubo(qubo: np.array, approxed_qubo: np.array, soluti
         print(best_solutions_approx)
     min_solution_quality, best_solution_approx, mean_solution_quality, min_mean_sol_qual, mean_mean_sol_qual \
         = get_min_solution_quality(best_solutions_approx, qubo, solutions)
-    return min_solution_quality, best_solution_approx, relative_approx_count, mean_solution_quality,\
+    return min_solution_quality, best_solution_approx, relative_approx_count, mean_solution_quality, \
            min_mean_sol_qual, mean_mean_sol_qual
 
 
@@ -358,8 +358,8 @@ def solve_qubo(qubo: np.array, config: dict):
     for solutions in metadata.solutions[solver]:
         solution_list.append(solutions[0])  # Append first solution given by the solver
         calc_energies.append(solutions[0].dot(qubo.dot(solutions[0])))
-    #print(solution_list)
-    #for solution in solution_list:
+    # print(solution_list)
+    # for solution in solution_list:
     #    calc_energies.append(solution.dot(qubo.dot(solution)))
     # print('Calc energies: ', calc_energies)
     # print(metadata.solutions[solver], metadata.energies[solver])
@@ -423,6 +423,27 @@ def construct_standard_fitness_function(fitness_params: dict) -> Callable[[dict,
                        b * (1 - np.square(d - true_approx_percent)) +
                        c * np.floor(1 - solution_quality))
             if not true_approx_percent > min_approx:  # or true_approx_percent == 1:
+                fitness = 0
+            fitness_list.append(fitness)
+        return np.mean(fitness_list)
+
+    return get_new_fitness_value
+
+
+def construct_scale_fitness_function(fitness_params: dict) -> Callable[[dict, dict], float]:
+    def get_new_fitness_value(problem_dict: dict, config: dict) -> float:
+        a, b, c, d, min_approx = extract_fitness_params_from_dict(fitness_params)
+        fitness_list = []
+        qubo_list, approxed_qubo_list, \
+            solution_list, scale_list = problem_dict['qubo_list'], problem_dict['approxed_qubo_list'], \
+                                            problem_dict['solutions_list'], problem_dict['scale_list']
+        for qubo, approximation, solutions, scale in zip(qubo_list, approxed_qubo_list, solution_list, scale_list):
+            solution_quality, best_approx_solution, true_approx_percent, *_ = get_quality_of_approxed_qubo(
+                qubo, approximation, solutions, config)
+            fitness = (a * (1 - solution_quality) +
+                       b * (1 - np.square(scale - true_approx_percent)) +
+                       c * np.floor(1 - solution_quality))
+            if not np.abs(scale - true_approx_percent) < min_approx or true_approx_percent == 0:
                 fitness = 0
             fitness_list.append(fitness)
         return np.mean(fitness_list)
@@ -525,7 +546,7 @@ def get_classical_solution_tsp(problem: dict) -> list:
     while len(cities_left) != 0:
         dist_list = [(dist_matrix[current_city][i], i) for i in cities_left]
         dist_list.sort()
-        chosen_spot = rng.binomial(len(cities_left) - 1, 1/(2 * len(cities_left)))
+        chosen_spot = rng.binomial(len(cities_left) - 1, 1 / (2 * len(cities_left)))
         current_city = dist_list[chosen_spot][1]
         cities_visited.append(current_city)
         cities_left.remove(current_city)
@@ -552,7 +573,7 @@ def get_random_differencing_solution(problem: dict) -> list:
     while len(numbers) > 1:
         idx -= 1
         biggest = numbers.pop(0)
-        next_number = rng.binomial(len(numbers) - 1, 1/(2 * len(numbers)))
+        next_number = rng.binomial(len(numbers) - 1, 1 / (2 * len(numbers)))
         second = numbers.pop(next_number)
         numbers.append((biggest[0] - second[0], idx))
         backtracking_list.append((biggest, second, (biggest[0] - second[0], idx)))
@@ -953,11 +974,12 @@ class Data(Dataset):
         return self.len
 
 
-#problem = {'numbers': [120, 75, 74, 73, 71, 60, 56, 54, 46, 15]}
-#for n in range(10):
-    #print(get_random_differencing_solution(problem))
-    #print(get_random_solution_assignment(10))
+# problem = {'numbers': [120, 75, 74, 73, 71, 60, 56, 54, 46, 15]}
+# for n in range(10):
+# print(get_random_differencing_solution(problem))
+# print(get_random_solution_assignment(10))
 
-problem = {'subset_matrix': [[0,0,1,1,0,0,0],[1,0,0,0,0,0,1],[1,1,0,0,1,0,0],[1,0,0,1,0,0,0],[0,0,1,0,1,1,0],[0,0,0,0,1,0,0]]}
+problem = {'subset_matrix': [[0, 0, 1, 1, 0, 0, 0], [1, 0, 0, 0, 0, 0, 1], [1, 1, 0, 0, 1, 0, 0], [1, 0, 0, 1, 0, 0, 0],
+                             [0, 0, 1, 0, 1, 1, 0], [0, 0, 0, 0, 1, 0, 0]]}
 
 print(get_dlx_solution_ec(problem))
