@@ -311,6 +311,26 @@
         ]
       }
     },
+    "test_evol_scale_ec": {
+      "base_cfg": "1",
+      "dataset_id": "test_evol_scale_ec",
+      "problems": {
+        "qubo_size": 192,
+        "n_problems": 100,
+        "scale": {
+          "min": 0.05,
+          "max": 0.8
+        },
+        "EC": {
+          "size": [16, 65],
+          "target": 0.62,
+          "target_boundary": [0.34, 2.0]
+        },
+        "problems": [
+          "EC"
+        ]
+      }
+    },
     "test_evol_sgi": {
       "base_cfg": "1",
       "dataset_id": "test_evol_sgi",

@@ -64,7 +64,7 @@ training_config = {
         },
     'combined_ec_scale':
         {
-            'config_name': 'test_evol_ec',
+            'config_name': 'test_evol_scale_ec',
             'training_name': 'combined_scale_model',
             'learning_parameters': 'standard',
             'network_type': 'combined_scale',

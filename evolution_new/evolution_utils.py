@@ -88,12 +88,22 @@ def get_training_dataset(config: dict) -> dict:
     # qubo_heatmap(qubo_list[0])
     if 'tsp' in problem_list[0] and check_tsp:
         check_tsp_solutions(qubo_list, problem_list, solutions_list)
-    return {
+    problem_dict = {
         'qubo_list': qubo_list,
         'energy_list': energy_list,
         'solutions_list': solutions_list,
         'problem_list': problem_list
     }
+    if "scale" in config['pipeline']['problems']:
+        problem_dict["scale_list"] = get_random_scale_list(config)
+    return problem_dict
+
+
+def get_random_scale_list(config: dict) -> list[float]:
+    min_sc, max_sc = config['pipeline']['problems']['scale']['min'], config['pipeline']['problems']['scale']['max']
+    n_problems = config['pipeline']['problems']['n_problems']
+    rng = np.random.default_rng()
+    return rng.uniform(min_sc, max_sc, n_problems)
 
 
 # Solves a list of qubos returning two lists, the first containing the solutions, the second the minimal energies
@@ -114,7 +124,6 @@ def get_problem_qubos(config: dict):
     generator = QUBOGenerator(config)
     qubos, labels, problems = generator.generate()
     return qubos, problems
-
 
 # Get quality of the approximated qubo, regarding the quality of the solutions and how much approximation occurred
 # Returning quality, best solution and degree of approximation
@@ -432,7 +441,7 @@ def construct_standard_fitness_function(fitness_params: dict) -> Callable[[dict,
 
 def construct_scale_fitness_function(fitness_params: dict) -> Callable[[dict, dict], float]:
     def get_new_fitness_value(problem_dict: dict, config: dict) -> float:
-        a, b, c, d, min_approx = extract_fitness_params_from_dict(fitness_params)
+        a, b, c, _, min_approx = extract_fitness_params_from_dict(fitness_params)
         fitness_list = []
         qubo_list, approxed_qubo_list, \
             solution_list, scale_list = problem_dict['qubo_list'], problem_dict['approxed_qubo_list'], \
@@ -440,11 +449,13 @@ def construct_scale_fitness_function(fitness_params: dict) -> Callable[[dict, di
         for qubo, approximation, solutions, scale in zip(qubo_list, approxed_qubo_list, solution_list, scale_list):
             solution_quality, best_approx_solution, true_approx_percent, *_ = get_quality_of_approxed_qubo(
                 qubo, approximation, solutions, config)
+            # print(scale, true_approx_percent)
             fitness = (a * (1 - solution_quality) +
                        b * (1 - np.square(scale - true_approx_percent)) +
                        c * np.floor(1 - solution_quality))
             if not np.abs(scale - true_approx_percent) < min_approx or true_approx_percent == 0:
                 fitness = 0
+            # print(fitness)
             fitness_list.append(fitness)
         return np.mean(fitness_list)
 
