@@ -41,6 +41,7 @@ class CombinedModel(LearningModel):
 
     def get_approximation(self, problem_dict: dict) -> dict:
         problem_list, qubo_list = problem_dict['problem_list'], problem_dict['qubo_list']
+        # print(problem_list)
         approxed_qubo_list = []
         if len(qubo_list) > 100:
             approxed_qubo_list = self.get_approximation_multiprocessing(qubo_list, problem_list)

@@ -102,7 +102,7 @@ def get_qubo_solutions(qubo_list: list, config: dict) -> (list[list], list[float
     energy_list = []
     i = 0
     for qubo in qubo_list:
-        print('Solving Qubo ' + str(i))
+        #print('Solving Qubo ' + str(i))
         i += 1
         best_solution, solutions, min_energy = solve_qubo(qubo, config)
         solutions_list.append(solutions)
@@ -979,7 +979,7 @@ class Data(Dataset):
 # print(get_random_differencing_solution(problem))
 # print(get_random_solution_assignment(10))
 
-problem = {'subset_matrix': [[0, 0, 1, 1, 0, 0, 0], [1, 0, 0, 0, 0, 0, 1], [1, 1, 0, 0, 1, 0, 0], [1, 0, 0, 1, 0, 0, 0],
-                             [0, 0, 1, 0, 1, 1, 0], [0, 0, 0, 0, 1, 0, 0]]}
+# problem = {'subset_matrix': [[0, 0, 1, 1, 0, 0, 0], [1, 0, 0, 0, 0, 0, 1], [1, 1, 0, 0, 1, 0, 0],
+#                             [1, 0, 0, 1, 0, 0, 0], [0, 0, 1, 0, 1, 1, 0], [0, 0, 0, 0, 1, 0, 0]]}
 
-print(get_dlx_solution_ec(problem))
+# print(get_dlx_solution_ec(problem))
