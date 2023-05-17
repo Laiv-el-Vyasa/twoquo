@@ -125,6 +125,7 @@ def get_problem_qubos(config: dict):
     qubos, labels, problems = generator.generate()
     return qubos, problems
 
+
 # Get quality of the approximated qubo, regarding the quality of the solutions and how much approximation occurred
 # Returning quality, best solution and degree of approximation
 def get_quality_of_approxed_qubo(qubo: np.array, approxed_qubo: np.array, solutions: np.array,

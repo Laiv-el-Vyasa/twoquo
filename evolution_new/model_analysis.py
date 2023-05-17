@@ -9,30 +9,53 @@ from evolution_new.pygad_learning import PygadLearner
 from evolution_new.learning_model import LearningModel
 from new_visualisation import visualisation_pipeline, qubo_heatmap, visualize_boxplot_comparison
 
-solver = 'qbsolv_simulated_annealing'
 
-
-class TrainingAnalysis:
-    def __init__(self, config_name: str, analysis_parameters: dict):
+class ModelAnalysis:
+    def __init__(self, config_name: str, config_name_list: list, analysis_parameters: dict):
+        self.solver = analysis_parameters['solver']
+        self.model_result_list = []
         self.model, learning_parameters, fitness_func = get_data_from_training_config(config_name)
         self.pygad_learner = PygadLearner(self.model, learning_parameters, fitness_func)
-        self.config = load_cfg(cfg_id=learning_parameters['config_name'])
-        self.config["solvers"][solver]['repeats'] = 100
-        print(self.config["solvers"]['qbsolv_simulated_annealing']['repeats'])
-        self.analysis_name = get_file_name(analysis_parameters['analysis_name'], self.config,
-                                           learning_parameters['fitness_parameters'], analysis=True)
-        self.config['pipeline']['problems']['n_problems'] *= 1
         self.analysis_parameters = analysis_parameters
+        self.learning_parameters = learning_parameters
+        self.config_list = self.get_config_list(config_name_list)
+        #self.config = load_cfg(cfg_id=learning_parameters['config_name'])
+        #self.config["solvers"][solver]['repeats'] = 100
+        #self.config["solvers"][solver]['enabled'] = True
+        #print(self.config["solvers"]['qbsolv_simulated_annealing']['repeats'])
+        #self.analysis_name = get_file_name(analysis_parameters['analysis_name'], self.config,
+        #                                   learning_parameters['fitness_parameters'], analysis=True)
+        #self.config['pipeline']['problems']['n_problems'] *= 1
         if not self.model.load_best_model(learning_parameters['training_name']):
             self.pygad_learner.save_best_model()
             self.model.load_best_model(learning_parameters['training_name'])
 
-    def run_analysis(self):
-        approximation_quality_dict = self.get_model_approximation_quality()
-        analysis_baseline = self.get_analysis_baseline()
-        self.create_visualisation_calls(analysis_baseline, approximation_quality_dict)
+    def get_config_list(self, config_name_list: list) -> list:
+        config_list = []
+        for idx, config_name in enumerate(config_name_list):
+            if config_name == 'standard':
+                config = load_cfg(cfg_id=self.learning_parameters['config_name'])
+            else:
+                config = load_cfg(cfg_id=config_name)
+            config["solvers"][self.solver]['repeats'] = 100
+            config["solvers"][self.solver]['enabled'] = True
+            config['pipeline']['problems']['n_problems'] *= 1
+            if 'scale_list' in self.analysis_parameters:
+                config['pipeline']['problems']['scale']['min'] = self.analysis_parameters['scale_list'][idx]
+                config['pipeline']['problems']['scale']['max'] = self.analysis_parameters['scale_list'][idx]
+            config_list.append(config)
+        return config_list
 
-    def get_model_approximation_quality(self) -> dict:
+    def run_analysis(self):
+        for config in self.config_list:
+            approximation_quality_dict = self.get_model_approximation_quality(config)
+            analysis_baseline = self.get_analysis_baseline(config)
+            self.model_result_list.append({
+                'approximation_quality_dict': approximation_quality_dict,
+                'baseline': analysis_baseline
+            })
+
+    def get_model_approximation_quality(self, config: dict) -> dict:
         return_dict = {
             'solution_quality_list': [],
             'min_solution_quality_list': [],
@@ -53,7 +76,7 @@ class TrainingAnalysis:
             'repeat_qubo_min_solution_quality': [],
             'repeat_qubo_mean_solution_quality': []
         }
-        problem_dict = self.model.get_approximation(self.model.get_training_dataset(self.config))
+        problem_dict = self.model.get_approximation(self.model.get_training_dataset(config))
         approx_qubo_list, solutions_list, qubo_list, problem_list = problem_dict['approxed_qubo_list'], \
                                                                     problem_dict['solutions_list'], \
                                                                     problem_dict['qubo_list'], \
@@ -67,7 +90,7 @@ class TrainingAnalysis:
                 qubo_heatmap(qubo)
                 qubo_heatmap(get_qubo_approx_mask(approx_qubo, qubo))
             min_solution_quality, _, approx_percent, mean_solution_quality, min_mean_sol_qual, mean_mean_sol_qual \
-                = get_quality_of_approxed_qubo(qubo, approx_qubo, solutions, self.config)
+                = get_quality_of_approxed_qubo(qubo, approx_qubo, solutions, config)
             return_dict['solution_quality_list'].append((np.floor(1 - min_solution_quality)))
             return_dict['min_solution_quality_list'].append((1 - min_solution_quality))
             return_dict['mean_solution_quality_list'].append((1 - mean_solution_quality))
@@ -87,7 +110,7 @@ class TrainingAnalysis:
 
             if 'compare_different_approaches' in self.analysis_parameters and \
                     self.analysis_parameters['compare_different_approaches']:
-                repeats = self.config["solvers"]['qbsolv_simulated_annealing']['repeats']
+                repeats = config["solvers"][self.solver]['repeats']
                 classical_min_solution_quality, classical_mean_solution_quality = \
                     get_classical_solution_qualities(solutions, qubo, problem, repeats, False)
                 return_dict['classical_solution_quality'].append(np.floor(1 - classical_min_solution_quality))
@@ -107,22 +130,24 @@ class TrainingAnalysis:
                 return_dict['repeat_qubo_mean_solution_quality'].append(1 - repeat_qubo_mean_solution_quality)
         return return_dict
 
-    def get_analysis_baseline(self) -> list[list, list, list, list, list, list, list]:
+    def get_analysis_baseline(self, config) -> list[list, list, list, list, list, list, list]:
+        analysis_name = get_file_name(self.analysis_parameters['analysis_name'], config,
+                                      self.learning_parameters['fitness_parameters'], analysis=True)
         try:
-            analysis_baseline = np.load(f'analysis_baseline/{self.analysis_name}.npy')
+            analysis_baseline = np.load(f'analysis_baseline/{analysis_name}.npy')
             print('Analysis baseline loaded')
         except FileNotFoundError:
-            analysis_baseline = self.get_new_analysis_baseline()
-            np.save(f'analysis_baseline/{self.analysis_name}', analysis_baseline)
+            analysis_baseline = self.get_new_analysis_baseline(config)
+            np.save(f'analysis_baseline/{analysis_name}', analysis_baseline)
         print(analysis_baseline)
         return analysis_baseline
 
-    def get_new_analysis_baseline(self) -> list[list, list, list, list, list, list, list]:
+    def get_new_analysis_baseline(self, config: dict) -> list[list, list, list, list, list, list, list]:
         analysis_baseline = [[], [], [], [], [], [], []]
-        problem_dict = self.model.get_training_dataset(self.config)
+        problem_dict = self.model.get_training_dataset(config)
         stepwise_approx_quality, stepwise_min_approx_quality, stepwise_mean_approx_quality, \
         stepwise_approx_quality_random, stepwise_min_approx_quality_random, stepwise_mean_approx_quality_random \
-            = self.get_stepwise_approx_quality(problem_dict)
+            = self.get_stepwise_approx_quality(problem_dict, config)
         # Prepare array for saving and display
         analysis_baseline[0] = stepwise_approx_quality
         step_list = [n / (self.analysis_parameters['steps'] + 1) for n in range(self.analysis_parameters['steps'] + 1)]
@@ -134,7 +159,8 @@ class TrainingAnalysis:
         analysis_baseline[6] = stepwise_mean_approx_quality_random
         return analysis_baseline
 
-    def get_stepwise_approx_quality(self, problem_dict: dict) -> tuple[list, list, list, list, list, list]:
+    def get_stepwise_approx_quality(self, problem_dict: dict, config: dict) \
+            -> tuple[list, list, list, list, list, list]:
         qubo_list, solutions_list = problem_dict['qubo_list'], problem_dict['solutions_list']
         solution_quality_list = []
         min_solution_quality_list = []
@@ -145,13 +171,13 @@ class TrainingAnalysis:
         for idx, (qubo, solutions) in enumerate(zip(qubo_list, solutions_list)):
             print(f'Approximating problem {idx} for baseline')
             sol_qual_sorted, min_sol_qual_sorted, mean_sol_qual_sorted = \
-                self.get_stepwise_approx_quality_for_qubo(qubo, solutions, True)
+                self.get_stepwise_approx_quality_for_qubo(qubo, solutions, config, True)
             # print(sol_qual_sorted)
             solution_quality_list.append(sol_qual_sorted)
             min_solution_quality_list.append(min_sol_qual_sorted)
             mean_solution_quality_list.append(mean_sol_qual_sorted)
             sol_qual_random, min_sol_qual_random, mean_sol_qual_random = \
-                self.get_stepwise_approx_quality_for_qubo(qubo, solutions, False)
+                self.get_stepwise_approx_quality_for_qubo(qubo, solutions, config, False)
             random_solution_quality_list.append(sol_qual_random)
             random_min_solution_quality_list.append(min_sol_qual_random)
             random_mean_solution_quality_list.append(mean_sol_qual_random)
@@ -163,7 +189,7 @@ class TrainingAnalysis:
                self.rotate_solution_quality_list(random_min_solution_quality_list), \
                self.rotate_solution_quality_list(random_mean_solution_quality_list)
 
-    def get_stepwise_approx_quality_for_qubo(self, qubo: list, solutions: list, sorted_approx: bool) \
+    def get_stepwise_approx_quality_for_qubo(self, qubo: list, solutions: list, config: dict, sorted_approx: bool) \
             -> tuple[list, list, list]:
         stepwise_approx_quality = [1.]
         stepwise_min_approx_quality = [1.]
@@ -173,7 +199,7 @@ class TrainingAnalysis:
         for i in range(self.analysis_parameters['steps']):
             approx_qubo = approximation_dict[str(i + 1)]['qubo']
             min_solution_quality, _, _, mean_solution_quality, *_ \
-                = get_quality_of_approxed_qubo(qubo, approx_qubo, solutions, self.config)
+                = get_quality_of_approxed_qubo(qubo, approx_qubo, solutions, config)
             # print('step ', i)
             # print(min_solution_quality)
             stepwise_approx_quality.append(np.floor(1 - min_solution_quality))
@@ -190,15 +216,6 @@ class TrainingAnalysis:
         for approx_step_quality_list in rotated_list:
             analysis_baseline.append(np.mean(approx_step_quality_list))
         return analysis_baseline
-
-    def get_visualisation_title(self, evaluation_type, models=False):
-        problems = self.config["pipeline"]["problems"]["problems"]
-        title = f'{evaluation_type}, trained model{"s" if models else ""}, problem{"s" if len(problems) > 1 else ""}: '
-        for problem in problems:
-            title = title + problem + ', '
-        title = title + f'Max-size: {self.config["pipeline"]["problems"]["qubo_size"]}, Solver: ' \
-                        f'{solver}'
-        return title
 
     def create_baseline_data_dict(self, baseline_data: list[list, list, list, list, list, list, list],
                                   sorted_approx=True, data_index=0, dotted=False, color='black') -> dict:
