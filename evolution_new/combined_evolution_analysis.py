@@ -27,6 +27,7 @@ analysis_pipeline = {
             'compare': True,
             'models': {
                 'combined_ec': {
+                    'model_name': 'Combined model trained on EC, 192',
                     'configs': [
                         0
                     ],

@@ -1,4 +1,6 @@
-from evolution_new.new_visualisation import visualisation_pipeline
+import numpy as np
+
+from evolution_new.new_visualisation import visualisation_pipeline, visualize_boxplot_comparison
 from model_analysis import ModelAnalysis
 
 
@@ -35,6 +37,16 @@ def get_visualisation_title(evaluation_type, config, solver, models=False):
     return title
 
 
+def get_model_config_description(model_name: str, config: dict, kind: str):
+    descr = model_name
+    problems = config["pipeline"]["problems"]["problems"]
+    descr = descr + ', evaluated on: '
+    for problem in problems:
+        descr = descr + problem + ', '
+    descr = descr + f'Max-size: {config["pipeline"]["problems"]["qubo_size"]}'
+    return descr + kind
+
+
 class AnalysisPipeline:
     def __init__(self, analysis_dict: dict):
         self.analysis_dict = analysis_dict
@@ -52,7 +64,63 @@ class AnalysisPipeline:
                 self.visualize_boxplot_one_problem(analysis)
 
     def visualize_baseline_correct_mean(self, analysis_dict: dict):
-        pass
+        visualisation_dict = {
+            'baseline_data': [],
+            'evaluation_results': [],
+            'title': 'Model comparison',
+            'x_label': 'approximated qubo entries in percent',
+            'y_label': 'percentage of correct solutions found'
+        }
+        for model_name in analysis_dict['models']:
+            model_analysis = self.models_dict[model_name]
+            model_dict = analysis_dict['models'][model_name]
+            for idx, config_nr in enumerate(model_dict['configs']):
+                model_analyis_results = model_analysis.model_result_list[config_nr]
+
+                visualisation_dict['baseline_data'].append(
+                    create_baseline_data_dict(model_analyis_results['baseline'],
+                                              model_analysis.analysis_parameters['steps'],
+                                              color=model_dict['baseline_colors'][idx])
+                )
+
+                visualisation_dict['evaluation_results'].append(
+                    {
+                        'color': model_dict['colors'][idx],
+                        'marker': 4,
+                        'evol_y': [np.mean(model_analyis_results['approximation_quality_dict']
+                                           ['solution_quality_list'])],
+                        'evol_x': [np.mean(model_analyis_results['approximation_quality_dict']['approx_percent_list'])],
+                        'label': get_model_config_description(model_dict['model_name'],
+                                                              model_analysis.config_list[config_nr],
+                                                              ', model performance')
+                    }
+                )
+                if analysis_dict['compare']:
+                    visualisation_dict['evaluation_results'].append(
+                        {
+                            'color': model_dict['colors'][idx],
+                            'marker': 5,
+                            'evol_y': [np.mean(model_analyis_results['approximation_quality_dict']
+                                               ['random_solution_quality'])],
+                            'evol_x': [np.mean(model_analyis_results['approximation_quality_dict']['approx_percent_list'])],
+                            'label': get_model_config_description(model_dict['model_name'],
+                                                                  model_analysis.config_list[config_nr],
+                                                                  ', random solutions (without approximation)')
+                        }
+                    )
+                    visualisation_dict['evaluation_results'].append(
+                        {
+                            'color': model_dict['colors'][idx],
+                            'marker': 6,
+                            'evol_y': [np.mean(model_analyis_results['approximation_quality_dict']
+                                               ['classical_solution_quality'])],
+                            'evol_x': [np.mean(model_analyis_results['approximation_quality_dict']['approx_percent_list'])],
+                            'label': get_model_config_description(model_dict['model_name'],
+                                                                  model_analysis.config_list[config_nr],
+                                                                  ', classical algorithm (without approximation)')
+                        }
+                    )
+        visualisation_pipeline(visualisation_dict)
 
     def visualize_baseline_correct_incorrect(self, analysis_dict: dict):
         model_analysis = self.models_dict[analysis_dict['model']]
@@ -69,7 +137,7 @@ class AnalysisPipeline:
                     'label': 'Correct solutions suggested by model'
                 },
                 {
-                    'color': analysis_dict['colors'][0],
+                    'color': analysis_dict['colors'][1],
                     'marker': 4,
                     'evol_y': [0 for _ in model_analyis_results['approximation_quality_dict']['incorrect_approx_list']],
                     'evol_x': model_analyis_results['approximation_quality_dict']['incorrect_approx_list'],
@@ -84,8 +152,84 @@ class AnalysisPipeline:
         })
 
     def visualize_relative_quality_with_mean(self, analysis_dict: dict):
-        pass
+        model_analysis = self.models_dict[analysis_dict['model']]
+        model_analyis_results = model_analysis.model_result_list[analysis_dict['config']]
+        visualisation_pipeline({  # Sorted/random with min/mean pipeline
+            'baseline_data': [
+                create_baseline_data_dict(model_analyis_results['analysis_baseline'],
+                                          model_analysis.analysis_parameters['steps'], data_index=3,
+                                          color=analysis_dict['baseline_colors'][0]),
+                create_baseline_data_dict(model_analyis_results['analysis_baseline'],
+                                          model_analysis.analysis_parameters['steps'], data_index=4, dotted=True,
+                                          color=analysis_dict['baseline_colors'][0]),
+                create_baseline_data_dict(model_analyis_results['analysis_baseline'],
+                                          model_analysis.analysis_parameters['steps'],
+                                          data_index=5, sorted_approx=False, color=analysis_dict['baseline_colors'][1]),
+                create_baseline_data_dict(model_analyis_results['analysis_baseline'],
+                                          model_analysis.analysis_parameters['steps'], data_index=6,
+                                          sorted_approx=False, dotted=True, color=analysis_dict['baseline_colors'][1])
+            ],
+            'evaluation_results': [
+                {
+                    'color': 'blue',
+                    'marker': 4,
+                    'alpha': 0.7,
+                    'evol_y': model_analyis_results['approximation_quality_dict']['min_solution_quality_list'],
+                    'evol_x': model_analyis_results['approximation_quality_dict']['approx_percent_list'],
+                    'label': 'Min solution quality of approximation suggested by model'
+                },
+                {
+                    'color': 'slateblue',
+                    'marker': 5,
+                    'alpha': 0.7,
+                    'evol_y': model_analyis_results['approximation_quality_dict']['mean_solution_quality_list'],
+                    'evol_x': model_analyis_results['approximation_quality_dict']['approx_percent_list'],
+                    'label': 'Mean solution quality of approximation suggested by model'
+                },
+            ],
+            'title': get_visualisation_title('Solution quality of every solution',
+                                             model_analysis.config_list[analysis_dict['config']],
+                                             model_analysis.analysis_parameters['solver']),
+            'x_label': 'approximated qubo entries in percent',
+            'y_label': 'solution quality (min energy - energy) / min energy'
+        })
 
     def visualize_boxplot_one_problem(self, analysis_dict: dict):
-        pass
+        model_analysis = self.models_dict[analysis_dict['model']]
+        model_analyis_results = model_analysis.model_result_list[analysis_dict['config']]
+        visualize_boxplot_comparison({
+            'data_list':
+                [
+                    {
+                        'min': model_analyis_results['approximation_quality_dict']['min_solution_quality_list'],
+                        'mean': model_analyis_results['approximation_quality_dict']['mean_solution_quality_list'],
+                        'tick_name': 'Model performance'
+                    },
+                    {
+                        'min': model_analyis_results['approximation_quality_dict']['classical_min_solution_quality'],
+                        'mean': model_analyis_results['approximation_quality_dict']['classical_mean_solution_quality'],
+                        'tick_name': 'Classical algorithm'
+                    },
+                    {
+                        'min': model_analyis_results['approximation_quality_dict']['random_min_solution_quality'],
+                        'mean': model_analyis_results['approximation_quality_dict']['random_mean_solution_quality'],
+                        'tick_name': 'Random solutions'
+                    },
+                    {
+                        'min': model_analyis_results['approximation_quality_dict']['repeat_qubo_min_solution_quality'],
+                        'mean': model_analyis_results['approximation_quality_dict']['repeat_qubo_mean_solution_quality'],
+                        'tick_name': 'Original QUBO'
+                    }
+                ],
+            'colors':
+                {
+                    'min': '#D7191C',
+                    'mean': '#2C7BB6'
+                },
+            'y_label': 'solution quality (min energy - energy) / min energy',
+            'title': get_visualisation_title('Comparison of different approaches',
+                                             model_analysis.config_list[analysis_dict['config']],
+                                             model_analysis.analysis_parameters['solver'])
+        })
+
 
