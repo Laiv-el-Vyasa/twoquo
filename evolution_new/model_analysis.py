@@ -91,10 +91,10 @@ class ModelAnalysis:
             min_solution_quality, _, approx_percent, mean_solution_quality, min_mean_sol_qual, mean_mean_sol_qual \
                 = get_quality_of_approxed_qubo(qubo, approx_qubo, solutions, config)
             return_dict['solution_quality_list'].append((np.floor(1 - min_solution_quality)))
-            return_dict['min_solution_quality_list'].append((1 - min_solution_quality))
-            return_dict['mean_solution_quality_list'].append((1 - mean_solution_quality))
-            return_dict['min_mean_solution_quality_list'].append((1 - min_mean_sol_qual))
-            return_dict['mean_mean_solution_quality_list'].append((1 - min_solution_quality))
+            return_dict['min_solution_quality_list'].append(min_solution_quality)
+            return_dict['mean_solution_quality_list'].append(mean_solution_quality)
+            return_dict['min_mean_solution_quality_list'].append(min_mean_sol_qual)
+            return_dict['mean_mean_solution_quality_list'].append(min_solution_quality)
             approx_size = get_relative_size_of_approxed_entries(approx_qubo, qubo)
             # print('approx size: ', approx_size)
             # print(min_solution_quality, approx_percent)
@@ -113,20 +113,20 @@ class ModelAnalysis:
                 classical_min_solution_quality, classical_mean_solution_quality = \
                     get_classical_solution_qualities(solutions, qubo, problem, repeats, False)
                 return_dict['classical_solution_quality'].append(np.floor(1 - classical_min_solution_quality))
-                return_dict['classical_min_solution_quality'].append(1 - classical_min_solution_quality)
-                return_dict['classical_mean_solution_quality'].append(1 - classical_mean_solution_quality)
+                return_dict['classical_min_solution_quality'].append(classical_min_solution_quality)
+                return_dict['classical_mean_solution_quality'].append(classical_mean_solution_quality)
 
                 random_min_solution_quality, random_mean_solution_quality = \
                     get_classical_solution_qualities(solutions, qubo, problem, repeats, True)
                 return_dict['random_solution_quality'].append(np.floor(1 - random_min_solution_quality))
-                return_dict['random_min_solution_quality'].append(1 - random_min_solution_quality)
-                return_dict['random_mean_solution_quality'].append(1 - random_mean_solution_quality)
+                return_dict['random_min_solution_quality'].append(random_min_solution_quality)
+                return_dict['random_mean_solution_quality'].append(random_mean_solution_quality)
 
                 repeat_qubo_min_solution_quality, _, repeat_qubo_mean_solution_quality, *_ = \
                     get_min_solution_quality(solutions, qubo, solutions)
                 # print(repeat_qubo_min_solution_quality, repeat_qubo_mean_solution_quality)
-                return_dict['repeat_qubo_min_solution_quality'].append(1 - repeat_qubo_min_solution_quality)
-                return_dict['repeat_qubo_mean_solution_quality'].append(1 - repeat_qubo_mean_solution_quality)
+                return_dict['repeat_qubo_min_solution_quality'].append(repeat_qubo_min_solution_quality)
+                return_dict['repeat_qubo_mean_solution_quality'].append(repeat_qubo_mean_solution_quality)
         return return_dict
 
     def get_analysis_baseline(self, config) -> list[list, list, list, list, list, list, list]:
@@ -202,8 +202,8 @@ class ModelAnalysis:
             # print('step ', i)
             # print(min_solution_quality)
             stepwise_approx_quality.append(np.floor(1 - min_solution_quality))
-            stepwise_min_approx_quality.append((1 - min_solution_quality))
-            stepwise_mean_approx_quality.append((1 - mean_solution_quality))
+            stepwise_min_approx_quality.append(min_solution_quality)
+            stepwise_mean_approx_quality.append(mean_solution_quality)
         return stepwise_approx_quality, stepwise_min_approx_quality, stepwise_mean_approx_quality
 
     def rotate_solution_quality_list(self, solution_quality_list: list[list]) -> list:

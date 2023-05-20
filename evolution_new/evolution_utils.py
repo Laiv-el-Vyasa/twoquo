@@ -657,7 +657,7 @@ def get_dlx_solution_ec(problem: dict) -> list:
     solution = np.zeros(len(subset_matrix[0]))
     for selected_subset in selected_subsets:
         solution[selected_subset] = 1
-    print(solution)
+    # print(solution)
     return solution
 
 
