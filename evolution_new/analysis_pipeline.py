@@ -36,13 +36,16 @@ def get_visualisation_title(evaluation_type, config, solver, models=False):
     return title
 
 
-def get_model_config_description(model_name: str, config: dict, kind: str):
+def get_model_config_description(model_name: str, model_analysis: ModelAnalysis, config_nr: int, kind: str) ->str:
     descr = model_name
+    config = model_analysis.config_list[config_nr]
     problems = config["pipeline"]["problems"]["problems"]
     descr = descr + ', evaluated on: '
     for problem in problems:
         descr = descr + problem + ', '
     descr = descr + f'Max-size: {config["pipeline"]["problems"]["qubo_size"]}'
+    if 'scale_list' in model_analysis.analysis_parameters:
+        descr = descr + 'desired approximation: ' + str(model_analysis.analysis_parameters['scale_list'][config_nr])
     return descr + kind
 
 
@@ -90,8 +93,10 @@ class AnalysisPipeline:
                                            ['solution_quality_list'])],
                         'evol_x': [np.mean(model_analyis_results['approximation_quality_dict']['approx_percent_list'])],
                         'label': get_model_config_description(model_dict['model_name'],
-                                                              model_analysis.config_list[config_nr],
-                                                              ', model performance')
+                                                              model_analysis,
+                                                              config_nr,
+                                                              ', model performance' if analysis_dict['compare'] else
+                                                              '')
                     }
                 )
                 if analysis_dict['compare']:
@@ -103,7 +108,8 @@ class AnalysisPipeline:
                                                ['random_solution_quality'])],
                             'evol_x': [np.mean(model_analyis_results['approximation_quality_dict']['approx_percent_list'])],
                             'label': get_model_config_description(model_dict['model_name'],
-                                                                  model_analysis.config_list[config_nr],
+                                                                  model_analysis,
+                                                                  config_nr,
                                                                   ', random solutions (without approximation)')
                         }
                     )
@@ -115,7 +121,8 @@ class AnalysisPipeline:
                                                ['classical_solution_quality'])],
                             'evol_x': [np.mean(model_analyis_results['approximation_quality_dict']['approx_percent_list'])],
                             'label': get_model_config_description(model_dict['model_name'],
-                                                                  model_analysis.config_list[config_nr],
+                                                                  model_analysis,
+                                                                  config_nr,
                                                                   ', classical algorithm (without approximation)')
                         }
                     )
