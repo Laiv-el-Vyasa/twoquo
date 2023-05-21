@@ -108,7 +108,7 @@ analysis_pipeline = {
 
 analysis_pipeline_2 = {
     'models': {
-        'combined_ec': {
+        'combined_gc': {
             'analysis_parameters': analysis_parameters,
             'analysis_name': 'combined_analysis',
             'configs': [
@@ -136,7 +136,7 @@ analysis_pipeline_2 = {
                 'standard'
             ]
         },
-        'combined_gc': {
+        'combined_ec': {
             'analysis_parameters': analysis_parameters,
             'analysis_name': 'combined_analysis',
             'configs': [
@@ -173,7 +173,7 @@ analysis_pipeline_2 = {
                         0
                     ],
                     'colors': [
-                        "violet"
+                        "darkviolet"
                     ],
                     'baseline_colors': [
                         "black"

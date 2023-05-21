@@ -711,7 +711,7 @@ def keep_subset(subset_matrix: list[list], old_subset: int, selected_elements: s
 def get_d_satur_algorithm_solution(problem: dict) -> list:
     graph = problem['graph']
     n_colors = problem['n_colors']
-    node_open_color_list = [(0, node, set([i for i in range(n_colors)])) for node in graph.nodes]
+    node_open_color_list = [[0, node, set([i for i in range(n_colors)])] for node in graph.nodes]
     random.shuffle(node_open_color_list)
     node_color_list = [0 for _ in graph.nodes]
     while len(node_open_color_list) > 0:
@@ -726,17 +726,19 @@ def process_next_urgent_node(node_open_color_list: list[tuple[int, int, set[int]
     current_node = node_open_color_list.pop(0)
     current_node_nr = current_node[1]
     chosen_color = get_color(current_node[2], n_colors)
+    new_open_node_color_list = []
     for open_node in node_open_color_list:
-        open_node_nr = node_open_color_list[1]
+        open_colors, open_node_nr, open_colors_dict = open_node
         for edge in graph.edges:  # Search for adjacent nodes
             if edge[0] == current_node_nr and edge[1] == open_node_nr or edge[0] == open_node_nr \
                     and edge[1] == current_node_nr:
-                if chosen_color in open_node[2]:  # If node not already adjacent to chosen color:
-                    open_node[0] += 1
-                    open_node[2].remove(chosen_color)
+                if chosen_color in open_colors_dict:  # If node not already adjacent to chosen color:
+                    open_colors += 1
+                    open_colors_dict.remove(chosen_color)
+        new_open_node_color_list.append((open_colors, open_node_nr, open_colors_dict))
     node_color_list[current_node_nr] = chosen_color
-    node_open_color_list.sort()
-    return node_open_color_list, node_color_list
+    new_open_node_color_list.sort()
+    return new_open_node_color_list, node_color_list
 
 
 def node_color_list_to_solution(node_color_list: list, n_colors: int) -> list:
@@ -752,7 +754,7 @@ def get_color(open_colors: set[int], n_colors: int) -> int:
         open_colors_list = [i for i in range(n_colors)]
     else:
         open_colors_list = [i for i in open_colors]
-    idx = rng.integers(0, len(open_colors))
+    idx = rng.integers(0, len(open_colors_list))
     return open_colors_list[idx]
 
 

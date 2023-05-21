@@ -261,7 +261,7 @@ class AnalysisPipeline:
                     'qubo': model_analyis_results['approximation_quality_dict']['repeat_qubo_min_solution_quality'],
                     'tick_name': get_model_config_description(model_dict['model_name'], model_analysis, config_nr, '')
                 })
-        visualize_boxplot_comparison({
+        visualize_boxplot_comparison_multiple_models({
             'data_list':
                 data_list,
             'colors':
