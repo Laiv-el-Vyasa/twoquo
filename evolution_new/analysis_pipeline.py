@@ -73,17 +73,21 @@ class AnalysisPipeline:
             'x_label': 'approximated qubo entries in percent',
             'y_label': 'percentage of correct solutions found'
         }
+        config_name_set = set()
         for model_name in analysis_dict['models']:
             model_analysis = self.models_dict[model_name]
             model_dict = analysis_dict['models'][model_name]
             for idx, config_nr in enumerate(model_dict['configs']):
                 model_analyis_results = model_analysis.model_result_list[config_nr]
 
-                visualisation_dict['baseline_data'].append(
-                    create_baseline_data_dict(model_analyis_results['baseline'],
-                                              model_analysis.analysis_parameters['steps'],
-                                              color=model_dict['baseline_colors'][idx])
-                )
+                config_name = self.analysis_dict['models'][model_name]['configs'][config_nr]
+                if config_name not in config_name_set:
+                    visualisation_dict['baseline_data'].append(
+                        create_baseline_data_dict(model_analyis_results['baseline'],
+                                                  model_analysis.analysis_parameters['steps'],
+                                                  color=model_dict['baseline_colors'][idx])
+                    )
+                    config_name_set.add(config_name)
 
                 visualisation_dict['evaluation_results'].append(
                     {

@@ -131,7 +131,8 @@ class ModelAnalysis:
 
     def get_analysis_baseline(self, config) -> list[list, list, list, list, list, list, list]:
         analysis_name = get_file_name(self.analysis_parameters['analysis_name'], config,
-                                      self.learning_parameters['fitness_parameters'], analysis=True)
+                                      self.learning_parameters['fitness_parameters'], analysis=True,
+                                      steps=self.analysis_parameters['steps'])
         try:
             analysis_baseline = np.load(f'analysis_baseline/{analysis_name}.npy')
             print('Analysis baseline loaded')
