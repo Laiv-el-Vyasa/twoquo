@@ -66,6 +66,8 @@ class AnalysisPipeline:
                 self.visualize_relative_quality_with_mean(analysis)
             elif analysis['type'] == 'boxplot_one':
                 self.visualize_boxplot_one_problem(analysis)
+            elif analysis['type'] == 'boxplot_multiple':
+                self.visualize_boxplot_multiple_problems(analysis)
 
     def visualize_baseline_correct_mean(self, analysis_dict: dict):
         visualisation_dict = {
