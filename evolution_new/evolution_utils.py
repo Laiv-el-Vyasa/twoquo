@@ -1,6 +1,7 @@
 import random
 import time
 
+import networkx
 import numpy as np
 from numpy import random as np_random
 import torch
@@ -110,7 +111,7 @@ def get_qubo_solutions(qubo_list: list, config: dict) -> (list[list], list[float
     energy_list = []
     i = 0
     for qubo in qubo_list:
-        #print('Solving Qubo ' + str(i))
+        # print('Solving Qubo ' + str(i))
         i += 1
         best_solution, solutions, min_energy = solve_qubo(qubo, config)
         solutions_list.append(solutions)
@@ -443,8 +444,8 @@ def construct_scale_fitness_function(fitness_params: dict) -> Callable[[dict, di
         a, b, c, _, min_approx = extract_fitness_params_from_dict(fitness_params)
         fitness_list = []
         qubo_list, approxed_qubo_list, \
-            solution_list, scale_list = problem_dict['qubo_list'], problem_dict['approxed_qubo_list'], \
-                                            problem_dict['solutions_list'], problem_dict['scale_list']
+        solution_list, scale_list = problem_dict['qubo_list'], problem_dict['approxed_qubo_list'], \
+                                    problem_dict['solutions_list'], problem_dict['scale_list']
         for qubo, approximation, solutions, scale in zip(qubo_list, approxed_qubo_list, solution_list, scale_list):
             solution_quality, best_approx_solution, true_approx_percent, *_ = get_quality_of_approxed_qubo(
                 qubo, approximation, solutions, config)
@@ -538,6 +539,11 @@ def get_classical_solutions(problem: dict, reads: int, random_solutions: bool) -
                 solution_list.append(get_random_solution_assignment(len(problem['subset_matrix'][0])))
             else:
                 solution_list.append(get_dlx_solution_ec(problem))
+        elif 'n_colors' in problem:
+            if random_solutions:
+                solution_list.append(get_random_coloring(problem))
+            else:
+                solution_list.append(get_d_satur_algorithm_solution(problem))
     return solution_list
 
 
@@ -612,6 +618,7 @@ def get_item_ids_from_sorted_numbers(sorted_numbers: list[list, list], idx: int)
                 return i, j
 
 
+# Get a solution list from the two lists of indexes
 def get_solution_from_sorted_numbers(sorted_numbers: list[list, list]) -> list:
     solution = np.zeros(len(sorted_numbers[0]) + len(sorted_numbers[1]))
     for item in sorted_numbers[0]:
@@ -695,6 +702,55 @@ def keep_subset(subset_matrix: list[list], old_subset: int, selected_elements: s
     return True
 
 
+# Using a variant of the DSatur-Algorithm to generate a heuristic solution for GC
+def get_d_satur_algorithm_solution(problem: dict) -> list:
+    graph = problem['graph']
+    n_colors = problem['n_colors']
+    node_open_color_list = [(0, node, set([i for i in range(n_colors)])) for node in graph.nodes]
+    random.shuffle(node_open_color_list)
+    node_color_list = [0 for _ in graph.nodes]
+    while len(node_open_color_list) > 0:
+        node_open_color_list, node_color_list = process_next_urgent_node(node_open_color_list, node_color_list,
+                                                                         n_colors, graph)
+    return node_color_list_to_solution(node_color_list, n_colors)
+
+
+def process_next_urgent_node(node_open_color_list: list[tuple[int, int, set[int]]],
+                             node_color_list: list[int], n_colors: int, graph: networkx.Graph) \
+        -> tuple[list[tuple[int, int, set[int]]], list[int]]:
+    current_node = node_open_color_list.pop(0)
+    current_node_nr = current_node[1]
+    chosen_color = get_color(current_node[2], n_colors)
+    for open_node in node_open_color_list:
+        open_node_nr = node_open_color_list[1]
+        for edge in graph.edges:  # Search for adjacent nodes
+            if edge[0] == current_node_nr and edge[1] == open_node_nr or edge[0] == open_node_nr \
+                    and edge[1] == current_node_nr:
+                if chosen_color in open_node[2]:  # If node not already adjacent to chosen color:
+                    open_node[0] += 1
+                    open_node[2].remove(chosen_color)
+    node_color_list[current_node_nr] = chosen_color
+    node_open_color_list.sort()
+    return node_open_color_list, node_color_list
+
+
+def node_color_list_to_solution(node_color_list: list, n_colors: int) -> list:
+    solution = np.zeros(len(node_color_list * n_colors))
+    for node, color in enumerate(node_color_list):
+        solution[node * n_colors + color] = 1
+    return solution
+
+
+def get_color(open_colors: set[int], n_colors: int) -> int:
+    rng = np_random.default_rng()
+    if not open_colors:
+        open_colors_list = [i for i in range(n_colors)]
+    else:
+        open_colors_list = [i for i in open_colors]
+    idx = rng.integers(0, len(open_colors))
+    return open_colors_list[idx]
+
+
 def get_random_city_order_solution(problem: dict) -> list:
     cities = [i for i in range(len(problem['cities']))]
     random.shuffle(cities)
@@ -708,6 +764,18 @@ def get_random_solution_assignment(n: int) -> list:
     for i in range(n):
         if rng.uniform() < p:
             solution[i] = 1
+    return solution
+
+
+def get_random_coloring(problem: dict) -> list:
+    rng = np_random.default_rng()
+    graph = problem['graph']
+    n_colors = problem['n_colors']
+    node_count = len(graph.nodes)
+    solution = np.zeros(node_count * n_colors)
+    for node in range(node_count):
+        random_color = rng.integers(0, n_colors)
+        solution[node * n_colors + random_color] = 1
     return solution
 
 
@@ -982,7 +1050,6 @@ class Data(Dataset):
 
     def __len__(self):
         return self.len
-
 
 # problem = {'numbers': [120, 75, 74, 73, 71, 60, 56, 54, 46, 15]}
 # for n in range(10):
