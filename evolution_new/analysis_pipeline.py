@@ -1,6 +1,7 @@
 import numpy as np
 
-from evolution_new.new_visualisation import visualisation_pipeline, visualize_boxplot_comparison
+from evolution_new.new_visualisation import visualisation_pipeline, visualize_boxplot_comparison, \
+    visualize_boxplot_comparison_multiple_models
 from model_analysis import ModelAnalysis
 
 
@@ -128,7 +129,7 @@ class AnalysisPipeline:
                             'label': get_model_config_description(model_dict['model_name'],
                                                                   model_analysis,
                                                                   config_nr,
-                                                                  ', classical algorithm (without approximation)')
+                                                                  ', classical heuristic (without approximation)')
                         }
                     )
         visualisation_pipeline(visualisation_dict)
@@ -241,6 +242,35 @@ class AnalysisPipeline:
             'title': get_visualisation_title('Comparison of different approaches',
                                              model_analysis.config_list[analysis_dict['config']],
                                              model_analysis.analysis_parameters['solver'])
+        })
+
+    def visualize_boxplot_multiple_problems(self, analysis_dict: dict):
+        data_list = []
+        for model_name in analysis_dict['models']:
+            model_analysis = self.models_dict[model_name]
+            model_dict = analysis_dict['models'][model_name]
+            for idx, config_nr in enumerate(model_dict['configs']):
+                model_analyis_results = model_analysis.model_result_list[config_nr]
+                data_list.append({
+                    'model': model_analyis_results['approximation_quality_dict']['min_solution_quality_list'],
+                    'classical': model_analyis_results['approximation_quality_dict']
+                    ['classical_min_solution_quality'],
+                    'random': model_analyis_results['approximation_quality_dict']['random_min_solution_quality'],
+                    'qubo': model_analyis_results['approximation_quality_dict']['repeat_qubo_min_solution_quality'],
+                    'tick_name': get_model_config_description(model_dict['model_name'], model_analysis, config_nr, '')
+                })
+        visualize_boxplot_comparison({
+            'data_list':
+                data_list,
+            'colors':
+                {
+                    'model': '#D7191C',
+                    'classical': '#2C7BB6',
+                    'random': '#FA9C1B',
+                    'qubo': '#9400D3'
+                },
+            'y_label': 'solution quality (min energy - energy) / min energy',
+            'title': 'Comparison between different models / evaluations'
         })
 
 

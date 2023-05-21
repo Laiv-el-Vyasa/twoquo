@@ -75,6 +75,40 @@ def visualize_boxplot_comparison(boxplot_data: dict):
     pyplot.show()
 
 
+def visualize_boxplot_comparison_multiple_models(boxplot_data: dict):
+    label_dict = {
+        'model': 'model solution',
+        'classical': 'classical heuristic',
+        'random': 'random solution',
+        'qubo': 'qubo without approximation'
+    }
+    fig, ax = pyplot.subplots()
+    data_list = boxplot_data['data_list']
+    color_dict = boxplot_data['colors']
+    tick_labels = []
+    for i, data in enumerate(data_list):
+        bxplt = pyplot.boxplot(data['model'], positions=[i * 3 - 0.3], widths=0.4)
+        set_box_color(bxplt, color_dict['model'])
+        bxplt = pyplot.boxplot(data['classical'], positions=[i * 3 + 0.3], widths=0.4)
+        set_box_color(bxplt, color_dict['classical'])
+        bxplt = pyplot.boxplot(data['random'], positions=[i * 3 - 0.9], widths=0.4)
+        set_box_color(bxplt, color_dict['random'])
+        bxplt = pyplot.boxplot(data['qubo'], positions=[i * 3 + 0.9], widths=0.4)
+        set_box_color(bxplt, color_dict['qubo'])
+        tick_labels.append(data['tick_name'])
+
+    for analysis_name in color_dict:
+        pyplot.plot([], c=color_dict[analysis_name], label=label_dict[analysis_name])
+    pyplot.legend()
+    pyplot.legend()
+
+    pyplot.xticks(range(0, len(tick_labels) * 3, 2), tick_labels)
+    pyplot.xlim(-2, len(tick_labels) * 3)
+    ax.set_ylabel(boxplot_data['y_label'])
+    ax.set_title(boxplot_data['title'])
+    pyplot.show()
+
+
 def set_box_color(bp, color):
     pyplot.setp(bp['boxes'], color=color)
     pyplot.setp(bp['whiskers'], color=color)
