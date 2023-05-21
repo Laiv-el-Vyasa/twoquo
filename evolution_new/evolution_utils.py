@@ -82,7 +82,7 @@ def check_tsp_solutions(qubo_list: list, problem_list: list, solutions_list: lis
 def get_training_dataset(config: dict) -> dict:
     qubo_list, problem_list = get_problem_qubos(config)
     solutions_list, energy_list = get_qubo_solutions(qubo_list, config)
-    # print(solutions_list)
+    print(problem_list)
     # qubo_heatmap(qubo_list[0])
     if 'tsp' in problem_list[0] and check_tsp:
         check_tsp_solutions(qubo_list, problem_list, solutions_list)
@@ -544,6 +544,11 @@ def get_classical_solutions(problem: dict, reads: int, random_solutions: bool) -
                 solution_list.append(get_random_coloring(problem))
             else:
                 solution_list.append(get_d_satur_algorithm_solution(problem))
+        elif 'clauses' in problem:
+            if random_solutions:
+                solution_list.append(get_random_m3sat_solution(problem))
+            else:
+                solution_list.append(get_1_opt_solution_m3sat(problem))
     return solution_list
 
 
@@ -751,6 +756,84 @@ def get_color(open_colors: set[int], n_colors: int) -> int:
     return open_colors_list[idx]
 
 
+# Using the simple 1-opt heuristic to generate a possible solution for m3sat
+def get_1_opt_solution_m3sat(problem: dict) -> list[int]:
+    n_vars = problem['n_vars']
+    clause_list = problem['clauses']
+    solution = get_initial_solution_1_opt(n_vars, clause_list)
+    better_solution_found = True
+    while better_solution_found:
+        solution, better_solution_found = get_best_1_opt(solution, clause_list)
+    return get_qubo_solution_for_m3sat(n_vars, clause_list, solution)
+
+
+def get_initial_solution_1_opt(n_vars: int, clause_list: list[list[tuple[int, bool]]]) -> list[bool]:
+    rng = np_random.default_rng()
+    initial_solution = []
+    for i in range(n_vars):
+        count_true = 0
+        count_false = 0
+        for clause in clause_list:
+            for literal in clause:
+                if literal[0] == i:
+                    if literal[1]:
+                        count_true += 1
+                    else:
+                        count_false += 1
+        if count_true > count_false:
+            initial_solution.append(True)
+        elif count_false > count_true:
+            initial_solution.append(False)
+        else:
+            if rng.uniform() > .5:
+                initial_solution.append(True)
+            else:
+                initial_solution.append(False)
+    return initial_solution
+
+
+def get_best_1_opt(current_solution: list[bool], clause_list: list[list[tuple[int, bool]]]) -> tuple[list[bool], bool]:
+    better_found = False
+    current_best = check_m3sat_solution(clause_list, current_solution)
+    current_best_solution = current_solution
+    new_solutions = [[val if not idx == i else not val for idx, val in enumerate(current_solution)]
+                         for i in range(len(current_solution))]
+    for solution in new_solutions:
+        solution_quality = check_m3sat_solution(clause_list, solution)
+        if solution_quality > current_best:
+            current_best_solution = solution
+            current_best = solution_quality
+            better_found = True
+    return current_best_solution, better_found
+
+
+def check_m3sat_solution(clause_list: list[list[tuple[int, bool]]], solution: list[bool]) -> int:
+    correct_clauses = 0
+    for clause in clause_list:
+        if check_m3sat_clause(clause, solution):
+            correct_clauses += 1
+    return correct_clauses
+
+
+def check_m3sat_clause(clause:list[tuple[int, bool]], solution: list[bool]) -> bool:
+    clause_value = False
+    for variable, sign in clause:
+        clause_value = clause_value or ((solution[variable] and sign) or (not solution[variable] and not sign))
+    return clause_value
+
+
+# Transform the True/False solution into a possible solution from a qubo (first the variables, then each clause)
+def get_qubo_solution_for_m3sat(n_vars: int, clause_list: list[list[tuple[int, bool]]], solution: list[bool]) -> list:
+    qubo_solution = np.zeros(n_vars + len(clause_list))
+    for i in range(n_vars):
+        if solution[i]:
+            qubo_solution[i] = 1
+    for idx, clause in enumerate(clause_list):
+        if check_m3sat_clause(clause, solution):
+            qubo_solution[n_vars + idx] = 1
+    return qubo_solution
+
+
 def get_random_city_order_solution(problem: dict) -> list:
     cities = [i for i in range(len(problem['cities']))]
     random.shuffle(cities)
@@ -777,6 +860,19 @@ def get_random_coloring(problem: dict) -> list:
         random_color = rng.integers(0, n_colors)
         solution[node * n_colors + random_color] = 1
     return solution
+
+
+def get_random_m3sat_solution(problem: dict) -> list[int]:
+    rng = np_random.default_rng()
+    n_vars = problem['n_vars']
+    clauses = problem['clauses']
+    solution = []
+    for i in range(n_vars):
+        if rng.uniform() > .5:
+            solution.append(True)
+        else:
+            solution.append(False)
+    return get_qubo_solution_for_m3sat(n_vars, clauses, solution)
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
