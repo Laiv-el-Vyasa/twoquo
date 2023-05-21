@@ -93,6 +93,7 @@ def get_training_dataset(config: dict) -> dict:
     }
     if "scale" in config['pipeline']['problems']:
         problem_dict["scale_list"] = get_random_scale_list(config)
+    # print('Scale list, ', problem_dict["scale_list"])
     return problem_dict
 
 

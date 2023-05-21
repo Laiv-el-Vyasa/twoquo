@@ -18,6 +18,7 @@ class CombinedScaleModel(CombinedModel):
 
     def get_scaled_approxed_qubo(self, qubo: list, problem: dict, scale: float, index: int) -> tuple[list, int]:
         edge_index, node_features = self.get_edge_index_and_node_features(qubo, problem)
+        # print('Scale: ', scale)
         # print(f'Problem {index}, node_features: {node_features}')
         node_mean_tensor_list = []
         for edge_0, edge_1 in zip(edge_index[0], edge_index[1]):

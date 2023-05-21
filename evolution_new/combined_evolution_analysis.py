@@ -26,7 +26,7 @@ scale_analysis_parameters = {
 scale_analysis_pipeline = {
     'models': {
         'combined_ec_scale': {
-            'analysis_parameters': analysis_parameters,
+            'analysis_parameters': scale_analysis_parameters,
             'analysis_name': 'combined_analysis',
             'configs': [
                 'standard', 'standard', 'standard'

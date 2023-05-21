@@ -4,9 +4,11 @@ from approximation import get_approximated_qubos
 from config import load_cfg
 from evolution_new.combined_evolution_training import get_data_from_training_config
 from evolution_new.evolution_utils import get_quality_of_approxed_qubo, get_qubo_approx_mask, get_file_name, \
-    get_relative_size_of_approxed_entries, get_classical_solution_qualities, get_min_solution_quality
+    get_relative_size_of_approxed_entries, get_classical_solution_qualities, get_min_solution_quality, \
+    remove_hard_constraits_from_qubo
 from evolution_new.pygad_learning import PygadLearner
 from new_visualisation import qubo_heatmap
+from combined_model_features_onehot import CombinedOneHotFeatureModel
 
 
 class ModelAnalysis:
@@ -161,23 +163,24 @@ class ModelAnalysis:
 
     def get_stepwise_approx_quality(self, problem_dict: dict, config: dict) \
             -> tuple[list, list, list, list, list, list]:
-        qubo_list, solutions_list = problem_dict['qubo_list'], problem_dict['solutions_list']
+        qubo_list, solutions_list, problem_list = problem_dict['qubo_list'], problem_dict['solutions_list'], \
+                                                  problem_dict['problem_list']
         solution_quality_list = []
         min_solution_quality_list = []
         mean_solution_quality_list = []
         random_solution_quality_list = []
         random_min_solution_quality_list = []
         random_mean_solution_quality_list = []
-        for idx, (qubo, solutions) in enumerate(zip(qubo_list, solutions_list)):
+        for idx, (qubo, solutions, problem) in enumerate(zip(qubo_list, solutions_list, problem_list)):
             print(f'Approximating problem {idx} for baseline')
             sol_qual_sorted, min_sol_qual_sorted, mean_sol_qual_sorted = \
-                self.get_stepwise_approx_quality_for_qubo(qubo, solutions, config, True)
+                self.get_stepwise_approx_quality_for_qubo(qubo, solutions, config, problem, True)
             # print(sol_qual_sorted)
             solution_quality_list.append(sol_qual_sorted)
             min_solution_quality_list.append(min_sol_qual_sorted)
             mean_solution_quality_list.append(mean_sol_qual_sorted)
             sol_qual_random, min_sol_qual_random, mean_sol_qual_random = \
-                self.get_stepwise_approx_quality_for_qubo(qubo, solutions, config, False)
+                self.get_stepwise_approx_quality_for_qubo(qubo, solutions, config, problem, False)
             random_solution_quality_list.append(sol_qual_random)
             random_min_solution_quality_list.append(min_sol_qual_random)
             random_mean_solution_quality_list.append(mean_sol_qual_random)
@@ -189,12 +192,16 @@ class ModelAnalysis:
                self.rotate_solution_quality_list(random_min_solution_quality_list), \
                self.rotate_solution_quality_list(random_mean_solution_quality_list)
 
-    def get_stepwise_approx_quality_for_qubo(self, qubo: list, solutions: list, config: dict, sorted_approx: bool) \
-            -> tuple[list, list, list]:
+    def get_stepwise_approx_quality_for_qubo(self, qubo: list, solutions: list, config: dict, problem: dict,
+                                             sorted_approx: bool) -> tuple[list, list, list]:
         stepwise_approx_quality = [1.]
         stepwise_min_approx_quality = [1.]
         stepwise_mean_approx_quality = [1.]
-        approximation_dict, _ = get_approximated_qubos(qubo, False, True, self.analysis_parameters['steps'],
+        if isinstance(self.model, CombinedOneHotFeatureModel):
+            qubo_to_approx = remove_hard_constraits_from_qubo(qubo, problem, True)
+        else:
+            qubo_to_approx = qubo
+        approximation_dict, _ = get_approximated_qubos(qubo_to_approx, False, True, self.analysis_parameters['steps'],
                                                        sorted_approx=sorted_approx)
         for i in range(self.analysis_parameters['steps']):
             approx_qubo = approximation_dict[str(i + 1)]['qubo']

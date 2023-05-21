@@ -5,12 +5,13 @@ from model_analysis import ModelAnalysis
 
 
 def get_models_dict(models_dict: dict) -> dict:
+    model_analysis_dict = {}
     for training_cfg_name in models_dict:
-        models_dict[training_cfg_name] = ModelAnalysis(training_cfg_name,
-                                                       models_dict[training_cfg_name]['configs'],
-                                                       models_dict[training_cfg_name]['analysis_parameters'])
-        models_dict[training_cfg_name].run_analysis()
-    return models_dict
+        model_analysis_dict[training_cfg_name] = ModelAnalysis(training_cfg_name,
+                                                               models_dict[training_cfg_name]['configs'],
+                                                               models_dict[training_cfg_name]['analysis_parameters'])
+        model_analysis_dict[training_cfg_name].run_analysis()
+    return model_analysis_dict
 
 
 def create_baseline_data_dict(baseline_data: list[list, list, list, list, list, list, list], steps,
@@ -45,7 +46,7 @@ def get_model_config_description(model_name: str, model_analysis: ModelAnalysis,
         descr = descr + problem + ', '
     descr = descr + f'Max-size: {config["pipeline"]["problems"]["qubo_size"]}'
     if 'scale_list' in model_analysis.analysis_parameters:
-        descr = descr + 'desired approximation: ' + str(model_analysis.analysis_parameters['scale_list'][config_nr])
+        descr = descr + ', desired approximation: ' + str(model_analysis.analysis_parameters['scale_list'][config_nr])
     return descr + kind
 
 
