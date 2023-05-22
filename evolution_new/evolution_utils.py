@@ -82,7 +82,7 @@ def check_tsp_solutions(qubo_list: list, problem_list: list, solutions_list: lis
 def get_training_dataset(config: dict) -> dict:
     qubo_list, problem_list = get_problem_qubos(config)
     solutions_list, energy_list = get_qubo_solutions(qubo_list, config)
-    print(problem_list)
+    # print(problem_list)
     # qubo_heatmap(qubo_list[0])
     if 'tsp' in problem_list[0] and check_tsp:
         check_tsp_solutions(qubo_list, problem_list, solutions_list)
@@ -831,9 +831,24 @@ def get_qubo_solution_for_m3sat(n_vars: int, clause_list: list[list[tuple[int, b
         if solution[i]:
             qubo_solution[i] = 1
     for idx, clause in enumerate(clause_list):
-        if check_m3sat_clause(clause, solution):
+        if get_clause_energy(clause, solution) < 0:
             qubo_solution[n_vars + idx] = 1
     return qubo_solution
+
+
+def get_clause_energy(clause: list[tuple[int, bool]], solution: list[bool]) -> float:
+    clause_energy_list = [-0.5 * solution[i] if sign else 0.5 * solution[i] for i, sign in clause]
+    return np.sum(clause_energy_list) + get_clause_sum(clause)
+
+
+def get_clause_sum(clause: list[tuple[int, bool]]) -> float:
+    clause_sum = 0.5
+    for _, sign in clause:
+        if sign:
+            clause_sum += .5
+        else:
+            clause_sum -= .5
+    return clause_sum
 
 
 def get_random_city_order_solution(problem: dict) -> list:
