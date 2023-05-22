@@ -42,12 +42,12 @@ def get_model_config_description(model_name: str, model_analysis: ModelAnalysis,
     descr = model_name
     config = model_analysis.config_list[config_nr]
     problems = config["pipeline"]["problems"]["problems"]
-    descr = descr + ', evaluated on: '
+    descr = descr + ', \nevaluated on: '
     for problem in problems:
         descr = descr + problem + ', '
-    descr = descr + f'Max-size: {config["pipeline"]["problems"]["qubo_size"]}'
+    descr = descr + f'{config["pipeline"]["problems"]["qubo_size"]}'
     if 'scale_list' in model_analysis.analysis_parameters:
-        descr = descr + ', desired approximation: ' + str(model_analysis.analysis_parameters['scale_list'][config_nr])
+        descr = descr + ', \ndesired approximation: ' + str(model_analysis.analysis_parameters['scale_list'][config_nr])
     return descr + kind
 
 

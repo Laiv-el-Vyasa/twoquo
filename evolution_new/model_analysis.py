@@ -85,8 +85,6 @@ class ModelAnalysis:
 
         for idx, (qubo, approx_qubo, solutions, problem) in enumerate(zip(qubo_list, approx_qubo_list,
                                                                           solutions_list, problem_list)):
-            print(f'Approximating problem {idx} via model')
-            # print(solutions)
             if idx < self.analysis_parameters['show_qubo_mask']:
                 qubo_heatmap(qubo)
                 qubo_heatmap(get_qubo_approx_mask(approx_qubo, qubo))
