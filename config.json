@@ -221,6 +221,21 @@
         ]
       }
     },
+    "test_evol_mc_big": {
+      "base_cfg": "1",
+      "dataset_id": "test_evol_mc",
+      "problems": {
+        "qubo_size": 256,
+        "n_problems": 100,
+        "MC": {
+          "size": [32, 256],
+          "edge_node_factor": 0.5
+        },
+        "problems": [
+          "MC"
+        ]
+      }
+    },
     "test_evol_gc": {
       "base_cfg": "1",
       "dataset_id": "test_evol_gc",

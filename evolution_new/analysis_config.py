@@ -1,4 +1,3 @@
-
 analysis_parameters = {
     'steps': 100,
     'analysis_name': 'combined_analysis',
@@ -105,7 +104,6 @@ analysis_pipeline = {
     ]
 }
 
-
 analysis_pipeline_m3sat = {
     'models': {
         'combined_m3sat': {
@@ -118,11 +116,13 @@ analysis_pipeline_m3sat = {
     },
     'analysis': [{
         'type': 'boxplot_multiple',
-        'models': {'combined_m3sat': {
-            'model_name': 'something trained on M3SAT',
-        'configs': [0, 1, 2, 3]
+        'models': {
+            'combined_m3sat':
+                {
+                    'model_name': 'something trained on M3SAT',
+                    'configs': [0, 1, 2, 3]
+                }
         }
-    }
     },
         {
             'type': 'baseline_correct_mean',
@@ -148,14 +148,14 @@ analysis_pipeline_m3sat = {
 
 analysis_pipeline_2 = {
     'models': {
-        'combined_gc': {
+        'combined_mc': {
             'analysis_parameters': analysis_parameters,
             'analysis_name': 'combined_analysis',
             'configs': [
                 'standard'
             ]
         },
-        'combined_mc': {
+        'combined_gc': {
             'analysis_parameters': analysis_parameters,
             'analysis_name': 'combined_analysis',
             'configs': [
@@ -227,6 +227,11 @@ analysis_pipeline_2 = {
             'config': 0
         },
         {
+            'type': 'boxplot_one',
+            'model': 'combined_gc',
+            'config': 0
+        },
+        {
             'type': 'boxplot_multiple',
             'models': {
                 'combined_m3sat': {
@@ -251,6 +256,50 @@ analysis_pipeline_2 = {
                     'model_name': 'Combined model trained on NPP, 64',
                     'configs': [
                         0
+                    ]
+                }
+            }
+        }
+    ]
+}
+
+
+analysis_pipeline_multiple = {
+    'models': {
+        'combined_multiple': {
+            'analysis_parameters': analysis_parameters,
+            'analysis_name': 'combined_analysis',
+            'configs': [
+                'test_evol_ec', 'test_evol_mc', 'test_evol_npp', 'test_evol_m3sat'
+            ]
+        }
+    },
+    'analysis': [
+        {
+            'type': 'baseline_correct_mean',
+            'compare': False,
+            'models': {
+                'combined_multiple': {
+                    'model_name': 'Combined model\ntrained on EC, MC, NPP, M3SAT 128',
+                    'configs': [
+                        0, 1, 2, 3
+                    ],
+                    'colors': [
+                        'black', "violet", 'blue', 'teal'
+                    ],
+                    'baseline_colors': [
+                        'black', "violet", 'blue', 'teal'
+                    ]
+                }
+            }
+        },
+        {
+            'type': 'boxplot_multiple',
+            'models': {
+                'combined_multiple': {
+                    'model_name': 'Combined model\ntrained on EC, MC, NPP, M3SAT 128',
+                    'configs': [
+                        0, 1, 2, 3
                     ]
                 }
             }

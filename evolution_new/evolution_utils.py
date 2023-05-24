@@ -548,7 +548,7 @@ def get_classical_solutions(problem: dict, reads: int, random_solutions: bool) -
             if random_solutions:
                 solution_list.append(get_random_m3sat_solution(problem))
             else:
-                solution_list.append(get_1_opt_solution_m3sat(problem))
+                solution_list.append(get_wsat_solution_m3sat(problem, ))
     return solution_list
 
 
@@ -759,54 +759,60 @@ def get_color(open_colors: set[int], n_colors: int) -> int:
 
 
 # Using the simple 1-opt heuristic to generate a possible solution for m3sat
-def get_1_opt_solution_m3sat(problem: dict) -> list[int]:
+def get_wsat_solution_m3sat(problem: dict, max_walks=5, max_flips=10, flip_prob=.5) -> list[int]:
+    rng = np_random.default_rng()
     n_vars = problem['n_vars']
     clause_list = problem['clauses']
-    solution = get_initial_solution_1_opt(n_vars, clause_list)
-    better_solution_found = True
-    while better_solution_found:
-        solution, better_solution_found = get_best_1_opt(solution, clause_list)
+    solution = get_random_variable_assignment(n_vars)
+    for _ in range(max_walks):
+        solution = get_random_variable_assignment(n_vars)
+        for _ in range(max_flips):
+            if rng.uniform() < flip_prob:
+                solution, clauses_satisfied = get_best_flip(solution, clause_list)
+            else:
+                solution = satisfy_one_random_clause(solution, clause_list)
+                clauses_satisfied = check_m3sat_solution(clause_list, solution)
+            if clauses_satisfied == len(clause_list):
+                return get_qubo_solution_for_m3sat(n_vars, clause_list, solution)
     return get_qubo_solution_for_m3sat(n_vars, clause_list, solution)
 
 
-def get_initial_solution_1_opt(n_vars: int, clause_list: list[list[tuple[int, bool]]]) -> list[bool]:
-    rng = np_random.default_rng()
-    initial_solution = []
-    for i in range(n_vars):
-        count_true = 0
-        count_false = 0
-        for clause in clause_list:
-            for literal in clause:
-                if literal[0] == i:
-                    if literal[1]:
-                        count_true += 1
-                    else:
-                        count_false += 1
-        if count_true > count_false:
-            initial_solution.append(True)
-        elif count_false > count_true:
-            initial_solution.append(False)
-        else:
-            if rng.uniform() > .5:
-                initial_solution.append(True)
-            else:
-                initial_solution.append(False)
-    return initial_solution
-
-
-def get_best_1_opt(current_solution: list[bool], clause_list: list[list[tuple[int, bool]]]) -> tuple[list[bool], bool]:
-    better_found = False
-    current_best = check_m3sat_solution(clause_list, current_solution)
-    current_best_solution = current_solution
+def get_best_flip(current_solution: list[bool], clause_list: list[list[tuple[int, bool]]]) -> tuple[list[bool], int]:
+    current_best = 0
+    current_best_solution = []
     new_solutions = [[val if not idx == i else not val for idx, val in enumerate(current_solution)]
-                         for i in range(len(current_solution))]
+                     for i in range(len(current_solution))]
+    random.shuffle(new_solutions)
     for solution in new_solutions:
         solution_quality = check_m3sat_solution(clause_list, solution)
         if solution_quality > current_best:
             current_best_solution = solution
             current_best = solution_quality
-            better_found = True
-    return current_best_solution, better_found
+    return current_best_solution, current_best
+
+
+def satisfy_one_random_clause(solution: list[bool], clause_list: list[list[tuple[int, bool]]]):
+    unsatisfied_clauses = []
+    for clause in clause_list:
+        if not check_m3sat_clause(clause, solution):
+            unsatisfied_clauses.append(clause)
+    random.shuffle(unsatisfied_clauses)
+    chosen_clause = unsatisfied_clauses[0]
+    random.shuffle(chosen_clause)
+    chosen_variable, _ = chosen_clause[0]
+    solution[chosen_variable] = not solution[chosen_variable]
+    return solution
+
+
+def get_random_variable_assignment(n_vars: int) -> list[bool]:
+    rng = np_random.default_rng()
+    solution = []
+    for i in range(n_vars):
+        if rng.uniform() > .5:
+            solution.append(True)
+        else:
+            solution.append(False)
+    return solution
 
 
 def check_m3sat_solution(clause_list: list[list[tuple[int, bool]]], solution: list[bool]) -> int:
@@ -817,7 +823,7 @@ def check_m3sat_solution(clause_list: list[list[tuple[int, bool]]], solution: li
     return correct_clauses
 
 
-def check_m3sat_clause(clause:list[tuple[int, bool]], solution: list[bool]) -> bool:
+def check_m3sat_clause(clause: list[tuple[int, bool]], solution: list[bool]) -> bool:
     clause_value = False
     for variable, sign in clause:
         clause_value = clause_value or ((solution[variable] and sign) or (not solution[variable] and not sign))
@@ -880,16 +886,9 @@ def get_random_coloring(problem: dict) -> list:
 
 
 def get_random_m3sat_solution(problem: dict) -> list[int]:
-    rng = np_random.default_rng()
-    n_vars = problem['n_vars']
-    clauses = problem['clauses']
-    solution = []
-    for i in range(n_vars):
-        if rng.uniform() > .5:
-            solution.append(True)
-        else:
-            solution.append(False)
-    return get_qubo_solution_for_m3sat(n_vars, clauses, solution)
+    n_vars, clauses = problem['n_vars'], problem['clauses']
+    random_solution = get_random_variable_assignment(n_vars)
+    return get_qubo_solution_for_m3sat(n_vars, clauses, random_solution)
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #

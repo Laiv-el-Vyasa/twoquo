@@ -5,7 +5,7 @@ from config import load_cfg
 from evolution_new.combined_evolution_training import get_data_from_training_config
 from evolution_new.evolution_utils import get_quality_of_approxed_qubo, get_qubo_approx_mask, get_file_name, \
     get_relative_size_of_approxed_entries, get_classical_solution_qualities, get_min_solution_quality, \
-    remove_hard_constraits_from_qubo
+    remove_hard_constraits_from_qubo, delete_data
 from evolution_new.pygad_learning import PygadLearner
 from new_visualisation import qubo_heatmap
 from combined_model_features_onehot import CombinedOneHotFeatureModel
@@ -40,7 +40,7 @@ class ModelAnalysis:
                 config = load_cfg(cfg_id=config_name)
             config["solvers"][self.solver]['repeats'] = 100
             config["solvers"][self.solver]['enabled'] = True
-            config['pipeline']['problems']['n_problems'] = 1
+            config['pipeline']['problems']['n_problems'] *= 1
             if 'scale_list' in self.analysis_parameters:
                 config['pipeline']['problems']['scale']['min'] = self.analysis_parameters['scale_list'][idx]
                 config['pipeline']['problems']['scale']['max'] = self.analysis_parameters['scale_list'][idx]
@@ -85,6 +85,7 @@ class ModelAnalysis:
 
         for idx, (qubo, approx_qubo, solutions, problem) in enumerate(zip(qubo_list, approx_qubo_list,
                                                                           solutions_list, problem_list)):
+            print(f'Approximating problem {idx} via model')
             if idx < self.analysis_parameters['show_qubo_mask']:
                 qubo_heatmap(qubo)
                 qubo_heatmap(get_qubo_approx_mask(approx_qubo, qubo))
@@ -143,6 +144,7 @@ class ModelAnalysis:
         return analysis_baseline
 
     def get_new_analysis_baseline(self, config: dict) -> list[list, list, list, list, list, list, list]:
+        delete_data()
         analysis_baseline = [[], [], [], [], [], [], []]
         problem_dict = self.model.get_training_dataset(config)
         stepwise_approx_quality, stepwise_min_approx_quality, stepwise_mean_approx_quality, \
