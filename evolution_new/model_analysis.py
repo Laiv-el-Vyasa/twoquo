@@ -49,6 +49,7 @@ class ModelAnalysis:
 
     def run_analysis(self):
         for config in self.config_list:
+            delete_data()
             approximation_quality_dict = self.get_model_approximation_quality(config)
             analysis_baseline = self.get_analysis_baseline(config)
             self.model_result_list.append({
@@ -144,7 +145,6 @@ class ModelAnalysis:
         return analysis_baseline
 
     def get_new_analysis_baseline(self, config: dict) -> list[list, list, list, list, list, list, list]:
-        delete_data()
         analysis_baseline = [[], [], [], [], [], [], []]
         problem_dict = self.model.get_training_dataset(config)
         stepwise_approx_quality, stepwise_min_approx_quality, stepwise_mean_approx_quality, \

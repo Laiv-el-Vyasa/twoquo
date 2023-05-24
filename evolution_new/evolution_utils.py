@@ -548,7 +548,7 @@ def get_classical_solutions(problem: dict, reads: int, random_solutions: bool) -
             if random_solutions:
                 solution_list.append(get_random_m3sat_solution(problem))
             else:
-                solution_list.append(get_wsat_solution_m3sat(problem, ))
+                solution_list.append(get_wsat_solution_m3sat(problem))
     return solution_list
 
 
@@ -772,6 +772,7 @@ def get_wsat_solution_m3sat(problem: dict, max_walks=5, max_flips=10, flip_prob=
             else:
                 solution = satisfy_one_random_clause(solution, clause_list)
                 clauses_satisfied = check_m3sat_solution(clause_list, solution)
+            # print(clauses_satisfied, len(clause_list))
             if clauses_satisfied == len(clause_list):
                 return get_qubo_solution_for_m3sat(n_vars, clause_list, solution)
     return get_qubo_solution_for_m3sat(n_vars, clause_list, solution)
@@ -796,6 +797,11 @@ def satisfy_one_random_clause(solution: list[bool], clause_list: list[list[tuple
     for clause in clause_list:
         if not check_m3sat_clause(clause, solution):
             unsatisfied_clauses.append(clause)
+    # print('Unerfüllte Klauseln', len(unsatisfied_clauses))
+
+    if not unsatisfied_clauses:  # All clauses are satisfied
+        return solution
+
     random.shuffle(unsatisfied_clauses)
     chosen_clause = unsatisfied_clauses[0]
     random.shuffle(chosen_clause)

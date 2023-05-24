@@ -110,26 +110,17 @@ analysis_pipeline_m3sat = {
             'analysis_parameters': analysis_parameters,
             'analysis_name': 'combined_analysis',
             'configs': [
-                'standard', 'standard', 'standard', 'standard'
+                'standard'
             ]
         }
     },
-    'analysis': [{
-        'type': 'boxplot_multiple',
-        'models': {
-            'combined_m3sat':
-                {
-                    'model_name': 'something trained on M3SAT',
-                    'configs': [0, 1, 2, 3]
-                }
-        }
-    },
+    'analysis': [
         {
             'type': 'baseline_correct_mean',
-            'compare': True,
+            'compare': False,
             'models': {
                 'combined_m3sat': {
-                    'model_name': 'Combined model trained on M3SAT, 128',
+                    'model_name': 'Combined model\ntrained on M3SAT, 128',
                     'configs': [
                         0
                     ],
@@ -142,7 +133,11 @@ analysis_pipeline_m3sat = {
                 }
             }
         },
-
+        {
+            'type': 'boxplot_one',
+            'model': 'combined_m3sat',
+            'config': 0
+        }
     ]
 }
 
