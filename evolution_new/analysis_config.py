@@ -104,9 +104,9 @@ analysis_pipeline = {
     ]
 }
 
-analysis_pipeline_m3sat = {
+analysis_pipeline_npp = {
     'models': {
-        'combined_m3sat': {
+        'combined_npp': {
             'analysis_parameters': analysis_parameters,
             'analysis_name': 'combined_analysis',
             'configs': [
@@ -119,8 +119,8 @@ analysis_pipeline_m3sat = {
             'type': 'baseline_correct_mean',
             'compare': False,
             'models': {
-                'combined_m3sat': {
-                    'model_name': 'Combined model\ntrained on M3SAT, 128',
+                'combined_npp': {
+                    'model_name': 'Combined model\ntrained on NP, 64',
                     'configs': [
                         0
                     ],
@@ -135,7 +135,7 @@ analysis_pipeline_m3sat = {
         },
         {
             'type': 'boxplot_one',
-            'model': 'combined_m3sat',
+            'model': 'combined_npp',
             'config': 0
         }
     ]
