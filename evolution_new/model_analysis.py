@@ -5,7 +5,7 @@ from config import load_cfg
 from evolution_new.combined_evolution_training import get_data_from_training_config
 from evolution_new.evolution_utils import get_quality_of_approxed_qubo, get_qubo_approx_mask, get_file_name, \
     get_relative_size_of_approxed_entries, get_classical_solution_qualities, get_min_solution_quality, \
-    remove_hard_constraits_from_qubo, delete_data
+    remove_hard_constraits_from_qubo, delete_data, get_approximation_count
 from evolution_new.pygad_learning import PygadLearner
 from new_visualisation import qubo_heatmap
 from combined_model_features_onehot import CombinedOneHotFeatureModel
@@ -38,9 +38,9 @@ class ModelAnalysis:
                 config = load_cfg(cfg_id=self.learning_parameters['config_name'])
             else:
                 config = load_cfg(cfg_id=config_name)
-            config["solvers"][self.solver]['repeats'] = 100
+            config["solvers"][self.solver]['repeats'] = 1
             config["solvers"][self.solver]['enabled'] = True
-            config['pipeline']['problems']['n_problems'] *= 1
+            config['pipeline']['problems']['n_problems'] = 1
             if 'scale_list' in self.analysis_parameters:
                 config['pipeline']['problems']['scale']['min'] = self.analysis_parameters['scale_list'][idx]
                 config['pipeline']['problems']['scale']['max'] = self.analysis_parameters['scale_list'][idx]
@@ -92,6 +92,11 @@ class ModelAnalysis:
                 qubo_heatmap(get_qubo_approx_mask(approx_qubo, qubo))
             min_solution_quality, _, approx_percent, mean_solution_quality, min_mean_sol_qual, mean_mean_sol_qual \
                 = get_quality_of_approxed_qubo(qubo, approx_qubo, solutions, config)
+            if isinstance(self.model.__class__, CombinedOneHotFeatureModel.__class__):
+                qubo_to_approx = remove_hard_constraits_from_qubo(qubo, problem, True)
+                _, percent_hard_contraints = get_approximation_count(qubo, qubo_to_approx)
+                approx_percent = approx_percent / (1 - percent_hard_contraints)
+
             return_dict['solution_quality_list'].append((np.floor(1 - min_solution_quality)))
             return_dict['min_solution_quality_list'].append(min_solution_quality)
             return_dict['mean_solution_quality_list'].append(mean_solution_quality)
@@ -197,7 +202,7 @@ class ModelAnalysis:
         stepwise_approx_quality = [1.]
         stepwise_min_approx_quality = [1.]
         stepwise_mean_approx_quality = [1.]
-        if isinstance(self.model, CombinedOneHotFeatureModel):
+        if isinstance(self.model.__class__, CombinedOneHotFeatureModel.__class__):
             qubo_to_approx = remove_hard_constraits_from_qubo(qubo, problem, True)
         else:
             qubo_to_approx = qubo

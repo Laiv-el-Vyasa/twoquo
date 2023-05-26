@@ -229,7 +229,7 @@ def remove_hard_constraits_from_qubo(qubo: list, problem: dict, remove_diagonal:
                     return_qubo[i * n + k][i * n + j] = 0
     # Remove diagonal
     if remove_diagonal:
-        qubo -= np.diag(np.diagonal(qubo))
+        return_qubo -= np.diag(np.diagonal(qubo))
     return return_qubo
 
 
@@ -549,6 +549,11 @@ def get_classical_solutions(problem: dict, reads: int, random_solutions: bool) -
                 solution_list.append(get_random_m3sat_solution(problem))
             else:
                 solution_list.append(get_wsat_solution_m3sat(problem))
+        elif 'graph1' in problem and 'graph2' in problem:
+            if random_solutions:
+                solution_list.append(get_random_sgi_solution(problem))
+            else:
+                solution_list.append(get_random_sgi_solution(problem))
     return solution_list
 
 
@@ -863,6 +868,17 @@ def get_clause_sum(clause: list[tuple[int, bool]]) -> float:
     return clause_sum
 
 
+def node_pairs_to_solution(node_pairs: list[tuple[int, int]], graph1_order: int, graph2_order: int) -> list[int]:
+    solution = np.zeros(graph1_order * graph2_order)
+    for node_1, node_2 in node_pairs:
+        solution[node_1 * graph2_order + node_2] = 1
+    return solution
+
+
+# # # # # # #                                                     # # # # # # #
+#                          Random assignment methods                          #
+# # # # # # #                                                     # # # # # # #
+
 def get_random_city_order_solution(problem: dict) -> list:
     cities = [i for i in range(len(problem['cities']))]
     random.shuffle(cities)
@@ -895,6 +911,22 @@ def get_random_m3sat_solution(problem: dict) -> list[int]:
     n_vars, clauses = problem['n_vars'], problem['clauses']
     random_solution = get_random_variable_assignment(n_vars)
     return get_qubo_solution_for_m3sat(n_vars, clauses, random_solution)
+
+
+def get_random_sgi_solution(problem: dict) -> list[int]:
+    rng = np_random.default_rng()
+    graph1 = problem['graph1']
+    graph2 = problem['graph2']
+    node_2_list = [i for i in graph2.nodes]
+    random.shuffle(node_2_list)
+    node_pairs = []
+    for node in graph1.nodes:
+        node_2 = node_2_list.pop(0)
+        node_pairs.append((node, node_2))
+    return node_pairs_to_solution(node_pairs, graph1.order(), graph2.order())
+
+
+
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #

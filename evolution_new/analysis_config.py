@@ -9,6 +9,17 @@ analysis_parameters = {
     'solver': 'qbsolv_simulated_annealing'
 }
 
+analysis_parameters_features_onehot = {
+    'steps': 100,
+    'analysis_name': 'combined_feature_onehot_analysis',
+    'boxplot': True,
+    'sorted': True,
+    'show_qubo_mask': 0,
+    'size_analysis': False,
+    'compare_different_approaches': True,
+    'solver': 'qbsolv_simulated_annealing'
+}
+
 scale_analysis_parameters = {
     'steps': 100,
     'analysis_name': 'combined_analysis',
@@ -104,11 +115,11 @@ analysis_pipeline = {
     ]
 }
 
-analysis_pipeline_npp = {
+analysis_pipeline_gc = {
     'models': {
-        'combined_npp': {
-            'analysis_parameters': analysis_parameters,
-            'analysis_name': 'combined_analysis',
+        'combined_gc_features_onehot': {
+            'analysis_parameters': analysis_parameters_features_onehot,
+            'analysis_name': 'combined_feature_onehot_analysis',
             'configs': [
                 'standard'
             ]
@@ -119,8 +130,8 @@ analysis_pipeline_npp = {
             'type': 'baseline_correct_mean',
             'compare': False,
             'models': {
-                'combined_npp': {
-                    'model_name': 'Combined model\ntrained on NP, 64',
+                'combined_gc_features_onehot': {
+                    'model_name': 'Combined feature onehot model\ntrained on GC, 196',
                     'configs': [
                         0
                     ],
@@ -135,7 +146,45 @@ analysis_pipeline_npp = {
         },
         {
             'type': 'boxplot_one',
-            'model': 'combined_npp',
+            'model': 'combined_gc_features_onehot',
+            'config': 0
+        }
+    ]
+}
+
+
+analysis_pipeline_sgi= {
+    'models': {
+        'combined_sgi': {
+            'analysis_parameters': analysis_parameters,
+            'analysis_name': 'combined_analysis',
+            'configs': [
+                'standard'
+            ]
+        }
+    },
+    'analysis': [
+        {
+            'type': 'baseline_correct_mean',
+            'compare': False,
+            'models': {
+                'combined_sgi': {
+                    'model_name': 'Combined model\ntrained on SGI, 96',
+                    'configs': [
+                        0
+                    ],
+                    'colors': [
+                        "black"
+                    ],
+                    'baseline_colors': [
+                        "black"
+                    ]
+                }
+            }
+        },
+        {
+            'type': 'boxplot_one',
+            'model': 'combined_sgi',
             'config': 0
         }
     ]
