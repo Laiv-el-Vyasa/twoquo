@@ -38,9 +38,9 @@ class ModelAnalysis:
                 config = load_cfg(cfg_id=self.learning_parameters['config_name'])
             else:
                 config = load_cfg(cfg_id=config_name)
-            config["solvers"][self.solver]['repeats'] = 1
+            config["solvers"][self.solver]['repeats'] = 100
             config["solvers"][self.solver]['enabled'] = True
-            config['pipeline']['problems']['n_problems'] = 1
+            config['pipeline']['problems']['n_problems'] *= 1
             if 'scale_list' in self.analysis_parameters:
                 config['pipeline']['problems']['scale']['min'] = self.analysis_parameters['scale_list'][idx]
                 config['pipeline']['problems']['scale']['max'] = self.analysis_parameters['scale_list'][idx]
@@ -197,7 +197,7 @@ class ModelAnalysis:
                self.rotate_solution_quality_list(random_min_solution_quality_list), \
                self.rotate_solution_quality_list(random_mean_solution_quality_list)
 
-    def get_stepwise_approx_quality_for_qubo(self, qubo: list, solutions: list, config: dict, problem: dict,
+    def get_stepwise_approx_quality_for_qubo(self, qubo: np.array, solutions: list, config: dict, problem: dict,
                                              sorted_approx: bool) -> tuple[list, list, list]:
         stepwise_approx_quality = [1.]
         stepwise_min_approx_quality = [1.]
@@ -210,6 +210,9 @@ class ModelAnalysis:
                                                        sorted_approx=sorted_approx)
         for i in range(self.analysis_parameters['steps']):
             approx_qubo = approximation_dict[str(i + 1)]['qubo']
+            if isinstance(self.model.__class__, CombinedOneHotFeatureModel.__class__):
+                approx_qubo = qubo - qubo_to_approx + approx_qubo
+            #qubo_heatmap(approx_qubo)
             min_solution_quality, _, _, mean_solution_quality, *_ \
                 = get_quality_of_approxed_qubo(qubo, approx_qubo, solutions, config)
             # print('step ', i)
