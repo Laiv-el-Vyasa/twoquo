@@ -95,7 +95,10 @@ class ModelAnalysis:
             if isinstance(self.model.__class__, CombinedOneHotFeatureModel.__class__):
                 qubo_to_approx = remove_hard_constraits_from_qubo(qubo, problem, True)
                 _, percent_hard_contraints = get_approximation_count(qubo, qubo_to_approx)
-                approx_percent = approx_percent / (1 - percent_hard_contraints)
+                if percent_hard_contraints is 1:
+                    approx_percent = 0
+                else:
+                    approx_percent = approx_percent / (1 - percent_hard_contraints)
 
             return_dict['solution_quality_list'].append((np.floor(1 - min_solution_quality)))
             return_dict['min_solution_quality_list'].append(min_solution_quality)

@@ -553,7 +553,7 @@ def get_classical_solutions(problem: dict, reads: int, random_solutions: bool) -
             if random_solutions:
                 solution_list.append(get_random_sgi_solution(problem))
             else:
-                solution_list.append(get_random_sgi_solution(problem))
+                solution_list.append(get_subgraph_iso_solution(problem, 4))
     return solution_list
 
 
@@ -868,11 +868,191 @@ def get_clause_sum(clause: list[tuple[int, bool]]) -> float:
     return clause_sum
 
 
-def node_pairs_to_solution(node_pairs: list[tuple[int, int]], graph1_order: int, graph2_order: int) -> list[int]:
+def node_pairs_to_solution(node_pairs: dict, graph1_order: int, graph2_order: int) -> list[int]:
     solution = np.zeros(graph1_order * graph2_order)
-    for node_1, node_2 in node_pairs:
+    for node_1 in node_pairs:
+        node_2 = node_pairs[node_1]
         solution[node_1 * graph2_order + node_2] = 1
     return solution
+
+
+def get_subgraph_iso_solution(problem: dict, max_bruteforce_steps: int) -> list[int]:
+    graph1 = problem['graph1']
+    graph2 = problem['graph2']
+    random_steps = graph1.order() - max_bruteforce_steps
+    open_nodes = get_first_suitable_nodes_for_sgi(graph1, graph2)
+    found_subgraph = networkx.Graph()
+    matched_nodes = {}
+    _, _, matched_nodes = get_subgraph_iso_step(graph1, graph2, found_subgraph, matched_nodes, open_nodes, random_steps)
+    open_nodes_1, open_nodes_2 = get_open_nodes(matched_nodes, graph1, graph2)
+    matched_nodes = random_match_open_modes(matched_nodes, open_nodes_1, open_nodes_2)
+    return node_pairs_to_solution(matched_nodes, graph1.order(), graph2.order())
+
+
+def get_first_suitable_nodes_for_sgi(graph1: networkx.Graph, graph2: networkx.Graph) -> dict[int, set[int]]:
+    suitable_nodes = {}
+    node_order_dict_1 = get_node_order_dict_for_graph(graph1)
+    node_order_dict_2 = get_node_order_dict_for_graph(graph2)
+    for node in graph1.nodes:
+        node_order_set = set()
+        node_order = node_order_dict_1[node]
+        for node_2 in node_order_dict_2:
+            if node_order_dict_2[node_2] >= node_order:
+                node_order_set.add(node_2)
+        if node_order_set:
+            suitable_nodes[node] = node_order_set
+    return suitable_nodes
+
+
+def get_node_order_dict_for_graph(graph: networkx.Graph) -> dict:
+    node_order_dict = {}
+    for node in graph.nodes:
+        node_order = 0
+        for edge_1, edge_2 in graph.edges:
+            if edge_1 == node or edge_2 == node:
+                node_order += 1
+        node_order_dict[node] = node_order
+    return node_order_dict
+
+
+def get_subgraph_iso_step(graph1: networkx.Graph, graph2: networkx.Graph, found_subgraph: networkx.Graph,
+                          matched_nodes: dict, open_nodes: dict[int, set[int]], steps_random: int) \
+        -> tuple[networkx.Graph, int, dict[int, int]]:
+    next_node_list = get_nodes_to_continue(graph1, graph2, matched_nodes, found_subgraph, open_nodes)
+    if next_node_list:
+        if steps_random > 0:
+            return get_random_subgraph_iso_step(graph1, graph2, found_subgraph, matched_nodes, open_nodes,
+                                                steps_random, next_node_list)
+        else:
+            return get_bruteforce_subgraph_iso_step(graph1, graph2, found_subgraph, matched_nodes, open_nodes,
+                                                    steps_random, next_node_list)
+    return found_subgraph, get_quality_of_subgraph(found_subgraph), matched_nodes
+
+
+def get_random_subgraph_iso_step(graph1: networkx.Graph, graph2: networkx.Graph, found_subgraph: networkx.Graph,
+                                 matched_nodes: dict, open_nodes: dict[int, set[int]], steps_random: int,
+                                 next_node_list: list[tuple[int, set[int]]]) -> tuple[networkx.Graph, int,
+                                                                                      dict[int, int]]:
+    node_1, node_2_set = next_node_list.pop(0)
+    random_node2_list = get_random_list_from_set(node_2_set)
+    if random_node2_list:
+        node_2 = random_node2_list.pop(0)
+        matched_nodes[node_1] = node_2
+        new_subgraph = extend_subgraph_with_node(graph1, found_subgraph, node_1)
+        new_open_nodes = get_new_open_nodes(open_nodes, node_1)
+        steps_random -= 1
+        return get_subgraph_iso_step(graph1, graph2, new_subgraph, matched_nodes, new_open_nodes, steps_random)
+    else:
+        return found_subgraph, get_quality_of_subgraph(found_subgraph), matched_nodes
+
+
+def get_bruteforce_subgraph_iso_step(graph1: networkx.Graph, graph2: networkx.Graph, found_subgraph: networkx.Graph,
+                                     matched_nodes: dict, open_nodes: dict[int, set[int]], steps_random: int,
+                                     next_node_list: list[tuple[int, set[int]]]) -> tuple[networkx.Graph, int,
+                                                                                          dict[int, int]]:
+    best_subgraph = found_subgraph
+    best_quality = get_quality_of_subgraph(found_subgraph)
+    best_matched_nodes = matched_nodes
+    for node_1, node_2_set in next_node_list:
+        for node_2 in node_2_set:
+            subgraph, quality, matched_nodes = get_subgraph_iso_step(graph1, graph2,
+                                                                     extend_subgraph_with_node(graph1, found_subgraph,
+                                                                                               node_1),
+                                                                     create_new_matched_nodes_dict(matched_nodes,
+                                                                                                   node_1, node_2),
+                                                                     get_new_open_nodes(open_nodes, node_1),
+                                                                     steps_random)
+            if quality > best_quality:
+                best_subgraph = subgraph
+                best_quality = quality
+                best_matched_nodes = matched_nodes
+    return best_subgraph, best_quality, best_matched_nodes
+
+
+def get_nodes_to_continue(graph1: networkx.Graph, graph2: networkx.Graph, matched_nodes: dict,
+                          found_subgraph: networkx.Graph, open_nodes: dict[int, set[int]]) -> list[
+    tuple[int, set[int]]]:
+    open_node_list = []
+    for node in open_nodes:
+        suitable_nodes = get_suitable_nodes(graph1, graph2, matched_nodes, found_subgraph, node, open_nodes[node])
+        if suitable_nodes:
+            open_node_list.append((node, suitable_nodes))
+    random.shuffle(open_node_list)
+    return open_node_list
+
+
+def extend_subgraph_with_node(graph1: networkx.Graph, subgraph: networkx.Graph, node: int) -> networkx.Graph:
+    new_subgraph = networkx.Graph()
+    for node_old in subgraph.nodes:
+        new_subgraph.add_node(node_old)
+    new_subgraph.add_node(node)
+    for edge_1, edge_2 in graph1.edges:
+        if edge_1 in new_subgraph.nodes and edge_2 in new_subgraph.nodes:
+            new_subgraph.add_edge(edge_1, edge_2)
+    return new_subgraph
+
+
+def create_new_matched_nodes_dict(matched_nodes: dict[int, int], node1: int, node2: int) -> dict[int, int]:
+    new_dict = {}
+    for node in matched_nodes:
+        new_dict[node] = matched_nodes[node]
+    new_dict[node1] = node2
+    return new_dict
+
+
+def get_new_open_nodes(open_nodes: dict[int, set[int]], node_1: int) -> dict[int, set[int]]:
+    new_dict = {}
+    for node in open_nodes:
+        if not node == node_1:
+            new_dict[node] = open_nodes[node]
+    return new_dict
+
+
+def get_quality_of_subgraph(found_subgraph: networkx.Graph) -> int:
+    return len(found_subgraph.edges)
+
+
+def get_random_list_from_set(input_set: set) -> any:
+    random_list = [a for a in input_set]
+    random.shuffle(random_list)
+    return random_list
+
+
+def get_suitable_nodes(graph1: networkx.Graph, graph2: networkx.Graph, matched_nodes: dict[int, int],
+                       found_subgraph: networkx.Graph, choosen_node: int, open_nodes_2: set[int]) -> set[int]:
+    possible_nodes = set()
+    for open_node in open_nodes_2:
+        for edge_1, edge_2 in graph1.edges:
+            if (edge_1 == choosen_node and edge_2 in found_subgraph.nodes and
+                ((choosen_node, matched_nodes[edge_2]) in graph2.edges or
+                 (matched_nodes[edge_2], choosen_node) in graph2.edges)) \
+                    or (edge_2 == choosen_node and edge_1 in found_subgraph.nodes and
+                        ((choosen_node, matched_nodes[edge_2]) in graph2.edges or
+                         (matched_nodes[edge_2], choosen_node) in graph2.edges)):
+                possible_nodes.add(open_node)
+    return possible_nodes
+
+
+def get_open_nodes(matched_nodes: dict, graph1: networkx.Graph, graph2: networkx.Graph) -> tuple[list[int], list[int]]:
+    used_nodes1 = matched_nodes.keys()
+    used_nodes2 = matched_nodes.values()
+    open_nodes_1 = []
+    for node in graph1.nodes:
+        if node not in used_nodes1:
+            open_nodes_1.append(node)
+    open_nodes_2 = []
+    for node in graph2.nodes:
+        if node not in used_nodes2:
+            open_nodes_2.append(node)
+    return open_nodes_1, open_nodes_2
+
+
+def random_match_open_modes(matched_nodes: dict, open_nodes_1: list[int], open_nodes_2: list[int]) -> dict:
+    random.shuffle(open_nodes_2)
+    for node in open_nodes_1:
+        node_2 = open_nodes_2.pop(0)
+        matched_nodes[node] = node_2
+    return matched_nodes
 
 
 # # # # # # #                                                     # # # # # # #
@@ -914,19 +1094,10 @@ def get_random_m3sat_solution(problem: dict) -> list[int]:
 
 
 def get_random_sgi_solution(problem: dict) -> list[int]:
-    rng = np_random.default_rng()
     graph1 = problem['graph1']
     graph2 = problem['graph2']
-    node_2_list = [i for i in graph2.nodes]
-    random.shuffle(node_2_list)
-    node_pairs = []
-    for node in graph1.nodes:
-        node_2 = node_2_list.pop(0)
-        node_pairs.append((node, node_2))
-    return node_pairs_to_solution(node_pairs, graph1.order(), graph2.order())
-
-
-
+    node_dict = random_match_open_modes({}, graph1.nodes, graph2.nodes)
+    return node_pairs_to_solution(node_dict, graph1.order(), graph2.order())
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
