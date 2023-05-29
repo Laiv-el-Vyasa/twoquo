@@ -38,9 +38,9 @@ class ModelAnalysis:
                 config = load_cfg(cfg_id=self.learning_parameters['config_name'])
             else:
                 config = load_cfg(cfg_id=config_name)
-            config["solvers"][self.solver]['repeats'] = 100
+            config["solvers"][self.solver]['repeats'] = 1
             config["solvers"][self.solver]['enabled'] = True
-            config['pipeline']['problems']['n_problems'] *= 1
+            config['pipeline']['problems']['n_problems'] = 1
             if 'scale_list' in self.analysis_parameters:
                 config['pipeline']['problems']['scale']['min'] = self.analysis_parameters['scale_list'][idx]
                 config['pipeline']['problems']['scale']['max'] = self.analysis_parameters['scale_list'][idx]
@@ -95,7 +95,7 @@ class ModelAnalysis:
             if isinstance(self.model.__class__, CombinedOneHotFeatureModel.__class__):
                 qubo_to_approx = remove_hard_constraits_from_qubo(qubo, problem, True)
                 _, percent_hard_contraints = get_approximation_count(qubo, qubo_to_approx)
-                if percent_hard_contraints is 1:
+                if percent_hard_contraints == 1:
                     approx_percent = 0
                 else:
                     approx_percent = approx_percent / (1 - percent_hard_contraints)
