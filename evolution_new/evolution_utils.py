@@ -553,7 +553,7 @@ def get_classical_solutions(problem: dict, reads: int, random_solutions: bool) -
             if random_solutions:
                 solution_list.append(get_random_sgi_solution(problem))
             else:
-                solution_list.append(get_subgraph_iso_solution(problem, 3))
+                solution_list.append(get_subgraph_iso_solution(problem, 4))
     return solution_list
 
 

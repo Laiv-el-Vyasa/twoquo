@@ -206,6 +206,22 @@
         ]
       }
     },
+    "test_evol_npp_big": {
+      "base_cfg": "1",
+      "dataset_id": "test_evol_npp_big",
+      "problems": {
+        "qubo_size": 128,
+        "n_problems": 100,
+        "NP": {
+          "size": [16, 128],
+          "transition": 31.0106,
+          "bits": 29
+        },
+        "problems": [
+          "NP"
+        ]
+      }
+    },
     "test_evol_mc": {
       "base_cfg": "1",
       "dataset_id": "test_evol_mc",
@@ -223,7 +239,7 @@
     },
     "test_evol_mc_big": {
       "base_cfg": "1",
-      "dataset_id": "test_evol_mc",
+      "dataset_id": "test_evol_mc_big",
       "problems": {
         "qubo_size": 256,
         "n_problems": 100,
@@ -251,6 +267,21 @@
         ]
       }
     },
+    "test_evol_gc_big": {
+      "base_cfg": "1",
+      "dataset_id": "test_evol_gc",
+      "problems": {
+        "qubo_size": 512,
+        "n_problems": 100,
+        "GC": {
+          "size": [128, 512],
+          "n_colors": 4
+        },
+        "problems": [
+          "GC"
+        ]
+      }
+    },
     "test_evol_gc_onehot": {
       "base_cfg": "1",
       "dataset_id": "test_evol_gc",
@@ -259,6 +290,21 @@
         "n_problems": 100,
         "GC": {
           "size": [16, 48],
+          "n_colors": 4
+        },
+        "problems": [
+          "GC"
+        ]
+      }
+    },
+    "test_evol_gc_onehot_big": {
+      "base_cfg": "1",
+      "dataset_id": "test_evol_gc",
+      "problems": {
+        "qubo_size": 512,
+        "n_problems": 100,
+        "GC": {
+          "size": [64, 128],
           "n_colors": 4
         },
         "problems": [
@@ -296,6 +342,21 @@
         ]
       }
     },
+    "test_evol_m3sat_big": {
+      "base_cfg": "1",
+      "dataset_id": "test_evol_m3sat_big",
+      "problems": {
+        "qubo_size": 512,
+        "n_problems": 100,
+        "M3SAT": {
+          "size": [64, 512],
+          "target_density": 4.27
+        },
+        "problems": [
+          "M3SAT"
+        ]
+      }
+    },
     "test_evol_tsp": {
       "base_cfg": "1",
       "dataset_id": "test_evol_tsp",
@@ -304,6 +365,20 @@
         "n_problems": 100,
         "TSP": {
           "size": [6, 11]
+        },
+        "problems": [
+          "TSP"
+        ]
+      }
+    },
+    "test_evol_tsp_big": {
+      "base_cfg": "1",
+      "dataset_id": "test_evol_tsp_big",
+      "problems": {
+        "qubo_size": 400,
+        "n_problems": 100,
+        "TSP": {
+          "size": [12, 20]
         },
         "problems": [
           "TSP"
@@ -320,6 +395,22 @@
           "size": [16, 65],
           "target": 0.62,
           "target_boundary": [0.34, 2.0]
+        },
+        "problems": [
+          "EC"
+        ]
+      }
+    },
+    "test_evol_ec_big": {
+      "base_cfg": "1",
+      "dataset_id": "test_evol_ec_big",
+      "problems": {
+        "qubo_size": 384,
+        "n_problems": 100,
+        "EC": {
+          "size": [64, 129],
+          "target": 0.62,
+          "target_boundary": [0.34, 3.0]
         },
         "problems": [
           "EC"
@@ -355,6 +446,22 @@
         "SGI": {
           "size1": [4, 8],
           "size2": [8, 12],
+          "edge_p2": 0.4
+        },
+        "problems": [
+          "SGI"
+        ]
+      }
+    },
+    "test_evol_sgi_big": {
+      "base_cfg": "1",
+      "dataset_id": "test_evol_sgi_big",
+      "problems": {
+        "qubo_size": 512,
+        "n_problems": 100,
+        "SGI": {
+          "size1": [8, 16],
+          "size2": [16, 32],
           "edge_p2": 0.4
         },
         "problems": [

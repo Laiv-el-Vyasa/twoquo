@@ -115,13 +115,13 @@ analysis_pipeline = {
     ]
 }
 
-analysis_pipeline_tsp = {
+analysis_pipeline_tsp_big = {
     'models': {
         'combined_tsp_features_onehot': {
             'analysis_parameters': analysis_parameters_features_onehot,
             'analysis_name': 'combined_feature_onehot_analysis',
             'configs': [
-                'standard'
+                'test_evol_tsp_big'
             ]
         }
     },
@@ -153,6 +153,44 @@ analysis_pipeline_tsp = {
 }
 
 
+analysis_pipeline_gc_onehot_big = {
+    'models': {
+        'combined_gc_features_onehot': {
+            'analysis_parameters': analysis_parameters_features_onehot,
+            'analysis_name': 'combined_feature_onehot_analysis',
+            'configs': [
+                'test_evol_gc_onehot_big'
+            ]
+        }
+    },
+    'analysis': [
+        {
+            'type': 'baseline_correct_mean',
+            'compare': False,
+            'models': {
+                'combined_gc_features_onehot': {
+                    'model_name': 'Combined feature onehot model\ntrained on GC, 128',
+                    'configs': [
+                        0
+                    ],
+                    'colors': [
+                        "black"
+                    ],
+                    'baseline_colors': [
+                        "black"
+                    ]
+                }
+            }
+        },
+        {
+            'type': 'boxplot_one',
+            'model': 'combined_gc_features_onehot',
+            'config': 0
+        }
+    ]
+}
+
+
 analysis_pipeline_sgi = {
     'models': {
         'combined_sgi': {
@@ -169,7 +207,7 @@ analysis_pipeline_sgi = {
             'compare': False,
             'models': {
                 'combined_sgi': {
-                    'model_name': 'Combined model\ntrained on SGI, 96',
+                    'model_name': 'Combined model\ntrained on SGI, 128',
                     'configs': [
                         0
                     ],
