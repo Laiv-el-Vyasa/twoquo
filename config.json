@@ -457,11 +457,11 @@
       "base_cfg": "1",
       "dataset_id": "test_evol_sgi_big",
       "problems": {
-        "qubo_size": 512,
+        "qubo_size": 352,
         "n_problems": 100,
         "SGI": {
-          "size1": [8, 16],
-          "size2": [16, 32],
+          "size1": [10, 16],
+          "size2": [16, 22],
           "edge_p2": 0.4
         },
         "problems": [

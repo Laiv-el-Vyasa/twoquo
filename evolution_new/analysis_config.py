@@ -191,13 +191,13 @@ analysis_pipeline_gc_onehot_big = {
 }
 
 
-analysis_pipeline_sgi = {
+analysis_pipeline_sgi_big = {
     'models': {
         'combined_sgi': {
             'analysis_parameters': analysis_parameters,
             'analysis_name': 'combined_analysis',
             'configs': [
-                'standard'
+                'test_evol_sgi_big'
             ]
         }
     },
