@@ -104,7 +104,7 @@ def visualize_boxplot_comparison_multiple_models(boxplot_data: dict):
 
     pyplot.xticks(range(0, len(tick_labels) * 3, 3), tick_labels)
     pyplot.xlim(-2, len(tick_labels) * 3)
-    pyplot.yscale('symlog')
+    #pyplot.yscale('symlog')
     ax.set_ylabel(boxplot_data['y_label'])
     ax.set_title(boxplot_data['title'])
     pyplot.show()

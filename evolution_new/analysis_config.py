@@ -153,13 +153,55 @@ analysis_pipeline_tsp_big = {
 }
 
 
-analysis_pipeline_gc_onehot = {
+analysis_pipeline_overall = {
     'models': {
         'combined_gc_features_onehot': {
             'analysis_parameters': analysis_parameters_features_onehot,
             'analysis_name': 'combined_feature_onehot_analysis',
             'configs': [
                 'test_evol_gc_onehot', 'test_evol_gc_onehot_big'
+            ]
+        },
+        'combined_tsp_features_onehot': {
+            'analysis_parameters': analysis_parameters_features_onehot,
+            'analysis_name': 'combined_feature_onehot_analysis',
+            'configs': [
+                'test_evol_tsp', 'test_evol_tsp_big'
+            ]
+        },
+        'combined_ec': {
+            'analysis_parameters': analysis_parameters,
+            'analysis_name': 'combined_analysis',
+            'configs': [
+                'test_evol_ec', 'test_evol_ec_big'
+            ]
+        },
+        'combined_mc': {
+            'analysis_parameters': analysis_parameters,
+            'analysis_name': 'combined_analysis',
+            'configs': [
+                'test_evol_mc', 'test_evol_mc_big'
+            ]
+        },
+        'combined_m3sat': {
+            'analysis_parameters': analysis_parameters,
+            'analysis_name': 'combined_analysis',
+            'configs': [
+                'test_evol_m3sat', 'test_evol_m3sat_big'
+            ]
+        },
+        'combined_npp': {
+            'analysis_parameters': analysis_parameters,
+            'analysis_name': 'combined_analysis',
+            'configs': [
+                'test_evol_npp', 'test_evol_npp_big'
+            ]
+        },
+        'combined_sgi': {
+            'analysis_parameters': analysis_parameters,
+            'analysis_name': 'combined_analysis',
+            'configs': [
+                'test_evol_sgi', 'test_evol_sgi_big'
             ]
         }
     },
@@ -184,20 +226,284 @@ analysis_pipeline_gc_onehot = {
         },
         {
             'type': 'boxplot_one',
+            'model_name': 'Combined feature onehot model\ntrained on GC, 192',
             'model': 'combined_gc_features_onehot',
-            'config': [0, 1]
+            'config': 0
+        },
+        {
+            'type': 'boxplot_one',
+            'model_name': 'Combined feature onehot model\ntrained on GC, 192',
+            'model': 'combined_gc_features_onehot',
+            'config': 1
+        },
+        {
+            'type': 'boxplot_multiple',
+            'models': {
+                'combined_gc_features_onehot': {
+                    'model_name': 'Combined feature onehot model\ntrained on GC, 192',
+                    'configs': [
+                        0, 1
+                    ]
+                }
+            }
+        },
+        {
+            'type': 'baseline_correct_mean',
+            'compare': False,
+            'models': {
+                'combined_tsp_features_onehot': {
+                    'model_name': 'Combined feature onehot model\ntrained on TSP, 121',
+                    'configs': [
+                        0, 1
+                    ],
+                    'colors': [
+                        "black", "grey"
+                    ],
+                    'baseline_colors': [
+                        "black", "grey"
+                    ]
+                }
+            }
+        },
+        {
+            'type': 'boxplot_one',
+            'model': 'combined_tsp_features_onehot',
+            'model_name': 'Combined feature onehot model\ntrained on TSP, 121',
+            'config': 0
+        },
+        {
+            'type': 'boxplot_one',
+            'model': 'combined_tsp_features_onehot',
+            'model_name': 'Combined feature onehot model\ntrained on TSP, 121',
+            'config': 1
+        },
+        {
+            'type': 'boxplot_multiple',
+            'models': {
+                'combined_tsp_features_onehot': {
+                    'model_name': 'Combined feature onehot model\ntrained on TSP, 121',
+                    'configs': [
+                        0, 1
+                    ]
+                }
+            }
+        },
+        {
+            'type': 'baseline_correct_mean',
+            'compare': False,
+            'models': {
+                'combined_ec': {
+                    'model_name': 'Combined model\ntrained on EC, 192',
+                    'configs': [
+                        0, 1
+                    ],
+                    'colors': [
+                        "black", "grey"
+                    ],
+                    'baseline_colors': [
+                        "black", "grey"
+                    ]
+                }
+            }
+        },
+        {
+            'type': 'boxplot_one',
+            'model': 'combined_ec',
+            'model_name': 'Combined model\ntrained on EC, 192',
+            'config': 0
+        },
+        {
+            'type': 'boxplot_one',
+            'model': 'combined_ec',
+            'model_name': 'Combined model\ntrained on EC, 192',
+            'config': 1
+        },
+        {
+            'type': 'boxplot_multiple',
+            'models': {
+                'combined_ec': {
+                    'model_name': 'Combined model\ntrained on EC, 192',
+                    'configs': [
+                        0, 1
+                    ]
+                }
+            }
+        },
+        {
+            'type': 'baseline_correct_mean',
+            'compare': False,
+            'models': {
+                'combined_mc': {
+                    'model_name': 'Combined model\ntrained on MC, 128',
+                    'configs': [
+                        0, 1
+                    ],
+                    'colors': [
+                        "black", "grey"
+                    ],
+                    'baseline_colors': [
+                        "black", "grey"
+                    ]
+                }
+            }
+        },
+        {
+            'type': 'boxplot_one',
+            'model': 'combined_mc',
+            'model_name': 'Combined model\ntrained on MC, 128',
+            'config': 0
+        },
+        {
+            'type': 'boxplot_one',
+            'model': 'combined_mc',
+            'model_name': 'Combined model\ntrained on MC, 128',
+            'config': 1
+        },
+        {
+            'type': 'boxplot_multiple',
+            'models': {
+                'combined_mc': {
+                    'model_name': 'Combined model\ntrained on MC, 128',
+                    'configs': [
+                        0, 1
+                    ]
+                }
+            }
+        },
+        {
+            'type': 'baseline_correct_mean',
+            'compare': False,
+            'models': {
+                'combined_m3sat': {
+                    'model_name': 'Combined model\ntrained on M3SAT, 128',
+                    'configs': [
+                        0, 1
+                    ],
+                    'colors': [
+                        "black", "grey"
+                    ],
+                    'baseline_colors': [
+                        "black", "grey"
+                    ]
+                }
+            }
+        },
+        {
+            'type': 'boxplot_one',
+            'model': 'combined_m3sat',
+            'model_name': 'Combined model\ntrained on M3SAT, 128',
+            'config': 0
+        },
+        {
+            'type': 'boxplot_one',
+            'model': 'combined_m3sat',
+            'model_name': 'Combined model\ntrained on M3SAT, 128',
+            'config': 1
+        },
+        {
+            'type': 'boxplot_multiple',
+            'models': {
+                'combined_m3sat': {
+                    'model_name': 'Combined model\ntrained on M3SAT, 128',
+                    'configs': [
+                        0, 1
+                    ]
+                }
+            }
+        },
+        {
+            'type': 'baseline_correct_mean',
+            'compare': False,
+            'models': {
+                'combined_npp': {
+                    'model_name': 'Combined model\ntrained on NP, 64',
+                    'configs': [
+                        0, 1
+                    ],
+                    'colors': [
+                        "black", "grey"
+                    ],
+                    'baseline_colors': [
+                        "black", "grey"
+                    ]
+                }
+            }
+        },
+        {
+            'type': 'boxplot_one',
+            'model': 'combined_npp',
+            'model_name': 'Combined model\ntrained on NP, 64',
+            'config': 0
+        },
+        {
+            'type': 'boxplot_one',
+            'model': 'combined_npp',
+            'model_name': 'Combined model\ntrained on NP, 64',
+            'config': 1
+        },
+        {
+            'type': 'boxplot_multiple',
+            'models': {
+                'combined_npp': {
+                    'model_name': 'Combined model\ntrained on NP, 64',
+                    'configs': [
+                        0, 1
+                    ]
+                }
+            }
+        },
+        {
+            'type': 'baseline_correct_mean',
+            'compare': False,
+            'models': {
+                'combined_sgi': {
+                    'model_name': 'Combined model\ntrained on SGI, 128',
+                    'configs': [
+                        0, 1
+                    ],
+                    'colors': [
+                        "black", "grey"
+                    ],
+                    'baseline_colors': [
+                        "black", "grey"
+                    ]
+                }
+            }
+        },
+        {
+            'type': 'boxplot_one',
+            'model': 'combined_sgi',
+            'model_name': 'Combined model\ntrained on SGI, 128',
+            'config': 0
+        },
+        {
+            'type': 'boxplot_one',
+            'model': 'combined_sgi',
+            'model_name': 'Combined model\ntrained on SGI, 128',
+            'config': 1
+        },
+        {
+            'type': 'boxplot_multiple',
+            'models': {
+                'combined_sgi': {
+                    'model_name': 'Combined model\ntrained on SGI, 128',
+                    'configs': [
+                        0, 1
+                    ]
+                }
+            }
         }
     ]
 }
 
 
-analysis_pipeline_sgi_big = {
+analysis_pipeline_npp_big = {
     'models': {
-        'combined_sgi': {
+        'combined_npp': {
             'analysis_parameters': analysis_parameters,
             'analysis_name': 'combined_analysis',
             'configs': [
-                'test_evol_sgi_big'
+                'test_evol_npp_big'
             ]
         }
     },
@@ -206,8 +512,8 @@ analysis_pipeline_sgi_big = {
             'type': 'baseline_correct_mean',
             'compare': False,
             'models': {
-                'combined_sgi': {
-                    'model_name': 'Combined model\ntrained on SGI, 128',
+                'combined_npp': {
+                    'model_name': 'Combined model\ntrained on NP, 64',
                     'configs': [
                         0
                     ],
@@ -222,7 +528,8 @@ analysis_pipeline_sgi_big = {
         },
         {
             'type': 'boxplot_one',
-            'model': 'combined_sgi',
+            'model': 'combined_npp',
+            'model_name': 'Combined model\ntrained on NP, 64',
             'config': 0
         }
     ]

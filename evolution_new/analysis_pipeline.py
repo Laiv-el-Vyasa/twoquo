@@ -23,7 +23,7 @@ def create_baseline_data_dict(baseline_data: list[list, list, list, list, list, 
     config_description = ''
     for problem in problems:
         config_description = config_description + problem + ', '
-    config_description = config_description + config["pipeline"]["problems"]["qubo_size"]
+    config_description = config_description + str(config["pipeline"]["problems"]["qubo_size"])
     return {
         'percent_list': baseline_data[1],
         'color': color,
@@ -38,11 +38,11 @@ def create_baseline_data_dict(baseline_data: list[list, list, list, list, list, 
 
 def get_visualisation_title(evaluation_type, config, solver, models=False):
     problems = config["pipeline"]["problems"]["problems"]
-    title = f'{evaluation_type}, trained model{"s" if models else ""}, problem{"s" if len(problems) > 1 else ""}: '
+    title = f'{evaluation_type}, trained model{"s" if models else ""}, evaluation on problem{"s" if len(problems) > 1 else ""}: '
     for problem in problems:
         title = title + problem + ', '
-    title = title + f'Max-size: {config["pipeline"]["problems"]["qubo_size"]}, Solver: ' \
-                    f'{solver}'
+    title = title + f'Max-size: {config["pipeline"]["problems"]["qubo_size"]}'  # \
+    #                f', Solver: ' f'{solver}'
     return title
 
 
@@ -81,7 +81,8 @@ class AnalysisPipeline:
         visualisation_dict = {
             'baseline_data': [],
             'evaluation_results': [],
-            'title': 'Model comparison',
+            'title': f'Comparison with approximation baseline between different '
+                     f'{"models / " if len(analysis_dict["models"]) > 1 else ""}evaluations',
             'x_label': 'approximated qubo entries in percent',
             'y_label': 'percentage of correct solutions found'
         }
@@ -232,7 +233,7 @@ class AnalysisPipeline:
                     {
                         'min': model_analyis_results['approximation_quality_dict']['min_solution_quality_list'],
                         'mean': model_analyis_results['approximation_quality_dict']['mean_solution_quality_list'],
-                        'tick_name': 'Model performance'
+                        'tick_name': f'Model performance,\n{analysis_dict["model_name"]}'
                     },
                     {
                         'min': model_analyis_results['approximation_quality_dict']['classical_min_solution_quality'],
@@ -287,7 +288,8 @@ class AnalysisPipeline:
                     'qubo': '#9400D3'
                 },
             'y_label': 'solution quality (min energy - energy) / min energy',
-            'title': 'Comparison between different models / evaluations'
+            'title': f'Comparison of solution quality between different '
+                     f'{"models / " if len(analysis_dict["models"]) > 1 else ""}evaluations'
         })
 
 
