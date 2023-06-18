@@ -16,15 +16,23 @@ def get_models_dict(models_dict: dict) -> dict:
 
 
 def create_baseline_data_dict(baseline_data: list[list, list, list, list, list, list, list], steps,
+                              model_analysis: ModelAnalysis, config_nr: int,
                               sorted_approx=True, data_index=0, dotted=False, color='black') -> dict:
+    config = model_analysis.config_list[config_nr]
+    problems = config["pipeline"]["problems"]["problems"]
+    config_description = ''
+    for problem in problems:
+        config_description = config_description + problem + ', '
+    config_description = config_description + config["pipeline"]["problems"]["qubo_size"]
     return {
         'percent_list': baseline_data[1],
         'color': color,
         'dotted': dotted,
         'baseline_approx_data': baseline_data[data_index],
-        'legend': f'stepwise-approximation: {steps} steps, '
+        'legend': f'{config_description}, '
+                  f'stepwise-approximation: {steps} steps, '
                   f'{"smallest entries first" if sorted_approx else "random entries"}, '
-                  f'{"mean" if data_index == 3 or data_index == 6 else "best"}'
+                  f'{"mean" if data_index == 3 or data_index == 6 else "best solution"}'
     }
 
 
@@ -89,6 +97,8 @@ class AnalysisPipeline:
                     visualisation_dict['baseline_data'].append(
                         create_baseline_data_dict(model_analyis_results['baseline'],
                                                   model_analysis.analysis_parameters['steps'],
+                                                  model_analysis,
+                                                  config_nr,
                                                   color=model_dict['baseline_colors'][idx])
                     )
                     config_name_set.add(config_name)
@@ -141,7 +151,8 @@ class AnalysisPipeline:
         model_analyis_results = model_analysis.model_result_list[analysis_dict['config']]
         visualisation_pipeline({
             'baseline_data': [create_baseline_data_dict(model_analyis_results['baseline'],
-                                                        model_analysis.analysis_parameters['steps'])],
+                                                        model_analysis.analysis_parameters['steps'],
+                                                        model_analysis, 0)],
             'evaluation_results': [
                 {
                     'color': analysis_dict['colors'][0],
@@ -171,16 +182,20 @@ class AnalysisPipeline:
         visualisation_pipeline({  # Sorted/random with min/mean pipeline
             'baseline_data': [
                 create_baseline_data_dict(model_analyis_results['baseline'],
-                                          model_analysis.analysis_parameters['steps'], data_index=3,
-                                          color=analysis_dict['baseline_colors'][0]),
-                create_baseline_data_dict(model_analyis_results['baseline'],
-                                          model_analysis.analysis_parameters['steps'], data_index=4, dotted=True,
+                                          model_analysis.analysis_parameters['steps'],
+                                          model_analysis, 0, data_index=3,
                                           color=analysis_dict['baseline_colors'][0]),
                 create_baseline_data_dict(model_analyis_results['baseline'],
                                           model_analysis.analysis_parameters['steps'],
+                                          model_analysis, 0, data_index=4, dotted=True,
+                                          color=analysis_dict['baseline_colors'][0]),
+                create_baseline_data_dict(model_analyis_results['baseline'],
+                                          model_analysis.analysis_parameters['steps'],
+                                          model_analysis, 0,
                                           data_index=5, sorted_approx=False, color=analysis_dict['baseline_colors'][1]),
                 create_baseline_data_dict(model_analyis_results['baseline'],
-                                          model_analysis.analysis_parameters['steps'], data_index=6,
+                                          model_analysis.analysis_parameters['steps'],
+                                          model_analysis, 0, data_index=6,
                                           sorted_approx=False, dotted=True, color=analysis_dict['baseline_colors'][1])
             ],
             'evaluation_results': [

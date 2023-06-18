@@ -201,7 +201,7 @@ training_config = {
         {
             'config_name': 'test_evol_gc_onehot',
             'training_name': 'combined_feature_onehot_model',
-            'learning_parameters': 'standard',
+            'learning_parameters': 'long',
             'network_type': 'combined_features_onehot',
             'network_information': {
                 'network_name': 'combinedModelUwU',
@@ -346,7 +346,7 @@ learning_parameters_config = {
     },
     'long': {
         'population': 100,
-        'num_generations': 1000,
+        'num_generations': 350,
         'keep_elitism': 5,
         'percent_of_parents_mating': 0.2
     }

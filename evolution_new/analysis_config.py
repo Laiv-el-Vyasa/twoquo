@@ -153,13 +153,13 @@ analysis_pipeline_tsp_big = {
 }
 
 
-analysis_pipeline_gc_onehot_big = {
+analysis_pipeline_gc_onehot = {
     'models': {
         'combined_gc_features_onehot': {
             'analysis_parameters': analysis_parameters_features_onehot,
             'analysis_name': 'combined_feature_onehot_analysis',
             'configs': [
-                'test_evol_gc_onehot_big'
+                'test_evol_gc_onehot', 'test_evol_gc_onehot_big'
             ]
         }
     },
@@ -169,15 +169,15 @@ analysis_pipeline_gc_onehot_big = {
             'compare': False,
             'models': {
                 'combined_gc_features_onehot': {
-                    'model_name': 'Combined feature onehot model\ntrained on GC, 128',
+                    'model_name': 'Combined feature onehot model\ntrained on GC, 192',
                     'configs': [
-                        0
+                        0, 1
                     ],
                     'colors': [
-                        "black"
+                        "black", "grey"
                     ],
                     'baseline_colors': [
-                        "black"
+                        "black", "grey"
                     ]
                 }
             }
@@ -185,7 +185,7 @@ analysis_pipeline_gc_onehot_big = {
         {
             'type': 'boxplot_one',
             'model': 'combined_gc_features_onehot',
-            'config': 0
+            'config': [0, 1]
         }
     ]
 }
