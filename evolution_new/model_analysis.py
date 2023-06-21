@@ -5,7 +5,7 @@ from config import load_cfg
 from evolution_new.combined_evolution_training import get_data_from_training_config
 from evolution_new.evolution_utils import get_quality_of_approxed_qubo, get_qubo_approx_mask, get_file_name, \
     get_relative_size_of_approxed_entries, get_classical_solution_qualities, get_min_solution_quality, \
-    remove_hard_constraits_from_qubo, delete_data, get_approximation_count
+    remove_hard_constraits_from_qubo, delete_data, get_approximation_count, get_analysis_results_file_name
 from evolution_new.pygad_learning import PygadLearner
 from new_visualisation import qubo_heatmap
 from combined_model_features_onehot import CombinedOneHotFeatureModel
@@ -56,6 +56,20 @@ class ModelAnalysis:
                 'approximation_quality_dict': approximation_quality_dict,
                 'baseline': analysis_baseline
             })
+
+    def get_model_approximation_dict(self, config: dict) -> dict:
+        filename = get_analysis_results_file_name(self.analysis_parameters['analysis_name'],
+                                                  load_cfg(cfg_id=self.learning_parameters['config_name']),
+                                                  config,
+                                                  self.learning_parameters['fitness_parameters'])
+        try:
+            approximation_dict = np.load(f'analysis_results/{filename}.npy', allow_pickle=True).item()
+            print('Analysis results loaded')
+        except FileNotFoundError:
+            approximation_dict = self.get_model_approximation_dict(config)
+            np.save(f'analysis_results/{filename}', approximation_dict)
+        # print(approximation_dict)
+        return approximation_dict
 
     def get_model_approximation_quality(self, config: dict) -> dict:
         return_dict = {

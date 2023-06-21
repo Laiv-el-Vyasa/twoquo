@@ -51,6 +51,21 @@ def get_file_name(base_name: str, config: dict, fitness_params: dict, analysis=F
     return name
 
 
+def get_analysis_results_file_name(base_name: str, training_config: dict, config: dict, fitness_params: dict) -> str:
+    name = base_name
+    problems_train = training_config['pipeline']['problems']['problems']
+    for prob in problems_train:
+        name = name + '_' + prob
+    name = name + '_' + str(training_config['pipeline']['problems']['qubo_size'])
+    name = name + fitness_params_to_string(fitness_params)
+    name = name + '_eval'
+    problems_eval = config['pipeline']['problems']['problems']
+    for prob2 in problems_eval:
+        name = name + '_' + prob2
+    name = name + '_' + str(config['pipeline']['problems']['qubo_size'])
+    return name
+
+
 def fitness_params_to_string(fitness_params: dict) -> str:
     fitness_param_string = ''
     for key in fitness_params:
