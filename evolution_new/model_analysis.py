@@ -50,7 +50,7 @@ class ModelAnalysis:
     def run_analysis(self):
         for config in self.config_list:
             delete_data()
-            approximation_quality_dict = self.get_model_approximation_quality(config)
+            approximation_quality_dict = self.get_model_approximation_dict(config)
             analysis_baseline = self.get_analysis_baseline(config)
             self.model_result_list.append({
                 'approximation_quality_dict': approximation_quality_dict,
@@ -66,8 +66,9 @@ class ModelAnalysis:
             approximation_dict = np.load(f'analysis_results/{filename}.npy', allow_pickle=True).item()
             print('Analysis results loaded')
         except FileNotFoundError:
-            approximation_dict = self.get_model_approximation_dict(config)
+            approximation_dict = self.get_model_approximation_quality(config)
             np.save(f'analysis_results/{filename}', approximation_dict)
+            print('Analysis results saved')
         # print(approximation_dict)
         return approximation_dict
 

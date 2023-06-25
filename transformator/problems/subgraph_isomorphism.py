@@ -4,6 +4,7 @@ import math
 import numpy as np
 from networkx import erdos_renyi_graph
 
+from evolution_new.new_visualisation import qubo_heatmap
 from transformator.problems.problem import Problem
 from transformator.common.util import gen_graph
 from numpy import random
@@ -56,7 +57,6 @@ class SubGraphIsomorphism(Problem):
     def gen_qubo_matrix(self):
         n1 = self.graph1.order()
         n2 = self.graph2.order()
-
         Q = np.zeros((n1 * n2, n1 * n2))
 
         for i in range(n1):

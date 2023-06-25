@@ -115,13 +115,13 @@ analysis_pipeline = {
     ]
 }
 
-analysis_pipeline_tsp_big = {
+analysis_pipeline_sgi = {
     'models': {
-        'combined_tsp_features_onehot': {
-            'analysis_parameters': analysis_parameters_features_onehot,
-            'analysis_name': 'combined_feature_onehot_analysis',
+        'combined_sgi': {
+            'analysis_parameters': analysis_parameters,
+            'analysis_name': 'combined_analysis',
             'configs': [
-                'test_evol_tsp_big'
+                'test_evol_sgi_small'
             ]
         }
     },
@@ -130,8 +130,8 @@ analysis_pipeline_tsp_big = {
             'type': 'baseline_correct_mean',
             'compare': False,
             'models': {
-                'combined_tsp_features_onehot': {
-                    'model_name': 'Combined feature onehot model\ntrained on TSP, 121',
+                'combined_sgi': {
+                    'model_name': 'Combined model\ntrained on SGI, 128',
                     'configs': [
                         0
                     ],
@@ -146,7 +146,8 @@ analysis_pipeline_tsp_big = {
         },
         {
             'type': 'boxplot_one',
-            'model': 'combined_tsp_features_onehot',
+            'model': 'combined_sgi',
+            'model_name': 'Combined model\ntrained on SGI, 128',
             'config': 0
         }
     ]

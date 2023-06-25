@@ -437,6 +437,22 @@
         ]
       }
     },
+    "test_evol_sgi_small": {
+      "base_cfg": "1",
+      "dataset_id": "test_evol_sgi",
+      "problems": {
+        "qubo_size": 15,
+        "n_problems": 1,
+        "SGI": {
+          "size1": [3, 3],
+          "size2": [5, 5],
+          "edge_p2": 0.4
+        },
+        "problems": [
+          "SGI"
+        ]
+      }
+    },
     "test_evol_sgi": {
       "base_cfg": "1",
       "dataset_id": "test_evol_sgi",
