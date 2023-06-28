@@ -153,6 +153,83 @@ analysis_pipeline_sgi = {
     ]
 }
 
+analysis_pipeline_mc = {
+    'models': {
+        'combined_mc': {
+            'analysis_parameters': analysis_parameters,
+            'analysis_name': 'combined_analysis',
+            'configs': [
+                'test_evol_mc_small'
+            ]
+        }
+    },
+    'analysis': [
+        {
+            'type': 'baseline_correct_mean',
+            'compare': False,
+            'models': {
+                'combined_mc': {
+                    'model_name': 'Combined model\ntrained on MC, 128',
+                    'configs': [
+                        0
+                    ],
+                    'colors': [
+                        "black"
+                    ],
+                    'baseline_colors': [
+                        "black"
+                    ]
+                }
+            }
+        },
+        {
+            'type': 'boxplot_one',
+            'model': 'combined_mc',
+            'model_name': 'Combined model\ntrained on MC, 128',
+            'config': 0
+        }
+    ]
+}
+
+
+analysis_pipeline_tsp = {
+    'models': {
+        'combined_tsp_features_onehot': {
+            'analysis_parameters': analysis_parameters_features_onehot,
+            'analysis_name': 'combined_feature_onehot_analysis',
+            'configs': [
+                'test_evol_tsp_small'
+            ]
+        }
+    },
+    'analysis': [
+        {
+            'type': 'baseline_correct_mean',
+            'compare': False,
+            'models': {
+                'combined_tsp_features_onehot': {
+                    'model_name': 'Combined model\ntrained on TSP, 121',
+                    'configs': [
+                        0
+                    ],
+                    'colors': [
+                        "black"
+                    ],
+                    'baseline_colors': [
+                        "black"
+                    ]
+                }
+            }
+        },
+        {
+            'type': 'boxplot_one',
+            'model': 'combined_tsp_features_onehot',
+            'model_name': 'Combined model\ntrained on TSP, 121',
+            'config': 0
+        }
+    ]
+}
+
 
 analysis_pipeline_overall = {
     'models': {

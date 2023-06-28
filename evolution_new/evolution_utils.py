@@ -143,7 +143,8 @@ def get_problem_qubos(config: dict):
 # Get quality of the approximated qubo, regarding the quality of the solutions and how much approximation occurred
 # Returning quality, best solution and degree of approximation
 def get_quality_of_approxed_qubo(qubo: np.array, approxed_qubo: np.array, solutions: np.array,
-                                 config: dict, print_solutions=False) -> tuple[float, list, float, float, float, float]:
+                                 config: dict, print_solutions=False) \
+        -> tuple[float, list, float, float, float, float, int]:
     absolute_approx_count, relative_approx_count = get_approximation_count(qubo, approxed_qubo)
     _, best_solutions_approx, min_energy_approx = solve_qubo(approxed_qubo, config)
     if print_solutions:
@@ -151,11 +152,11 @@ def get_quality_of_approxed_qubo(qubo: np.array, approxed_qubo: np.array, soluti
     min_solution_quality, best_solution_approx, mean_solution_quality, min_mean_sol_qual, mean_mean_sol_qual \
         = get_min_solution_quality(best_solutions_approx, qubo, solutions)
     return min_solution_quality, best_solution_approx, relative_approx_count, mean_solution_quality, \
-           min_mean_sol_qual, mean_mean_sol_qual
+           min_mean_sol_qual, mean_mean_sol_qual, absolute_approx_count
 
 
 def get_approximation_count(qubo: np.array, approxed_qubo: np.array) -> tuple[int, float]:
-    approxed_entries = get_nonzero_count(np.subtract(qubo, approxed_qubo))
+    approxed_entries = get_nonzero_count(np.subtract(np.triu(qubo), np.triu(approxed_qubo)))
     return approxed_entries, approxed_entries / get_nonzero_count(qubo)
 
 

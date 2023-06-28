@@ -77,10 +77,10 @@ def visualize_boxplot_comparison(boxplot_data: dict):
 
 def visualize_boxplot_comparison_multiple_models(boxplot_data: dict):
     label_dict = {
-        'model': 'model solution',
-        'classical': 'classical heuristic',
-        'random': 'random solution',
-        'qubo': 'qubo without approximation'
+        'model': 'Approximated QUBO',
+        'classical': 'Heuristic Algorithm',
+        'random': 'Random solution',
+        'qubo': 'Original QUBO'
     }
     fig, ax = pyplot.subplots()
     data_list = boxplot_data['data_list']

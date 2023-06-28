@@ -99,7 +99,7 @@ class AnalysisPipeline:
                         create_baseline_data_dict(model_analyis_results['baseline'],
                                                   model_analysis.analysis_parameters['steps'],
                                                   model_analysis,
-                                                  config_nr,
+                                                  config_nr, dotted=True if config_nr == 1 else False,
                                                   color=model_dict['baseline_colors'][idx])
                     )
                     config_name_set.add(config_name)
@@ -107,7 +107,7 @@ class AnalysisPipeline:
                 visualisation_dict['evaluation_results'].append(
                     {
                         'color': model_dict['colors'][idx],
-                        'marker': 4,
+                        'marker': 4 + config_nr if not analysis_dict['compare'] else 4,
                         'evol_y': [np.mean(model_analyis_results['approximation_quality_dict']
                                            ['solution_quality_list'])],
                         'evol_x': [np.mean(model_analyis_results['approximation_quality_dict']['approx_percent_list'])],
@@ -233,12 +233,19 @@ class AnalysisPipeline:
                     {
                         'min': model_analyis_results['approximation_quality_dict']['min_solution_quality_list'],
                         'mean': model_analyis_results['approximation_quality_dict']['mean_solution_quality_list'],
-                        'tick_name': f'Model performance,\n{analysis_dict["model_name"]}'
+                        'tick_name': f'Approximated QUBO,\n{analysis_dict["model_name"]}'
+                    },
+                    {
+                        'min': model_analyis_results['approximation_quality_dict']
+                                                    ['stepwise_approx_min_solution_quality'],
+                        'mean': model_analyis_results['approximation_quality_dict']
+                                                     ['stepwise_approx_mean_solution_quality'],
+                        'tick_name': f'Approximated QUBO,\nstepwise, same\npercent as model'
                     },
                     {
                         'min': model_analyis_results['approximation_quality_dict']['classical_min_solution_quality'],
                         'mean': model_analyis_results['approximation_quality_dict']['classical_mean_solution_quality'],
-                        'tick_name': 'Classical algorithm'
+                        'tick_name': 'Heuristic algorithm'
                     },
                     {
                         'min': model_analyis_results['approximation_quality_dict']['random_min_solution_quality'],

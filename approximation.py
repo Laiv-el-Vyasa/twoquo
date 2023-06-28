@@ -4,7 +4,8 @@ import random
 import numpy as np
 
 
-def get_approximated_qubos(qubo, single_entry_approx, fixed, approximation_steps, sorted_approx=True) -> dict:
+def get_approximated_qubos(qubo, single_entry_approx, fixed, approximation_steps,
+                           sorted_approx=True, break_at=np.inf) -> tuple[dict, list]:
     approx_qubos = {}
     qubodict = get_sorted_qubodict(qubo, sorted_approx)
     #print(qubodict)
@@ -18,6 +19,8 @@ def get_approximated_qubos(qubo, single_entry_approx, fixed, approximation_steps
     #print(percentage_steps)
     last_approx_number = 0
     for i, percentage_bound in enumerate(percentage_steps):
+        if i + 1 > break_at:
+            break
         if fixed:
             if not single_entry_approx or i < len(qubodict):
                 #print('I:', i)

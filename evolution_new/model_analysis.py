@@ -91,7 +91,9 @@ class ModelAnalysis:
             'random_min_solution_quality': [],
             'random_mean_solution_quality': [],
             'repeat_qubo_min_solution_quality': [],
-            'repeat_qubo_mean_solution_quality': []
+            'repeat_qubo_mean_solution_quality': [],
+            'stepwise_approx_min_solution_quality': [],
+            'stepwise_approx_mean_solution_quality': []
         }
         problem_dict = self.model.get_approximation(self.model.get_training_dataset(config))
         approx_qubo_list, solutions_list, qubo_list, problem_list = problem_dict['approxed_qubo_list'], \
@@ -105,15 +107,17 @@ class ModelAnalysis:
             if idx < self.analysis_parameters['show_qubo_mask']:
                 qubo_heatmap(qubo)
                 qubo_heatmap(get_qubo_approx_mask(approx_qubo, qubo))
-            min_solution_quality, _, approx_percent, mean_solution_quality, min_mean_sol_qual, mean_mean_sol_qual \
-                = get_quality_of_approxed_qubo(qubo, approx_qubo, solutions, config)
-            if isinstance(self.model.__class__, CombinedOneHotFeatureModel.__class__):
+            min_solution_quality, _, approx_percent, mean_solution_quality, min_mean_sol_qual, mean_mean_sol_qual, \
+                absolute_approx_count = get_quality_of_approxed_qubo(qubo, approx_qubo, solutions, config)
+            if self.model.__class__.__name__ == CombinedOneHotFeatureModel.__name__:
                 qubo_to_approx = remove_hard_constraits_from_qubo(qubo, problem, True)
-                _, percent_hard_contraints = get_approximation_count(qubo, qubo_to_approx)
+                absolute_count_hard_constraints, percent_hard_contraints = get_approximation_count(qubo, qubo_to_approx)
                 if percent_hard_contraints == 1:
                     approx_percent = 0
                 else:
                     approx_percent = approx_percent / (1 - percent_hard_contraints)
+            else:
+                qubo_to_approx = qubo
 
             return_dict['solution_quality_list'].append((np.floor(1 - min_solution_quality)))
             return_dict['min_solution_quality_list'].append(min_solution_quality)
@@ -152,6 +156,23 @@ class ModelAnalysis:
                 # print(repeat_qubo_min_solution_quality, repeat_qubo_mean_solution_quality)
                 return_dict['repeat_qubo_min_solution_quality'].append(repeat_qubo_min_solution_quality)
                 return_dict['repeat_qubo_mean_solution_quality'].append(repeat_qubo_mean_solution_quality)
+
+                print('Absolute approx count: ', absolute_approx_count)
+                if absolute_approx_count == 0:
+                    stepwise_approxed_qubo = qubo_to_approx
+                else:
+                    stepwise_approx_qubo_dict, _ = get_approximated_qubos(qubo_to_approx,
+                                                                          True, True, 100,
+                                                                          break_at=absolute_approx_count)
+                    stepwise_approxed_qubo = stepwise_approx_qubo_dict[str(absolute_approx_count)]['qubo']
+                if isinstance(self.model.__class__, CombinedOneHotFeatureModel.__class__):
+                    stepwise_approxed_qubo = qubo - qubo_to_approx + stepwise_approxed_qubo
+                # qubo_heatmap(qubo)
+                # qubo_heatmap(get_qubo_approx_mask(stepwise_approxed_qubo, qubo))
+                stepwise_min_solution_quality, _, _, stepwise_mean_solution_quality, *_ \
+                    = get_quality_of_approxed_qubo(qubo, stepwise_approxed_qubo, solutions, config)
+                return_dict['stepwise_approx_min_solution_quality'].append(stepwise_min_solution_quality)
+                return_dict['stepwise_approx_mean_solution_quality'].append(stepwise_mean_solution_quality)
         return return_dict
 
     def get_analysis_baseline(self, config) -> list[list, list, list, list, list, list, list]:
@@ -220,17 +241,17 @@ class ModelAnalysis:
         stepwise_approx_quality = [1.]
         stepwise_min_approx_quality = [1.]
         stepwise_mean_approx_quality = [1.]
-        if isinstance(self.model.__class__, CombinedOneHotFeatureModel.__class__):
+        if self.model.__class__.__name__ == CombinedOneHotFeatureModel.__name__:
             qubo_to_approx = remove_hard_constraits_from_qubo(qubo, problem, True)
         else:
             qubo_to_approx = qubo
+        # qubo_heatmap(qubo_to_approx)
         approximation_dict, _ = get_approximated_qubos(qubo_to_approx, False, True, self.analysis_parameters['steps'],
                                                        sorted_approx=sorted_approx)
         for i in range(self.analysis_parameters['steps']):
             approx_qubo = approximation_dict[str(i + 1)]['qubo']
-            if isinstance(self.model.__class__, CombinedOneHotFeatureModel.__class__):
+            if self.model.__class__.__name__ == CombinedOneHotFeatureModel.__name__:
                 approx_qubo = qubo - qubo_to_approx + approx_qubo
-            #qubo_heatmap(approx_qubo)
             min_solution_quality, _, _, mean_solution_quality, *_ \
                 = get_quality_of_approxed_qubo(qubo, approx_qubo, solutions, config)
             # print('step ', i)
