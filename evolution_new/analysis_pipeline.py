@@ -59,6 +59,16 @@ def get_model_config_description(model_name: str, model_analysis: ModelAnalysis,
     return descr + kind
 
 
+def create_upper_lower_errorbars(approx_percent_list: list) -> list[list, list]:
+    mean = np.mean(approx_percent_list)
+    list_above = [x - mean for x in approx_percent_list if x > mean]
+    list_below = [x - mean for x in approx_percent_list if x < mean]
+    return [
+        [np.sqrt(np.sum(np.square(list_below)) / len(list_below))],
+        [np.sqrt(np.sum(np.square(list_above)) / len(list_above))]
+    ]
+
+
 class AnalysisPipeline:
     def __init__(self, analysis_dict: dict):
         self.analysis_dict = analysis_dict
@@ -107,10 +117,13 @@ class AnalysisPipeline:
                 visualisation_dict['evaluation_results'].append(
                     {
                         'color': model_dict['colors'][idx],
-                        'marker': 4 + config_nr if not analysis_dict['compare'] else 4,
+                        'marker': 4 + config_nr if not analysis_dict['compare'] * 2 else 4,
                         'evol_y': [np.mean(model_analyis_results['approximation_quality_dict']
                                            ['solution_quality_list'])],
                         'evol_x': [np.mean(model_analyis_results['approximation_quality_dict']['approx_percent_list'])],
+                        'evol_x_err': [create_upper_lower_errorbars(model_analyis_results['approximation_quality_dict']
+                                                                    ['approx_percent_list'])],
+                        'std_dev': [np.std(model_analyis_results['approximation_quality_dict']['approx_percent_list'])],
                         'label': get_model_config_description(model_dict['model_name'],
                                                               model_analysis,
                                                               config_nr,
@@ -138,7 +151,8 @@ class AnalysisPipeline:
                             'marker': 6,
                             'evol_y': [np.mean(model_analyis_results['approximation_quality_dict']
                                                ['classical_solution_quality'])],
-                            'evol_x': [np.mean(model_analyis_results['approximation_quality_dict']['approx_percent_list'])],
+                            'evol_x': [np.mean(model_analyis_results['approximation_quality_dict']
+                                               ['approx_percent_list'])],
                             'label': get_model_config_description(model_dict['model_name'],
                                                                   model_analysis,
                                                                   config_nr,

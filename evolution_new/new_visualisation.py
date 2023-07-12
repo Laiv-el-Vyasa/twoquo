@@ -38,6 +38,7 @@ def add_baseline(ax: matplotlib.axes.Axes, baseline_data: dict, legend_lines: li
 
 
 def plot_points(ax: matplotlib.axes.Axes, evaluation_results: dict, legend_lines: list) -> tuple:
+    y_list = []
     for evol_result in evaluation_results:
         color = evol_result['color']
         marker = evol_result['marker']
@@ -45,8 +46,16 @@ def plot_points(ax: matplotlib.axes.Axes, evaluation_results: dict, legend_lines
             alpha = evol_result['alpha']
         else:
             alpha = 1
-        for x, y in zip(evol_result['evol_x'], evol_result['evol_y']):
-            ax.plot(x, y, color=color, marker=(marker, 2), markersize=12, alpha=alpha)
+        if 'evol_x_err' in evol_result:
+            print(evol_result)
+            for x, y, x_err in zip(evol_result['evol_x'], evol_result['evol_y'], evol_result['evol_x_err']):
+                if y in y_list:
+                    y -= 0.01
+                ax.errorbar(x, y, xerr=x_err, capsize=6, color=color, marker=(marker, 2), markersize=12, alpha=alpha)
+                y_list.append(y)
+        else:
+            for x, y in zip(evol_result['evol_x'], evol_result['evol_y']):
+                ax.plot(x, y, color=color, marker=(marker, 2), markersize=12, alpha=alpha)
         legend_lines.append(lines.Line2D([], [], color=color, linestyle='None',
                                          markersize=12, marker=(marker, 2), label=evol_result['label']))
     return ax, legend_lines
