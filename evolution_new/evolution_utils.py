@@ -157,7 +157,7 @@ def get_quality_of_approxed_qubo(qubo: np.array, approxed_qubo: np.array, soluti
 
 def get_approximation_count(qubo: np.array, approxed_qubo: np.array) -> tuple[int, float]:
     approxed_entries = get_nonzero_count(np.subtract(np.triu(qubo), np.triu(approxed_qubo)))
-    return approxed_entries, approxed_entries / get_nonzero_count(qubo)
+    return approxed_entries, approxed_entries / get_nonzero_count(np.triu(qubo))
 
 
 def linearize_qubo(qubo):

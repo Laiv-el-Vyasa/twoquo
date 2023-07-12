@@ -192,6 +192,57 @@ analysis_pipeline_mc = {
 }
 
 
+analysis_pipeline_m3sat = {
+    'models': {
+        'combined_m3sat': {
+            'analysis_parameters': analysis_parameters,
+            'analysis_name': 'combined_analysis',
+            'configs': [
+                'test_evol_m3sat'
+            ]
+        }
+    },
+    'analysis': [
+        {
+            'type': 'baseline_correct_mean',
+            'compare': False,
+            'models': {
+                'combined_m3sat': {
+                    'model_name': 'Combined model\ntrained on M3SAT, 128',
+                    'configs': [
+                        0
+                    ],
+                    'colors': [
+                        "black"
+                    ],
+                    'baseline_colors': [
+                        "black"
+                    ]
+                }
+            }
+        },
+        {
+            'type': 'boxplot_one',
+            'model': 'combined_m3sat',
+            'model_name': 'Combined model\ntrained on M3SAT, 128',
+            'config': 0
+        },
+        {
+            'type': 'boxplot_multiple',
+            'models': {
+                'combined_m3sat': {
+                    'model_name': 'Combined model\ntrained on M3SAT, 128',
+                    'configs': [
+                        0
+                    ]
+                }
+            }
+        },
+
+    ]
+}
+
+
 analysis_pipeline_tsp = {
     'models': {
         'combined_tsp_features_onehot': {
@@ -233,6 +284,34 @@ analysis_pipeline_tsp = {
 
 analysis_pipeline_overall = {
     'models': {
+        'combined_mc': {
+            'analysis_parameters': analysis_parameters,
+            'analysis_name': 'combined_analysis',
+            'configs': [
+                'test_evol_mc', 'test_evol_mc_big'
+            ]
+        },
+        'combined_npp': {
+            'analysis_parameters': analysis_parameters,
+            'analysis_name': 'combined_analysis',
+            'configs': [
+                'test_evol_npp', 'test_evol_npp_big'
+            ]
+        },
+        'combined_m3sat': {
+            'analysis_parameters': analysis_parameters,
+            'analysis_name': 'combined_analysis',
+            'configs': [
+                'test_evol_m3sat', 'test_evol_m3sat_big'
+            ]
+        },
+        'combined_ec': {
+            'analysis_parameters': analysis_parameters,
+            'analysis_name': 'combined_analysis',
+            'configs': [
+                'test_evol_ec', 'test_evol_ec_big'
+            ]
+        },
         'combined_gc_features_onehot': {
             'analysis_parameters': analysis_parameters_features_onehot,
             'analysis_name': 'combined_feature_onehot_analysis',
@@ -245,34 +324,6 @@ analysis_pipeline_overall = {
             'analysis_name': 'combined_feature_onehot_analysis',
             'configs': [
                 'test_evol_tsp', 'test_evol_tsp_big'
-            ]
-        },
-        'combined_ec': {
-            'analysis_parameters': analysis_parameters,
-            'analysis_name': 'combined_analysis',
-            'configs': [
-                'test_evol_ec', 'test_evol_ec_big'
-            ]
-        },
-        'combined_mc': {
-            'analysis_parameters': analysis_parameters,
-            'analysis_name': 'combined_analysis',
-            'configs': [
-                'test_evol_mc', 'test_evol_mc_big'
-            ]
-        },
-        'combined_m3sat': {
-            'analysis_parameters': analysis_parameters,
-            'analysis_name': 'combined_analysis',
-            'configs': [
-                'test_evol_m3sat', 'test_evol_m3sat_big'
-            ]
-        },
-        'combined_npp': {
-            'analysis_parameters': analysis_parameters,
-            'analysis_name': 'combined_analysis',
-            'configs': [
-                'test_evol_npp', 'test_evol_npp_big'
             ]
         },
         'combined_sgi': {

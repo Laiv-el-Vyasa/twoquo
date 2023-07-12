@@ -72,7 +72,7 @@
       "problems": {
         "n_problems": 100,
         "qubo_size": 64,
-        "NP": {
+        "NPP": {
           "size": 64
         },
         "MC": {
@@ -147,7 +147,7 @@
           "weight_range": []
         },
         "problems": [
-          "NP", "MC", "MVC", "SP", "M2SAT", "SPP", "GC", "QA", "QK",
+          "NPP", "MC", "MVC", "SP", "M2SAT", "SPP", "GC", "QA", "QK",
           "M3SAT", "TSP", "GI", "SGI", "MCQ", "EC", "BIP", "MIS",
           "MMM", "SC", "KIW", "JSS", "LP"
         ]
@@ -182,11 +182,27 @@
       "problems": {
         "qubo_size": 8,
         "n_problems": 100,
-        "NP": {
+        "NPP": {
           "size": 8
         },
         "problems": [
-          "NP"
+          "NPP"
+        ]
+      }
+    },
+    "test_evol_npp_small": {
+      "base_cfg": "1",
+      "dataset_id": "test_evol_npp_small",
+      "problems": {
+        "qubo_size": 16,
+        "n_problems": 10,
+        "NPP": {
+          "size": [16, 17],
+          "transition": 16,
+          "bits": 8
+        },
+        "problems": [
+          "NPP"
         ]
       }
     },
@@ -196,13 +212,13 @@
       "problems": {
         "qubo_size": 64,
         "n_problems": 100,
-        "NP": {
+        "NPP": {
           "size": [16, 64],
           "transition": 31.0106,
           "bits": 29
         },
         "problems": [
-          "NP"
+          "NPP"
         ]
       }
     },
@@ -212,13 +228,13 @@
       "problems": {
         "qubo_size": 128,
         "n_problems": 100,
-        "NP": {
+        "NPP": {
           "size": [16, 128],
           "transition": 31.0106,
           "bits": 29
         },
         "problems": [
-          "NP"
+          "NPP"
         ]
       }
     },
@@ -331,14 +347,29 @@
       "base_cfg": "1",
       "dataset_id": "test_evol_gc_small",
       "problems": {
-        "qubo_size": 64,
-        "n_problems": 100,
+        "qubo_size": 16,
+        "n_problems": 10,
         "GC": {
-          "size": [16, 64],
+          "size": [4, 5],
           "n_colors": 4
         },
         "problems": [
           "GC"
+        ]
+      }
+    },
+    "test_evol_m3sat_small": {
+      "base_cfg": "1",
+      "dataset_id": "test_evol_m3sat_small",
+      "problems": {
+        "qubo_size": 16,
+        "n_problems": 10,
+        "M3SAT": {
+          "size": [8, 8],
+          "target_density": 1
+        },
+        "problems": [
+          "M3SAT"
         ]
       }
     },
@@ -390,10 +421,10 @@
       "base_cfg": "1",
       "dataset_id": "test_evol_tsp",
       "problems": {
-        "qubo_size": 64,
+        "qubo_size": 16,
         "n_problems": 10,
         "TSP": {
-          "size": [6, 6]
+          "size": [4, 4]
         },
         "problems": [
           "TSP"
@@ -446,6 +477,22 @@
         ]
       }
     },
+    "test_evol_ec_small": {
+      "base_cfg": "1",
+      "dataset_id": "test_evol_ec",
+      "problems": {
+        "qubo_size": 16,
+        "n_problems": 10,
+        "EC": {
+          "size": [16, 17],
+          "target": 1,
+          "target_boundary": [0.95, 1.00]
+        },
+        "problems": [
+          "EC"
+        ]
+      }
+    },
     "test_evol_scale_ec": {
       "base_cfg": "1",
       "dataset_id": "test_evol_scale_ec",
@@ -471,7 +518,7 @@
       "dataset_id": "test_evol_sgi",
       "problems": {
         "qubo_size": 15,
-        "n_problems": 1,
+        "n_problems": 10,
         "SGI": {
           "size1": [3, 3],
           "size2": [5, 5],
@@ -520,7 +567,7 @@
       "problems": {
         "qubo_size": 64,
         "n_problems": 25,
-        "NP": {
+        "NPP": {
           "size": [16, 64],
           "transition": 31.0106,
           "bits": 29
@@ -539,7 +586,7 @@
           "edge_node_factor": 0.5
         },
         "problems": [
-          "NP", "EC", "M3SAT", "MC"
+          "NPP", "EC", "M3SAT", "MC"
         ]
       }
     },
@@ -549,7 +596,7 @@
       "problems": {
         "qubo_size": 128,
         "n_problems": 25,
-        "NP": {
+        "NPP": {
           "size": [16, 128],
           "transition": 31.0106,
           "bits": 29
@@ -568,7 +615,7 @@
           "edge_node_factor": 0.5
         },
         "problems": [
-          "NP", "EC", "M3SAT", "MC"
+          "NPP", "EC", "M3SAT", "MC"
         ]
       }
     },

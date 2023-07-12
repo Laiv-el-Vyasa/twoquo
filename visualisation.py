@@ -32,13 +32,13 @@ cfg = load_cfg(cfg_id='1')
 problem_name_array = cfg['pipeline']['problems']['problems']
 
 
-def qubo_heatmap(qubo_matrix):
+def qubo_heatmap(qubo_matrix, name=''):
     fig, ax = pyplot.subplots()
     mesh = ax.pcolormesh(qubo_matrix, cmap="plasma")
     ax.set_xticks([i for i in range(qubo_matrix.shape[0])], minor=True)
     ax.set_yticks([i for i in range(qubo_matrix.shape[0])], minor=True)
     ax.grid(True, color="black", which="both", linewidth=0.1, linestyle="-")
-    ax.set_title("QUBO Heatmap")
+    ax.set_title("QUBO Heatmap" if not name else name)
     fig.colorbar(mesh, ax=ax)
     pyplot.gca().invert_yaxis()
     pyplot.show()

@@ -32,7 +32,7 @@ def get_problem_size(size: tuple[int, int],
 
 
 def get_number_bound(cfg):
-    high = np.power(2, cfg['problems']['NP']['bits'])
+    high = np.power(2, cfg['problems']['NPP']['bits'])
     return high
 
 
@@ -55,5 +55,5 @@ class NumberPartitioning(Problem):
 
     @classmethod
     def gen_problems(self, cfg, n_problems, size=(16, 64), **kwargs):
-        problems = get_problems(cfg, n_problems, size, cfg['problems']['NP']['transition'])
+        problems = get_problems(cfg, n_problems, size, cfg['problems']['NPP']['transition'])
         return [{"numbers": problem} for problem in problems]

@@ -128,7 +128,7 @@ class ExactCover(Problem):
     @classmethod
     def gen_problems(cls, cfg, n_problems, size=(16, 64), **kwargs):
         target = cfg["problems"]["EC"].get("target_factor", 0.62)
-        target_boundary = cfg["problems"]["M3SAT"].get("target_boundary", [0.34, 2.0])
+        target_boundary = cfg["problems"]["EC"].get("target_boundary", [0.34, 2.0])
         problems = []
         for i in range(n_problems):
             m = get_element_number(size)

@@ -27,7 +27,7 @@ from transformator.problems.longest_path import LongestPath
 
 
 PROBLEM_REGISTRY = {
-    "NP": NumberPartitioning,
+    "NPP": NumberPartitioning,
     "MC": MaxCut,
     "MVC": MinimumVertexCover,
     #"SP": SetPacking,
