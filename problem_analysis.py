@@ -10,7 +10,7 @@ from visualisation import qubo_heatmap
 import torch, os
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
-cfg = load_cfg(cfg_id='test_evol_sgi_small')
+cfg = load_cfg(cfg_id='test_evol_m3sat_small')
 qubo_size = cfg['pipeline']['problems']['qubo_size']
 engine = RecommendationEngine(cfg=cfg)
 generator = QUBOGenerator(cfg)
@@ -78,6 +78,7 @@ elif problem_name == 'GC':
 elif problem_name == 'M3SAT':
     for problem, qubo in zip(problems, qubos):
         print(problem)
+        print(engine.recommend(qubo).solutions)
         qubo_heatmap(qubo, name='QUBO heatmap for M3SAT')
         qubo_heatmap(np.triu(qubo), name='QUBO heatmap for M3SAT')
 elif problem_name == 'EC':

@@ -366,6 +366,23 @@
         "n_problems": 10,
         "M3SAT": {
           "size": [8, 8],
+          "size_vars": [8, 8],
+          "target_density": 1,
+          "density_size": [0.99, 1.01]
+        },
+        "problems": [
+          "M3SAT"
+        ]
+      }
+    },
+    "test_evol_m3sat_small_": {
+      "base_cfg": "1",
+      "dataset_id": "test_evol_m3sat_small",
+      "problems": {
+        "qubo_size": 16,
+        "n_problems": 10,
+        "M3SAT": {
+          "size": [8, 8],
           "target_density": 1
         },
         "problems": [
@@ -374,6 +391,23 @@
       }
     },
     "test_evol_m3sat": {
+      "base_cfg": "1",
+      "dataset_id": "test_evol_m3sat",
+      "problems": {
+        "qubo_size": 256,
+        "n_problems": 100,
+        "M3SAT": {
+          "size": [16, 128],
+          "size_vars": [16, 32],
+          "target_density": 4.27,
+          "density_size": [0, 8]
+        },
+        "problems": [
+          "M3SAT"
+        ]
+      }
+    },
+    "test_evol_m3sat_": {
       "base_cfg": "1",
       "dataset_id": "test_evol_m3sat",
       "problems": {
