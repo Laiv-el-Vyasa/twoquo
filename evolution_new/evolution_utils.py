@@ -159,6 +159,11 @@ def get_approximation_count(qubo: np.array, approxed_qubo: np.array) -> tuple[in
     approxed_entries = get_nonzero_count(np.subtract(np.triu(qubo), np.triu(approxed_qubo)))
     return approxed_entries, approxed_entries / get_nonzero_count(np.triu(qubo))
 
+#approxed_entries = get_nonzero_count(np.subtract(np.subtract(np.triu(qubo), np.diag(np.diag(qubo))),
+#                                                 np.subtract(np.triu(approxed_qubo),
+#                                                             np.diag(np.diag(approxed_qubo)))))
+#return approxed_entries, approxed_entries / get_nonzero_count(np.subtract(np.triu(qubo), np.diag(np.diag(qubo))))
+
 
 def linearize_qubo(qubo):
     linearized_qubo = []
