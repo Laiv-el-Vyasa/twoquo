@@ -6,6 +6,7 @@ from config import load_cfg
 from pipeline_util import QUBOGenerator
 from recommendation import RecommendationEngine
 from visualisation import qubo_heatmap
+from evolution_new.evolution_utils import qubo_to_matrix, matrix_to_qubo
 
 import torch, os
 
@@ -79,6 +80,9 @@ elif problem_name == 'M3SAT':
     for problem, qubo in zip(problems, qubos):
         print(problem)
         print(engine.recommend(qubo).solutions)
+        qubo_dict = matrix_to_qubo(qubo)
+        print(qubo_dict)
+        print(qubo_to_matrix(qubo_dict, len(qubo)))
         qubo_heatmap(qubo, name='QUBO heatmap for M3SAT')
         qubo_heatmap(np.triu(qubo), name='QUBO heatmap for M3SAT')
 elif problem_name == 'EC':

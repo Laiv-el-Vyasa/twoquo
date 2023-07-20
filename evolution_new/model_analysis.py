@@ -5,10 +5,28 @@ from config import load_cfg
 from evolution_new.combined_evolution_training import get_data_from_training_config
 from evolution_new.evolution_utils import get_quality_of_approxed_qubo, get_qubo_approx_mask, get_file_name, \
     get_relative_size_of_approxed_entries, get_classical_solution_qualities, get_min_solution_quality, \
-    remove_hard_constraits_from_qubo, delete_data, get_approximation_count, get_analysis_results_file_name
+    remove_hard_constraits_from_qubo, delete_data, get_approximation_count, get_analysis_results_file_name, \
+    matrix_to_qubo
 from evolution_new.pygad_learning import PygadLearner
 from new_visualisation import qubo_heatmap
 from combined_model_features_onehot import CombinedOneHotFeatureModel
+from dwave.system.samplers import DWaveSampler
+from dwave.system.composites import EmbeddingComposite
+from minorminer import find_embedding
+
+
+def map_qpu_results_to_solutions(results: np.ndarray, variables: list, size: int) \
+        -> tuple[list[list[int]], list[float]]:
+    solutions = []
+    energies = []
+    for qpu_solution, energy, occurrence, chain_break in results:
+        qubo_solution = np.zeros(size)
+        for variable, solution_value in zip(variables, qpu_solution):
+            qubo_solution[variable] = solution_value
+        for _ in range(occurrence):
+            solutions.append(qubo_solution)
+            energies.append(energy)
+    return solutions, energies
 
 
 class ModelAnalysis:
@@ -38,7 +56,7 @@ class ModelAnalysis:
                 config = load_cfg(cfg_id=self.learning_parameters['config_name'])
             else:
                 config = load_cfg(cfg_id=config_name)
-            config["solvers"][self.solver]['repeats'] = 100
+            config["solvers"][self.solver]['repeats'] = 10
             config["solvers"][self.solver]['enabled'] = True
             config['pipeline']['problems']['n_problems'] *= 1
             if 'scale_list' in self.analysis_parameters:
@@ -52,10 +70,108 @@ class ModelAnalysis:
             delete_data()
             approximation_quality_dict = self.get_model_approximation_dict(config)
             analysis_baseline = self.get_analysis_baseline(config)
-            self.model_result_list.append({
-                'approximation_quality_dict': approximation_quality_dict,
-                'baseline': analysis_baseline
-            })
+            if 'quantum' in self.analysis_parameters:
+                quantum_analysis_dict = self.get_quantum_analysis_dict(config)
+                self.model_result_list.append({
+                    'approximation_quality_dict': approximation_quality_dict,
+                    'quantum_quality_dict': quantum_analysis_dict,
+                    'baseline': analysis_baseline
+                })
+            else:
+                self.model_result_list.append({
+                    'approximation_quality_dict': approximation_quality_dict,
+                    'baseline': analysis_baseline
+                })
+
+    def get_quantum_analysis_dict(self, config: dict) -> dict:
+        filename = get_analysis_results_file_name(self.analysis_parameters['analysis_name'] + '_quantum',
+                                                  load_cfg(cfg_id=self.learning_parameters['config_name']),
+                                                  config,
+                                                  self.learning_parameters['fitness_parameters'])
+        try:
+            quantum_approximation_dict = np.load(f'analysis_results/{filename}.npy', allow_pickle=True).item()
+            print('Analysis quantum results loaded')
+        except FileNotFoundError:
+            quantum_approximation_dict = self.get_quantum_approximation_quality(config)
+            #np.save(f'analysis_results/{filename}', quantum_approximation_dict)
+            print('Analysis quantum results saved')
+        return quantum_approximation_dict
+
+    def get_quantum_approximation_quality(self, config: dict) -> dict:
+        return_dict = {
+            'solutions_list_original': [],                          #
+            'solutions_list_approx': [],                            #
+            'energy_list_original': [],                             #
+            'energy_list_approx': [],                               #
+            'embedding_size_original_list': [],
+            'embedding_size_approx': [],
+            'solution_quality_list_original': [],                   #
+            'min_solution_quality_list_original': [],               #
+            'mean_solution_quality_list_original': [],              #
+            'solution_quality_list_approx': [],                     #
+            'min_solution_quality_list_approx': [],                 #
+            'mean_solution_quality_list_approx': [],                #
+            'qubo_list_original': [],                               #
+            'qubo_list_approx': [],                                 #
+            'problem_list': [],                                     #
+            'solutions_list': [],                                   #
+            'approx_percent_list': [],                              #
+        }
+        problem_dict = self.model.get_approximation(self.model.get_training_dataset(config))
+        approx_qubo_list, solutions_list, qubo_list, problem_list = problem_dict['approxed_qubo_list'], \
+                                                                    problem_dict['solutions_list'], \
+                                                                    problem_dict['qubo_list'], \
+                                                                    problem_dict['problem_list']
+        return_dict['problem_list'] = problem_list
+        return_dict['solutions_list'] = solutions_list
+        return_dict['qubo_list_original'] = qubo_list
+        return_dict['qubo_list_approx'] = approx_qubo_list
+        for idx, (qubo, approx_qubo, solutions, problem) in enumerate(zip(qubo_list, approx_qubo_list,
+                                                                          solutions_list, problem_list)):
+            print(f'Approximating problem on QPU {idx} via model')
+            min_solution_quality, _, approx_percent, _, _, _, _ = get_quality_of_approxed_qubo(qubo, approx_qubo,
+                                                                                               solutions, config)
+            if self.model.__class__.__name__ == CombinedOneHotFeatureModel.__name__:
+                qubo_to_approx = remove_hard_constraits_from_qubo(qubo, problem, True)
+                absolute_count_hard_constraints, percent_hard_contraints = get_approximation_count(qubo, qubo_to_approx)
+                if percent_hard_contraints == 1:
+                    approx_percent = 0
+                else:
+                    approx_percent = approx_percent / (1 - percent_hard_contraints)
+            else:
+                qubo_to_approx = qubo
+            return_dict['approx_percent_list'].append(approx_percent)
+            print(f'{approx_percent} percent of entries have been approxed!')
+
+            print(f'Evaluating original QUBO on quantum hardware {self.analysis_parameters["quantum"]["qpu_name"]} '
+                  f'with embedding structure {self.analysis_parameters["quantum"]["embedding_structure"]}')
+            self.solve_and_fill_dict(qubo, qubo, solutions, return_dict, 'original')
+
+            print(f'Evaluating approxed QUBO on quantum hardware {self.analysis_parameters["quantum"]["qpu_name"]} '
+                  f'with embedding structure {self.analysis_parameters["quantum"]["embedding_structure"]}')
+            self.solve_and_fill_dict(approx_qubo, qubo, solutions, return_dict, 'approx')
+
+        return return_dict
+
+    def solve_and_fill_dict(self, qubo: np.array, qubo_to_compare: np.array, solutions: list,
+                            return_dict: dict, source: str) -> dict:
+        sampler_dict = self.solve_qubo_on_qpu(qubo)
+        return_dict[f'solutions_list_{source}'].append(sampler_dict['solutions'])
+        return_dict[f'energy_list_{source}'].append(sampler_dict['energies'])
+        min_solution_quality, _, mean_solution_quality, _, _ \
+            = get_min_solution_quality(sampler_dict['solutions'], qubo_to_compare, solutions)
+        return_dict[f'solution_quality_list_{source}'].append(np.floor(1 - min_solution_quality))
+        return_dict[f'min_solution_quality_list_{source}'].append(min_solution_quality)
+        return_dict[f'mean_solution_quality_list_{source}'].append(mean_solution_quality)
+        return return_dict
+
+    def solve_qubo_on_qpu(self, qubo: np.array) -> dict:
+        qubo_dict = matrix_to_qubo(qubo)
+        sampler = EmbeddingComposite(DWaveSampler())
+        result = sampler.sample_qubo(qubo_dict, num_reads=10)
+        solutions, energies = map_qpu_results_to_solutions(result.record, result.variables, len(qubo))
+        return {'solutions': solutions,
+                'energies': energies}
 
     def get_model_approximation_dict(self, config: dict) -> dict:
         filename = get_analysis_results_file_name(self.analysis_parameters['analysis_name'],

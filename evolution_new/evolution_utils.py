@@ -156,13 +156,12 @@ def get_quality_of_approxed_qubo(qubo: np.array, approxed_qubo: np.array, soluti
 
 
 def get_approximation_count(qubo: np.array, approxed_qubo: np.array) -> tuple[int, float]:
-    approxed_entries = get_nonzero_count(np.subtract(np.triu(qubo), np.triu(approxed_qubo)))
-    return approxed_entries, approxed_entries / get_nonzero_count(np.triu(qubo))
-
-#approxed_entries = get_nonzero_count(np.subtract(np.subtract(np.triu(qubo), np.diag(np.diag(qubo))),
-#                                                 np.subtract(np.triu(approxed_qubo),
-#                                                             np.diag(np.diag(approxed_qubo)))))
-#return approxed_entries, approxed_entries / get_nonzero_count(np.subtract(np.triu(qubo), np.diag(np.diag(qubo))))
+    # approxed_entries = get_nonzero_count(np.subtract(np.triu(qubo), np.triu(approxed_qubo)))
+    # return approxed_entries, approxed_entries / get_nonzero_count(np.triu(qubo))
+    approxed_entries = get_nonzero_count(np.subtract(np.subtract(np.triu(qubo), np.diag(np.diag(qubo))),
+                                                     np.subtract(np.triu(approxed_qubo),
+                                                                 np.diag(np.diag(approxed_qubo)))))
+    return approxed_entries, approxed_entries / get_nonzero_count(np.subtract(np.triu(qubo), np.diag(np.diag(qubo))))
 
 
 def linearize_qubo(qubo):
@@ -375,6 +374,21 @@ def get_number_of_edges_for_gc(qubo: list, n: int):
 
 def get_tensor_of_structure(ndarray, np_type=np.float32):
     return torch.from_numpy(np.array(ndarray).astype(np_type))
+
+
+def matrix_to_qubo(qubo_matrix: np.array) -> dict:
+    qubo = {}
+    for pos, val in np.ndenumerate(qubo_matrix):
+        if val:
+            qubo[pos] = val
+    return qubo
+
+
+def qubo_to_matrix(qubo: dict, size: int) -> np.array:
+    Q = np.zeros((size, size))
+    for (x, y), v in qubo.items():
+        Q[x][y] = v
+    return Q
 
 
 # Returns the best solution / min energy (provided values and order is not always to be trusted)

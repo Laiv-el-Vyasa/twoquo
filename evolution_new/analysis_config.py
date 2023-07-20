@@ -9,6 +9,21 @@ analysis_parameters = {
     'solver': 'qbsolv_simulated_annealing'
 }
 
+analysis_parameters_quantum = {
+    'steps': 100,
+    'analysis_name': 'combined_analysis',
+    'boxplot': True,
+    'sorted': True,
+    'show_qubo_mask': 0,
+    'size_analysis': False,
+    'compare_different_approaches': True,
+    'solver': 'qbsolv_simulated_annealing',
+    'quantum': {
+        'qpu_name': 'Advantage_system5.3',
+        'embedding_structure': 'pegasus'
+    }
+}
+
 analysis_parameters_features_onehot = {
     'steps': 100,
     'analysis_name': 'combined_feature_onehot_analysis',
@@ -153,10 +168,10 @@ analysis_pipeline_sgi = {
     ]
 }
 
-analysis_pipeline_mc = {
+analysis_pipeline_mc_quantum = {
     'models': {
         'combined_mc': {
-            'analysis_parameters': analysis_parameters,
+            'analysis_parameters': analysis_parameters_quantum,
             'analysis_name': 'combined_analysis',
             'configs': [
                 'test_evol_mc_small'
