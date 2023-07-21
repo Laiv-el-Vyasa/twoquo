@@ -17,16 +17,31 @@ from minorminer import find_embedding
 
 def map_qpu_results_to_solutions(results: np.ndarray, variables: list, size: int) \
         -> tuple[list[list[int]], list[float]]:
+    rng = np.random.default_rng()
     solutions = []
     energies = []
     for qpu_solution, energy, occurrence, chain_break in results:
-        qubo_solution = np.zeros(size)
-        for variable, solution_value in zip(variables, qpu_solution):
-            qubo_solution[variable] = solution_value
         for _ in range(occurrence):
+            qubo_solution = np.zeros(size)
+            for variable, solution_value in zip(variables, qpu_solution):
+                qubo_solution[variable] = solution_value
+            for i in range(size):
+                if i not in variables:
+                    qubo_solution[i] = rng.choice([0, 1])
+
             solutions.append(qubo_solution)
             energies.append(energy)
     return solutions, energies
+
+
+def analyze_embedding(embedding: dict[int, list[int]], logical_qubits: int) -> tuple[float, float]:
+    physical_qubits = 0
+    chain_length_list = []
+    for key in embedding:
+        chain_length = len(embedding[key])
+        physical_qubits += chain_length
+        chain_length_list.append(chain_length)
+    return physical_qubits / logical_qubits, np.mean(chain_length_list)
 
 
 class ModelAnalysis:
@@ -93,7 +108,7 @@ class ModelAnalysis:
             print('Analysis quantum results loaded')
         except FileNotFoundError:
             quantum_approximation_dict = self.get_quantum_approximation_quality(config)
-            #np.save(f'analysis_results/{filename}', quantum_approximation_dict)
+            np.save(f'analysis_results/{filename}', quantum_approximation_dict)
             print('Analysis quantum results saved')
         return quantum_approximation_dict
 
@@ -103,8 +118,12 @@ class ModelAnalysis:
             'solutions_list_approx': [],                            #
             'energy_list_original': [],                             #
             'energy_list_approx': [],                               #
-            'embedding_size_original_list': [],
-            'embedding_size_approx': [],
+            'embedding_list_original': [],                          #
+            'embedding_list_approx': [],                            #
+            'embedding_size_list_original': [],                     #
+            'embedding_size_list_approx': [],                       #
+            'embedding_avg_chain_list_original': [],                #
+            'embedding_avg_chain_list_approx': [],                  #
             'solution_quality_list_original': [],                   #
             'min_solution_quality_list_original': [],               #
             'mean_solution_quality_list_original': [],              #
@@ -145,17 +164,17 @@ class ModelAnalysis:
 
             print(f'Evaluating original QUBO on quantum hardware {self.analysis_parameters["quantum"]["qpu_name"]} '
                   f'with embedding structure {self.analysis_parameters["quantum"]["embedding_structure"]}')
-            self.solve_and_fill_dict(qubo, qubo, solutions, return_dict, 'original')
+            self.solve_and_fill_dict(qubo, qubo, solutions, return_dict, 'original', config)
 
             print(f'Evaluating approxed QUBO on quantum hardware {self.analysis_parameters["quantum"]["qpu_name"]} '
                   f'with embedding structure {self.analysis_parameters["quantum"]["embedding_structure"]}')
-            self.solve_and_fill_dict(approx_qubo, qubo, solutions, return_dict, 'approx')
+            self.solve_and_fill_dict(approx_qubo, qubo, solutions, return_dict, 'approx', config)
 
         return return_dict
 
     def solve_and_fill_dict(self, qubo: np.array, qubo_to_compare: np.array, solutions: list,
-                            return_dict: dict, source: str) -> dict:
-        sampler_dict = self.solve_qubo_on_qpu(qubo)
+                            return_dict: dict, source: str, config: dict) -> dict:
+        sampler_dict = self.solve_qubo_on_qpu(qubo, config)
         return_dict[f'solutions_list_{source}'].append(sampler_dict['solutions'])
         return_dict[f'energy_list_{source}'].append(sampler_dict['energies'])
         min_solution_quality, _, mean_solution_quality, _, _ \
@@ -163,15 +182,26 @@ class ModelAnalysis:
         return_dict[f'solution_quality_list_{source}'].append(np.floor(1 - min_solution_quality))
         return_dict[f'min_solution_quality_list_{source}'].append(min_solution_quality)
         return_dict[f'mean_solution_quality_list_{source}'].append(mean_solution_quality)
+
+        return_dict[f'embedding_list_{source}'].append(sampler_dict['embedding'])
+        qubit_overhead, avg_chain_length = analyze_embedding(sampler_dict['embedding'], len(qubo_to_compare))
+        return_dict[f'embedding_size_list_{source}'].append(qubit_overhead)
+        return_dict[f'embedding_avg_chain_list_{source}'].append(avg_chain_length)
         return return_dict
 
-    def solve_qubo_on_qpu(self, qubo: np.array) -> dict:
+    def solve_qubo_on_qpu(self, qubo: np.array, config: dict) -> dict:
+        analysis_name = get_analysis_results_file_name('quantum', load_cfg(cfg_id=self.learning_parameters['config_name']),
+                                                       config, self.learning_parameters['fitness_parameters'])
         qubo_dict = matrix_to_qubo(qubo)
         sampler = EmbeddingComposite(DWaveSampler())
-        result = sampler.sample_qubo(qubo_dict, num_reads=10)
+        embedding_dict = find_embedding(qubo_dict, sampler.child.edgelist)
+        result = sampler.sample_qubo(qubo_dict, num_reads=10, label=analysis_name)
+        #res = [([0,1,1,1,0,1], -4, 3, 0)]
+        #vari = [1,2,5,7,12,14]
         solutions, energies = map_qpu_results_to_solutions(result.record, result.variables, len(qubo))
         return {'solutions': solutions,
-                'energies': energies}
+                'energies': energies,
+                'embedding': embedding_dict}
 
     def get_model_approximation_dict(self, config: dict) -> dict:
         filename = get_analysis_results_file_name(self.analysis_parameters['analysis_name'],

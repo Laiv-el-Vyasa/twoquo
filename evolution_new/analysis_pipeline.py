@@ -86,6 +86,8 @@ class AnalysisPipeline:
                 self.visualize_boxplot_one_problem(analysis)
             elif analysis['type'] == 'boxplot_multiple':
                 self.visualize_boxplot_multiple_problems(analysis)
+            elif analysis['type'] == 'boxplot_quantum':
+                self.visualize_quantum_boxplots(analysis)
 
     def visualize_baseline_correct_mean(self, analysis_dict: dict):
         visualisation_dict = {
@@ -311,6 +313,68 @@ class AnalysisPipeline:
             'y_label': 'solution quality (min energy - energy) / min energy',
             'title': f'Comparison of solution quality between different '
                      f'{"models / " if len(analysis_dict["models"]) > 1 else ""}evaluations'
+        })
+
+    def visualize_quantum_boxplots(self, analysis_dict: dict):
+        model_analysis = self.models_dict[analysis_dict['model']]
+        model_analyis_results = model_analysis.model_result_list[analysis_dict['config']]
+        visualize_boxplot_comparison({
+            'data_list':
+                [
+                    {
+                        'min': model_analyis_results['quantum_quality_dict']['min_solution_quality_list_original'],
+                        'mean': model_analyis_results['quantum_quality_dict']['mean_solution_quality_list_original'],
+                        'tick_name': f'Original QUBO,\n{analysis_dict["model_name"]}'
+                    },
+                    {
+                        'min': model_analyis_results['quantum_quality_dict']['min_solution_quality_list_approx'],
+                        'mean': model_analyis_results['quantum_quality_dict']['mean_solution_quality_list_approx'],
+                        'tick_name': f'Approximated QUBO,\n{analysis_dict["model_name"]}'
+                    },
+                ],
+            'colors':
+                {
+                    'min': '#D7191C',
+                    'mean': '#2C7BB6'
+                },
+            'y_label': 'solution quality (min energy - energy) / min energy',
+            'title': get_visualisation_title(f'Comparison of solution quality on '
+                                             f'{model_analysis.analysis_parameters["quantum"]["qpu_name"]}',
+                                             model_analysis.config_list[analysis_dict['config']],
+                                             '')
+        })
+
+        visualize_boxplot_comparison({
+            'data_list':
+                [
+                    {
+                        'embedding size': model_analyis_results['quantum_quality_dict']
+                                                    ['embedding_size_list_original'],
+                        'mean chain length': model_analyis_results['quantum_quality_dict']
+                                                     ['embedding_avg_chain_list_original'],
+                        'tick_name': f'Original QUBO,\n{analysis_dict["model_name"]}'
+                    },
+                    {
+                        'embedding size': model_analyis_results['quantum_quality_dict']
+                                                    ['embedding_size_list_approx'],
+                        'mean chain length': model_analyis_results['quantum_quality_dict']
+                                                     ['embedding_avg_chain_list_approx'],
+                        'tick_name': f'Approximated QUBO,\n{analysis_dict["model_name"]}'
+                    },
+                ],
+            'colors':
+                {
+                    'embedding size': '#D7191C',
+                    'mean chain length': '#2C7BB6'
+                },
+            'y_label': 'physical qubits / logical qubits | chain length',
+            'title': get_visualisation_title(f'Comparison of embedding parameters on  '
+                                             f'{model_analysis.analysis_parameters["quantum"]["qpu_name"]}'
+                                             f'with '
+                                             f'{model_analysis.analysis_parameters["quantum"]["embedding_structure"]}'
+                                             f'embedding\n',
+                                             model_analysis.config_list[analysis_dict['config']],
+                                             '')
         })
 
 

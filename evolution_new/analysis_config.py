@@ -180,25 +180,7 @@ analysis_pipeline_mc_quantum = {
     },
     'analysis': [
         {
-            'type': 'baseline_correct_mean',
-            'compare': False,
-            'models': {
-                'combined_mc': {
-                    'model_name': 'Combined model\ntrained on MC, 128',
-                    'configs': [
-                        0
-                    ],
-                    'colors': [
-                        "black"
-                    ],
-                    'baseline_colors': [
-                        "black"
-                    ]
-                }
-            }
-        },
-        {
-            'type': 'boxplot_one',
+            'type': 'boxplot_quantum',
             'model': 'combined_mc',
             'model_name': 'Combined model\ntrained on MC, 128',
             'config': 0

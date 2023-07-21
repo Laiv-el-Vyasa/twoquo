@@ -243,7 +243,7 @@
       "dataset_id": "test_evol_mc",
       "problems": {
         "qubo_size": 16,
-        "n_problems": 1,
+        "n_problems": 3,
         "MC": {
           "size": [16, 17],
           "edge_node_factor": 0.5

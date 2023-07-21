@@ -65,12 +65,13 @@ def visualize_boxplot_comparison(boxplot_data: dict):
     fig, ax = pyplot.subplots()
     data_list = boxplot_data['data_list']
     color_dict = boxplot_data['colors']
+    color_dict_keys = list(color_dict)
     tick_labels = []
     for i, data in enumerate(data_list):
-        bxplt = pyplot.boxplot(data['min'], positions=[i * 2 - 0.3], widths=0.4)
-        set_box_color(bxplt, color_dict['min'])
-        bxplt = pyplot.boxplot(data['mean'], positions=[i * 2 + 0.3], widths=0.4)
-        set_box_color(bxplt, color_dict['mean'])
+        bxplt = pyplot.boxplot(data[color_dict_keys[0]], positions=[i * 2 - 0.3], widths=0.4)
+        set_box_color(bxplt, color_dict[color_dict_keys[0]])
+        bxplt = pyplot.boxplot(data[color_dict_keys[1]], positions=[i * 2 + 0.3], widths=0.4)
+        set_box_color(bxplt, color_dict[color_dict_keys[1]])
         tick_labels.append(data['tick_name'])
 
     for analysis_name in color_dict:
