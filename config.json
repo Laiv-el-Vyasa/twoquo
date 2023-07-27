@@ -395,7 +395,7 @@
       "dataset_id": "test_evol_m3sat",
       "problems": {
         "qubo_size": 256,
-        "n_problems": 100,
+        "n_problems": 10,
         "M3SAT": {
           "size": [16, 128],
           "size_vars": [16, 32],

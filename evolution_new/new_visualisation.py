@@ -21,6 +21,7 @@ def visualisation_pipeline(evaluation_dict: dict):
     ax.set_ylabel(evaluation_dict['y_label'])
     ax.set_xlabel(evaluation_dict['x_label'])
     ax.set_title(evaluation_dict['title'], fontsize=12)
+    matplotlib.pyplot.subplots_adjust(left=0.04, bottom=0.07, right=0.96, top=0.93, wspace=None, hspace=None)
     pyplot.show()
 
 
@@ -61,27 +62,75 @@ def plot_points(ax: matplotlib.axes.Axes, evaluation_results: dict, legend_lines
     return ax, legend_lines
 
 
-def visualize_boxplot_comparison(boxplot_data: dict):
-    fig, ax = pyplot.subplots()
-    data_list = boxplot_data['data_list']
-    color_dict = boxplot_data['colors']
-    color_dict_keys = list(color_dict)
-    tick_labels = []
-    for i, data in enumerate(data_list):
-        bxplt = pyplot.boxplot(data[color_dict_keys[0]], positions=[i * 2 - 0.3], widths=0.4)
-        set_box_color(bxplt, color_dict[color_dict_keys[0]])
-        bxplt = pyplot.boxplot(data[color_dict_keys[1]], positions=[i * 2 + 0.3], widths=0.4)
-        set_box_color(bxplt, color_dict[color_dict_keys[1]])
-        tick_labels.append(data['tick_name'])
+def visualize_boxplot_comparison(boxplot_data_list: list[dict]):
+    fig, axes = pyplot.subplots(ncols=2)
+    for i in range(2):
+        boxplot_data = boxplot_data_list[i]
+        ax = axes[i]
+        data_list = boxplot_data['data_list']
+        color_dict = boxplot_data['colors']
+        color_dict_keys = list(color_dict)
+        tick_labels = []
+        for i, data in enumerate(data_list):
+            bxplt = ax.boxplot(data[color_dict_keys[0]], positions=[i * 2 - 0.3], widths=0.4)
+            set_box_color(bxplt, color_dict[color_dict_keys[0]])
+            bxplt = ax.boxplot(data[color_dict_keys[1]], positions=[i * 2 + 0.3], widths=0.4)
+            set_box_color(bxplt, color_dict[color_dict_keys[1]])
+            tick_labels.append(data['tick_name'])
 
-    for analysis_name in color_dict:
-        pyplot.plot([], c=color_dict[analysis_name], label=analysis_name)
-    pyplot.legend()
+        for analysis_name in color_dict:
+            ax.plot([], c=color_dict[analysis_name], label=analysis_name)
+        ax.legend()
 
-    pyplot.xticks(range(0, len(tick_labels) * 2, 2), tick_labels)
-    pyplot.xlim(-2, len(tick_labels)*2)
-    ax.set_ylabel(boxplot_data['y_label'])
-    ax.set_title(boxplot_data['title'])
+        ax.set_xticks(range(0, len(tick_labels) * 2, 2), tick_labels)
+        ax.set_xlim(-1, len(tick_labels)*2 - 1)
+        ax.set_ylabel(boxplot_data['y_label'])
+        #ax.set_ylim(-0.03, 0.75)
+        if 'embedding' in boxplot_data:
+            ax.yaxis.label.set_color(color_dict['relative embedding size'])
+            secax = ax.secondary_yaxis('right')
+            secax.set_ylabel(boxplot_data['y_label_2'])
+            secax.yaxis.label.set_color(color_dict['avg chain length'])
+        ax.set_title(boxplot_data['title'])
+    matplotlib.pyplot.subplots_adjust(left=0.04, bottom=0.08, right=0.96, top=0.92, wspace=None, hspace=None)
+    pyplot.show()
+
+
+def visualize_boxplot_comparison_quantum(boxplot_data_list: list[list[dict], list[dict]]):
+    fig, axes = pyplot.subplots(ncols=2, nrows=2)
+    for i in range(2):
+        ax_row = axes[i]
+        for j in range(2):
+            print(i, j)
+            ax = ax_row[j]
+            boxplot_data = boxplot_data_list[j][i]
+            print(boxplot_data_list)
+            data_list = boxplot_data['data_list']
+            color_dict = boxplot_data['colors']
+            color_dict_keys = list(color_dict)
+            tick_labels = []
+            for k, data in enumerate(data_list):
+                bxplt = ax.boxplot(data[color_dict_keys[0]], positions=[k * 2 - 0.3], widths=0.4)
+                set_box_color(bxplt, color_dict[color_dict_keys[0]])
+                bxplt = ax.boxplot(data[color_dict_keys[1]], positions=[k * 2 + 0.3], widths=0.4)
+                set_box_color(bxplt, color_dict[color_dict_keys[1]])
+                tick_labels.append(data['tick_name'])
+
+            for analysis_name in color_dict:
+                ax.plot([], c=color_dict[analysis_name], label=analysis_name)
+            ax.legend()
+
+            ax.set_xticks(range(0, len(tick_labels) * 2, 2), tick_labels)
+            ax.set_xlim(-1, len(tick_labels)*2 - 1)
+            ax.set_ylabel(boxplot_data['y_label'])
+            #ax.set_ylim(-0.03, 0.75)
+            if 'embedding' in boxplot_data:
+                ax.yaxis.label.set_color(color_dict['relative embedding size'])
+                secax = ax.secondary_yaxis('right')
+                secax.set_ylabel(boxplot_data['y_label_2'])
+                secax.yaxis.label.set_color(color_dict['avg chain length'])
+            ax.set_title(boxplot_data['title'])
+    matplotlib.pyplot.subplots_adjust(left=0.04, bottom=0.08, right=0.96, top=0.92, wspace=0.2, hspace=0.4)
     pyplot.show()
 
 
@@ -117,6 +166,7 @@ def visualize_boxplot_comparison_multiple_models(boxplot_data: dict):
     #pyplot.yscale('symlog')
     ax.set_ylabel(boxplot_data['y_label'])
     ax.set_title(boxplot_data['title'])
+    matplotlib.pyplot.subplots_adjust(left=0.05, bottom=0.1, right=0.95, top=0.9, wspace=None, hspace=None)
     pyplot.show()
 
 

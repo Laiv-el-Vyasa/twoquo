@@ -19,7 +19,7 @@ analysis_parameters_quantum = {
     'compare_different_approaches': True,
     'solver': 'qbsolv_simulated_annealing',
     'quantum': {
-        'qpu_name': 'Advantage_system5.3',
+        'qpu_name': 'Advantage_system5.4',
         'embedding_structure': 'pegasus',
         'add_results': True
     }
@@ -195,7 +195,7 @@ analysis_pipeline_ec_quantum = {
             'analysis_parameters': analysis_parameters_quantum,
             'analysis_name': 'combined_analysis',
             'configs': [
-                'test_evol_ec_big'
+                'test_evol_ec', 'test_evol_ec_big'
             ]
         }
     },
@@ -204,7 +204,31 @@ analysis_pipeline_ec_quantum = {
             'type': 'boxplot_quantum',
             'model': 'combined_ec',
             'model_name': 'Combined model\ntrained on EC, 192',
-            'config': 0
+            'config_list': [
+                0, 1
+            ]
+        }
+    ]
+}
+
+analysis_pipeline_m3sat_quantum = {
+    'models': {
+        'combined_m3sat': {
+            'analysis_parameters': analysis_parameters_quantum,
+            'analysis_name': 'combined_analysis',
+            'configs': [
+                'test_evol_m3sat'
+            ]
+        }
+    },
+    'analysis': [
+        {
+            'type': 'boxplot_quantum',
+            'model': 'combined_m3sat',
+            'model_name': 'Combined model\ntrained on M3SAT, 256',
+            'config_list': [
+                0
+            ]
         }
     ]
 }
@@ -381,24 +405,9 @@ analysis_pipeline_overall = {
             'type': 'boxplot_one',
             'model_name': 'Combined feature onehot model\ntrained on GC, 192',
             'model': 'combined_gc_features_onehot',
-            'config': 0
-        },
-        {
-            'type': 'boxplot_one',
-            'model_name': 'Combined feature onehot model\ntrained on GC, 192',
-            'model': 'combined_gc_features_onehot',
-            'config': 1
-        },
-        {
-            'type': 'boxplot_multiple',
-            'models': {
-                'combined_gc_features_onehot': {
-                    'model_name': 'Combined feature onehot model\ntrained on GC, 192',
-                    'configs': [
-                        0, 1
-                    ]
-                }
-            }
+            'config_list': [
+                0, 1
+            ]
         },
         {
             'type': 'baseline_correct_mean',
@@ -422,24 +431,9 @@ analysis_pipeline_overall = {
             'type': 'boxplot_one',
             'model': 'combined_tsp_features_onehot',
             'model_name': 'Combined feature onehot model\ntrained on TSP, 121',
-            'config': 0
-        },
-        {
-            'type': 'boxplot_one',
-            'model': 'combined_tsp_features_onehot',
-            'model_name': 'Combined feature onehot model\ntrained on TSP, 121',
-            'config': 1
-        },
-        {
-            'type': 'boxplot_multiple',
-            'models': {
-                'combined_tsp_features_onehot': {
-                    'model_name': 'Combined feature onehot model\ntrained on TSP, 121',
-                    'configs': [
-                        0, 1
-                    ]
-                }
-            }
+            'config_list': [
+                0, 1
+            ]
         },
         {
             'type': 'baseline_correct_mean',
@@ -463,24 +457,9 @@ analysis_pipeline_overall = {
             'type': 'boxplot_one',
             'model': 'combined_ec',
             'model_name': 'Combined model\ntrained on EC, 192',
-            'config': 0
-        },
-        {
-            'type': 'boxplot_one',
-            'model': 'combined_ec',
-            'model_name': 'Combined model\ntrained on EC, 192',
-            'config': 1
-        },
-        {
-            'type': 'boxplot_multiple',
-            'models': {
-                'combined_ec': {
-                    'model_name': 'Combined model\ntrained on EC, 192',
-                    'configs': [
-                        0, 1
-                    ]
-                }
-            }
+            'config_list': [
+                0, 1
+            ]
         },
         {
             'type': 'baseline_correct_mean',
@@ -504,31 +483,16 @@ analysis_pipeline_overall = {
             'type': 'boxplot_one',
             'model': 'combined_mc',
             'model_name': 'Combined model\ntrained on MC, 128',
-            'config': 0
-        },
-        {
-            'type': 'boxplot_one',
-            'model': 'combined_mc',
-            'model_name': 'Combined model\ntrained on MC, 128',
-            'config': 1
-        },
-        {
-            'type': 'boxplot_multiple',
-            'models': {
-                'combined_mc': {
-                    'model_name': 'Combined model\ntrained on MC, 128',
-                    'configs': [
-                        0, 1
-                    ]
-                }
-            }
+            'config_list': [
+                0, 1
+            ]
         },
         {
             'type': 'baseline_correct_mean',
             'compare': False,
             'models': {
                 'combined_m3sat': {
-                    'model_name': 'Combined model\ntrained on M3SAT, 128',
+                    'model_name': 'Combined model\ntrained on M3SAT, 256',
                     'configs': [
                         0, 1
                     ],
@@ -544,25 +508,10 @@ analysis_pipeline_overall = {
         {
             'type': 'boxplot_one',
             'model': 'combined_m3sat',
-            'model_name': 'Combined model\ntrained on M3SAT, 128',
-            'config': 0
-        },
-        {
-            'type': 'boxplot_one',
-            'model': 'combined_m3sat',
-            'model_name': 'Combined model\ntrained on M3SAT, 128',
-            'config': 1
-        },
-        {
-            'type': 'boxplot_multiple',
-            'models': {
-                'combined_m3sat': {
-                    'model_name': 'Combined model\ntrained on M3SAT, 128',
-                    'configs': [
-                        0, 1
-                    ]
-                }
-            }
+            'model_name': 'Combined model\ntrained on M3SAT, 256',
+            'config_list': [
+                0, 1
+            ]
         },
         {
             'type': 'baseline_correct_mean',
@@ -586,24 +535,9 @@ analysis_pipeline_overall = {
             'type': 'boxplot_one',
             'model': 'combined_npp',
             'model_name': 'Combined model\ntrained on NP, 64',
-            'config': 0
-        },
-        {
-            'type': 'boxplot_one',
-            'model': 'combined_npp',
-            'model_name': 'Combined model\ntrained on NP, 64',
-            'config': 1
-        },
-        {
-            'type': 'boxplot_multiple',
-            'models': {
-                'combined_npp': {
-                    'model_name': 'Combined model\ntrained on NP, 64',
-                    'configs': [
-                        0, 1
-                    ]
-                }
-            }
+            'config_list': [
+                0, 1
+            ]
         },
         {
             'type': 'baseline_correct_mean',
@@ -627,25 +561,10 @@ analysis_pipeline_overall = {
             'type': 'boxplot_one',
             'model': 'combined_sgi',
             'model_name': 'Combined model\ntrained on SGI, 128',
-            'config': 0
+            'config_list': [
+                0, 1
+            ]
         },
-        {
-            'type': 'boxplot_one',
-            'model': 'combined_sgi',
-            'model_name': 'Combined model\ntrained on SGI, 128',
-            'config': 1
-        },
-        {
-            'type': 'boxplot_multiple',
-            'models': {
-                'combined_sgi': {
-                    'model_name': 'Combined model\ntrained on SGI, 128',
-                    'configs': [
-                        0, 1
-                    ]
-                }
-            }
-        }
     ]
 }
 
