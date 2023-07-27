@@ -20,7 +20,8 @@ analysis_parameters_quantum = {
     'solver': 'qbsolv_simulated_annealing',
     'quantum': {
         'qpu_name': 'Advantage_system5.3',
-        'embedding_structure': 'pegasus'
+        'embedding_structure': 'pegasus',
+        'add_results': True
     }
 }
 
@@ -174,7 +175,7 @@ analysis_pipeline_mc_quantum = {
             'analysis_parameters': analysis_parameters_quantum,
             'analysis_name': 'combined_analysis',
             'configs': [
-                'test_evol_mc_small'
+                'test_evol_mc_big'
             ]
         }
     },
@@ -188,6 +189,26 @@ analysis_pipeline_mc_quantum = {
     ]
 }
 
+analysis_pipeline_ec_quantum = {
+    'models': {
+        'combined_ec': {
+            'analysis_parameters': analysis_parameters_quantum,
+            'analysis_name': 'combined_analysis',
+            'configs': [
+                'test_evol_ec_big'
+            ]
+        }
+    },
+    'analysis': [
+        {
+            'type': 'boxplot_quantum',
+            'model': 'combined_ec',
+            'model_name': 'Combined model\ntrained on EC, 192',
+            'config': 0
+        }
+    ]
+}
+
 
 analysis_pipeline_m3sat = {
     'models': {
@@ -195,7 +216,7 @@ analysis_pipeline_m3sat = {
             'analysis_parameters': analysis_parameters,
             'analysis_name': 'combined_analysis',
             'configs': [
-                'test_evol_m3sat'
+                'test_evol_m3sat', 'test_evol_m3sat_big'
             ]
         }
     },
@@ -225,12 +246,18 @@ analysis_pipeline_m3sat = {
             'config': 0
         },
         {
+            'type': 'boxplot_one',
+            'model': 'combined_m3sat',
+            'model_name': 'Combined model\ntrained on M3SAT, 128',
+            'config': 1
+        },
+        {
             'type': 'boxplot_multiple',
             'models': {
                 'combined_m3sat': {
                     'model_name': 'Combined model\ntrained on M3SAT, 128',
                     'configs': [
-                        0
+                        0, 1
                     ]
                 }
             }

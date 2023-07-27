@@ -38,7 +38,7 @@ def create_baseline_data_dict(baseline_data: list[list, list, list, list, list, 
 
 def get_visualisation_title(evaluation_type, config, solver, models=False):
     problems = config["pipeline"]["problems"]["problems"]
-    title = f'{evaluation_type}, trained model{"s" if models else ""}, evaluation on problem{"s" if len(problems) > 1 else ""}: '
+    title = f'{evaluation_type}trained model{"s" if models else ""}, evaluation on problem{"s" if len(problems) > 1 else ""}: '
     for problem in problems:
         title = title + problem + ', '
     title = title + f'Max-size: {config["pipeline"]["problems"]["qubo_size"]}'  # \
@@ -186,7 +186,7 @@ class AnalysisPipeline:
                     'label': 'Incorrect solutions suggested by model'
                 },
             ],
-            'title': get_visualisation_title('Correct & incorrect solutions',
+            'title': get_visualisation_title('Correct & incorrect solutions, ',
                                              model_analysis.config_list[analysis_dict['config']],
                                              model_analysis.analysis_parameters['solver']),
             'x_label': 'approximated qubo entries in percent',
@@ -233,7 +233,7 @@ class AnalysisPipeline:
                     'label': 'Mean solution quality of approximation suggested by model'
                 },
             ],
-            'title': get_visualisation_title('Solution quality of every solution',
+            'title': get_visualisation_title('Solution quality of every solution, ',
                                              model_analysis.config_list[analysis_dict['config']],
                                              model_analysis.analysis_parameters['solver']),
             'x_label': 'approximated qubo entries in percent',
@@ -280,7 +280,7 @@ class AnalysisPipeline:
                     'mean': '#2C7BB6'
                 },
             'y_label': 'solution quality (min energy - energy) / min energy',
-            'title': get_visualisation_title('Comparison of different approaches',
+            'title': get_visualisation_title('Comparison of different approaches, ',
                                              model_analysis.config_list[analysis_dict['config']],
                                              model_analysis.analysis_parameters['solver'])
         })
@@ -339,7 +339,7 @@ class AnalysisPipeline:
                 },
             'y_label': 'solution quality (min energy - energy) / min energy',
             'title': get_visualisation_title(f'Comparison of solution quality on '
-                                             f'{model_analysis.analysis_parameters["quantum"]["qpu_name"]}',
+                                             f'{model_analysis.analysis_parameters["quantum"]["qpu_name"]}\n',
                                              model_analysis.config_list[analysis_dict['config']],
                                              '')
         })
@@ -350,14 +350,14 @@ class AnalysisPipeline:
                     {
                         'embedding size': model_analyis_results['quantum_quality_dict']
                                                     ['embedding_size_list_original'],
-                        'mean chain length': model_analyis_results['quantum_quality_dict']
+                        'avg chain length': model_analyis_results['quantum_quality_dict']
                                                      ['embedding_avg_chain_list_original'],
                         'tick_name': f'Original QUBO,\n{analysis_dict["model_name"]}'
                     },
                     {
                         'embedding size': model_analyis_results['quantum_quality_dict']
                                                     ['embedding_size_list_approx'],
-                        'mean chain length': model_analyis_results['quantum_quality_dict']
+                        'avg chain length': model_analyis_results['quantum_quality_dict']
                                                      ['embedding_avg_chain_list_approx'],
                         'tick_name': f'Approximated QUBO,\n{analysis_dict["model_name"]}'
                     },
@@ -365,13 +365,13 @@ class AnalysisPipeline:
             'colors':
                 {
                     'embedding size': '#D7191C',
-                    'mean chain length': '#2C7BB6'
+                    'avg chain length': '#2C7BB6'
                 },
             'y_label': 'physical qubits / logical qubits | chain length',
             'title': get_visualisation_title(f'Comparison of embedding parameters on  '
-                                             f'{model_analysis.analysis_parameters["quantum"]["qpu_name"]}'
+                                             f'{model_analysis.analysis_parameters["quantum"]["qpu_name"]} '
                                              f'with '
-                                             f'{model_analysis.analysis_parameters["quantum"]["embedding_structure"]}'
+                                             f'{model_analysis.analysis_parameters["quantum"]["embedding_structure"]} '
                                              f'embedding\n',
                                              model_analysis.config_list[analysis_dict['config']],
                                              '')

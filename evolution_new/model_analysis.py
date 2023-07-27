@@ -71,7 +71,7 @@ class ModelAnalysis:
                 config = load_cfg(cfg_id=self.learning_parameters['config_name'])
             else:
                 config = load_cfg(cfg_id=config_name)
-            config["solvers"][self.solver]['repeats'] = 10
+            config["solvers"][self.solver]['repeats'] = 100
             config["solvers"][self.solver]['enabled'] = True
             config['pipeline']['problems']['n_problems'] *= 1
             if 'scale_list' in self.analysis_parameters:
@@ -106,36 +106,41 @@ class ModelAnalysis:
         try:
             quantum_approximation_dict = np.load(f'analysis_results/{filename}.npy', allow_pickle=True).item()
             print('Analysis quantum results loaded')
+            if self.analysis_parameters['quantum']['add_results']:
+                quantum_approximation_dict = self.get_quantum_approximation_quality(config, quantum_approximation_dict)
+                np.save(f'analysis_results/{filename}', quantum_approximation_dict)
+                print('Additional analysis quantum results saved')
         except FileNotFoundError:
-            quantum_approximation_dict = self.get_quantum_approximation_quality(config)
+            quantum_approximation_dict = self.get_quantum_approximation_quality(config, {})
             np.save(f'analysis_results/{filename}', quantum_approximation_dict)
             print('Analysis quantum results saved')
         return quantum_approximation_dict
 
-    def get_quantum_approximation_quality(self, config: dict) -> dict:
-        return_dict = {
-            'solutions_list_original': [],                          #
-            'solutions_list_approx': [],                            #
-            'energy_list_original': [],                             #
-            'energy_list_approx': [],                               #
-            'embedding_list_original': [],                          #
-            'embedding_list_approx': [],                            #
-            'embedding_size_list_original': [],                     #
-            'embedding_size_list_approx': [],                       #
-            'embedding_avg_chain_list_original': [],                #
-            'embedding_avg_chain_list_approx': [],                  #
-            'solution_quality_list_original': [],                   #
-            'min_solution_quality_list_original': [],               #
-            'mean_solution_quality_list_original': [],              #
-            'solution_quality_list_approx': [],                     #
-            'min_solution_quality_list_approx': [],                 #
-            'mean_solution_quality_list_approx': [],                #
-            'qubo_list_original': [],                               #
-            'qubo_list_approx': [],                                 #
-            'problem_list': [],                                     #
-            'solutions_list': [],                                   #
-            'approx_percent_list': [],                              #
-        }
+    def get_quantum_approximation_quality(self, config: dict, return_dict: dict) -> dict:
+        if not return_dict:
+            return_dict = {
+                'solutions_list_original': [],                          #
+                'solutions_list_approx': [],                            #
+                'energy_list_original': [],                             #
+                'energy_list_approx': [],                               #
+                'embedding_list_original': [],                          #
+                'embedding_list_approx': [],                            #
+                'embedding_size_list_original': [],                     #
+                'embedding_size_list_approx': [],                       #
+                'embedding_avg_chain_list_original': [],                #
+                'embedding_avg_chain_list_approx': [],                  #
+                'solution_quality_list_original': [],                   #
+                'min_solution_quality_list_original': [],               #
+                'mean_solution_quality_list_original': [],              #
+                'solution_quality_list_approx': [],                     #
+                'min_solution_quality_list_approx': [],                 #
+                'mean_solution_quality_list_approx': [],                #
+                'qubo_list_original': [],                               #
+                'qubo_list_approx': [],                                 #
+                'problem_list': [],                                     #
+                'solutions_list': [],                                   #
+                'approx_percent_list': [],                              #
+            }
         problem_dict = self.model.get_approximation(self.model.get_training_dataset(config))
         approx_qubo_list, solutions_list, qubo_list, problem_list = problem_dict['approxed_qubo_list'], \
                                                                     problem_dict['solutions_list'], \
@@ -147,7 +152,7 @@ class ModelAnalysis:
         return_dict['qubo_list_approx'] = approx_qubo_list
         for idx, (qubo, approx_qubo, solutions, problem) in enumerate(zip(qubo_list, approx_qubo_list,
                                                                           solutions_list, problem_list)):
-            print(f'Approximating problem on QPU {idx} via model')
+            print(f'Approximating problem {idx} on QPU via model')
             min_solution_quality, _, approx_percent, _, _, _, _ = get_quality_of_approxed_qubo(qubo, approx_qubo,
                                                                                                solutions, config)
             if self.model.__class__.__name__ == CombinedOneHotFeatureModel.__name__:
@@ -195,7 +200,7 @@ class ModelAnalysis:
         qubo_dict = matrix_to_qubo(qubo)
         sampler = EmbeddingComposite(DWaveSampler())
         embedding_dict = find_embedding(qubo_dict, sampler.child.edgelist)
-        result = sampler.sample_qubo(qubo_dict, num_reads=10, label=analysis_name)
+        result = sampler.sample_qubo(qubo_dict, num_reads=100, label=analysis_name)
         #res = [([0,1,1,1,0,1], -4, 3, 0)]
         #vari = [1,2,5,7,12,14]
         solutions, energies = map_qpu_results_to_solutions(result.record, result.variables, len(qubo))

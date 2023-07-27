@@ -27,7 +27,7 @@ def gen_random_clause_number(cfg: dict, n_vars: int) -> int:
 def get_clause(var_list: list[int]) -> tuple[tuple[int, bool], tuple[int, bool], tuple[int, bool]]:
     random.shuffle(var_list)
     clause_list = [(var_list[0], bool(random.getrandbits(1))), (var_list[1], bool(random.getrandbits(1))),
-              (var_list[2], bool(random.getrandbits(1)))]
+                   (var_list[2], bool(random.getrandbits(1)))]
     clause_list = sorted(clause_list, key=lambda x: (not x[1], x[0]))
     return clause_list[0], clause_list[1], clause_list[2]
 
@@ -39,11 +39,11 @@ def analyze_clause(clause: tuple[tuple[int, bool], tuple[int, bool], tuple[int, 
             pattern[i] = 0
     string = ''
     if pattern == [0, 0, 0]:
-        string = 'n' + str(clause[0][0]) + 'n' + str(clause[1][0]) + 'n' + str(clause[2][0])
-    elif pattern == [0, 1, 1]:
-        string = str(clause[0][0]) + 'n' + str(clause[1][0])
+        string = 'n' + str(clause[0][0]) + '_n' + str(clause[1][0]) + '_n' + str(clause[2][0])
+    elif pattern == [1, 0, 0]:
+        string = str(clause[0][0]) + '_n' + str(clause[1][0])
     else:
-        string = str(clause[0][0]) + 'n' + str(clause[1][0])
+        string = str(clause[0][0]) + '_' + str(clause[1][0])
     return pattern, string
 
 

@@ -16,6 +16,8 @@ from pipeline_util import QUBOGenerator
 from recommendation import RecommendationEngine
 from typing import Callable
 
+from transformator.problems.max3sat import analyze_clause
+
 cuda = torch.device('cuda')
 
 cfg = load_cfg(cfg_id='test_evol_m3sat')
@@ -156,12 +158,12 @@ def get_quality_of_approxed_qubo(qubo: np.array, approxed_qubo: np.array, soluti
 
 
 def get_approximation_count(qubo: np.array, approxed_qubo: np.array) -> tuple[int, float]:
-    # approxed_entries = get_nonzero_count(np.subtract(np.triu(qubo), np.triu(approxed_qubo)))
-    # return approxed_entries, approxed_entries / get_nonzero_count(np.triu(qubo))
-    approxed_entries = get_nonzero_count(np.subtract(np.subtract(np.triu(qubo), np.diag(np.diag(qubo))),
-                                                     np.subtract(np.triu(approxed_qubo),
-                                                                 np.diag(np.diag(approxed_qubo)))))
-    return approxed_entries, approxed_entries / get_nonzero_count(np.subtract(np.triu(qubo), np.diag(np.diag(qubo))))
+    approxed_entries = get_nonzero_count(np.subtract(np.triu(qubo), np.triu(approxed_qubo)))
+    return approxed_entries, approxed_entries / get_nonzero_count(np.triu(qubo))
+    #approxed_entries = get_nonzero_count(np.subtract(np.subtract(np.triu(qubo), np.diag(np.diag(qubo))),
+    #                                                 np.subtract(np.triu(approxed_qubo),
+    #                                                             np.diag(np.diag(approxed_qubo)))))
+    #return approxed_entries, approxed_entries / get_nonzero_count(np.subtract(np.triu(qubo), np.diag(np.diag(qubo))))
 
 
 def linearize_qubo(qubo):
@@ -814,8 +816,8 @@ def get_wsat_solution_m3sat(problem: dict, max_walks=5, max_flips=10, flip_prob=
                 clauses_satisfied = check_m3sat_solution(clause_list, solution)
             # print(clauses_satisfied, len(clause_list))
             if clauses_satisfied == len(clause_list):
-                return get_qubo_solution_for_m3sat(n_vars, clause_list, solution)
-    return get_qubo_solution_for_m3sat(n_vars, clause_list, solution)
+                return get_new_qubo_solution_for_m3sat(n_vars, clause_list, solution)
+    return get_new_qubo_solution_for_m3sat(n_vars, clause_list, solution)
 
 
 def get_best_flip(current_solution: list[bool], clause_list: list[list[tuple[int, bool]]]) -> tuple[list[bool], int]:
@@ -833,6 +835,7 @@ def get_best_flip(current_solution: list[bool], clause_list: list[list[tuple[int
 
 
 def satisfy_one_random_clause(solution: list[bool], clause_list: list[list[tuple[int, bool]]]):
+    rng = np_random.default_rng()
     unsatisfied_clauses = []
     for clause in clause_list:
         if not check_m3sat_clause(clause, solution):
@@ -844,8 +847,9 @@ def satisfy_one_random_clause(solution: list[bool], clause_list: list[list[tuple
 
     random.shuffle(unsatisfied_clauses)
     chosen_clause = unsatisfied_clauses[0]
-    random.shuffle(chosen_clause)
-    chosen_variable, _ = chosen_clause[0]
+    #random.shuffle(chosen_clause)
+    random_literal = rng.integers(0, 3)
+    chosen_variable, _ = chosen_clause[random_literal]
     solution[chosen_variable] = not solution[chosen_variable]
     return solution
 
@@ -874,6 +878,45 @@ def check_m3sat_clause(clause: list[tuple[int, bool]], solution: list[bool]) -> 
     for variable, sign in clause:
         clause_value = clause_value or ((solution[variable] and sign) or (not solution[variable] and not sign))
     return clause_value
+
+
+# Transform the True/False solution into a possible solution from a qubo (first the variables, then each clause)
+def get_new_qubo_solution_for_m3sat(n_vars: int, clause_list: list[tuple[tuple[int, bool], tuple[int, bool],
+                                                                   tuple[int, bool]]], solution: list[bool]) -> list:
+    qubo_solution = np.zeros(n_vars + len(clause_list))
+    for i in range(n_vars):
+        if solution[i]:
+            qubo_solution[i] = 1
+    clause_dict = {}
+    next_free_clause_idx = n_vars
+    for idx, clause in enumerate(clause_list):
+        clause_pattern, clause_string = analyze_clause(clause)
+        # print(clause_pattern)
+        c_idx = next_free_clause_idx
+        # print(idx, clause, clause_pattern, clause_string)
+        if clause_string in clause_dict.keys():
+            continue
+        else:
+            next_free_clause_idx += 1
+            clause_dict[clause_string] = c_idx
+        qubo_solution[c_idx] = get_pattern_solution(clause, clause_pattern, solution)
+    return qubo_solution
+
+
+def get_pattern_solution(clause: tuple[tuple[int, bool], tuple[int, bool], tuple[int, bool]],
+                         clause_pattern: list[int, int, int], solution: list[bool]) -> int:
+    return_int = 0
+    # print(clause_pattern)
+    if clause_pattern == [1, 1, 1] or clause_pattern == [1, 1, 0]:
+        if solution[clause[0][0]] or solution[clause[1][0]]:
+            return_int = 1
+    elif clause_pattern == [1, 0, 0]:
+        if solution[clause[0][0]] or not solution[clause[1][0]]:
+            return_int = 1
+    else:
+        if not solution[clause[0][0]] and not solution[clause[1][0]] and not solution[clause[2][0]]:
+            return_int = 1
+    return return_int
 
 
 # Transform the True/False solution into a possible solution from a qubo (first the variables, then each clause)
@@ -1143,7 +1186,7 @@ def get_random_coloring(problem: dict) -> list:
 def get_random_m3sat_solution(problem: dict) -> list[int]:
     n_vars, clauses = problem['n_vars'], problem['clauses']
     random_solution = get_random_variable_assignment(n_vars)
-    return get_qubo_solution_for_m3sat(n_vars, clauses, random_solution)
+    return get_new_qubo_solution_for_m3sat(n_vars, clauses, random_solution)
 
 
 def get_random_sgi_solution(problem: dict) -> list[int]:
