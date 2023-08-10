@@ -20,6 +20,12 @@ from evolution.evolution_util import get_training_dataset, get_fitness_value, ap
     check_pipeline_necessity, check_solution, get_mean_of_qubo_line
 
 
+# *---------------------------------------------------------------------------------- * #
+#                                                                                       #
+#                       FILES DEPRECATED - CHECK NEW EVOLUTION                          #
+#                                                                                       #
+# *---------------------------------------------------------------------------------- * #
+
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 run_bool = False

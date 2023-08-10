@@ -11,6 +11,8 @@ from evolution_new.evolution_utils import qubo_to_matrix, matrix_to_qubo, get_ws
 
 import torch, os
 
+# Analyzing and plotting QUBOs and their heatmaps
+
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 cfg = load_cfg(cfg_id='test_evol_m3sat_small')
 qubo_size = cfg['pipeline']['problems']['qubo_size']
@@ -85,11 +87,12 @@ elif problem_name == 'M3SAT':
         qubo_dict = matrix_to_qubo(qubo)
         print(qubo_dict)
         print(qubo_to_matrix(qubo_dict, len(qubo)))
-        #qubo_heatmap(qubo, name='QUBO heatmap for M3SAT')
-        #qubo_heatmap(np.triu(qubo), name='QUBO heatmap for M3SAT')
+        qubo_heatmap(qubo, name='QUBO heatmap for M3SAT')
+        qubo_heatmap(np.triu(qubo), name='QUBO heatmap for M3SAT')
 elif problem_name == 'EC':
     for problem, qubo in zip(problems, qubos):
         print(problem)
+        print(engine.recommend(qubo).solutions)
         qubo_heatmap(qubo, name='QUBO heatmap for EC')
         qubo_heatmap(np.triu(qubo), name='QUBO heatmap for EC')
 elif problem_name == 'SGI':

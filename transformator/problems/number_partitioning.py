@@ -6,20 +6,11 @@ from transformator.problems.problem import Problem
 def get_problems(cfg, n_problems, size: tuple[int, int], target: float):
     rng = random.default_rng()
     problems = np.empty(shape=n_problems, dtype=np.ndarray)
-    #print('empty problems: ', problems)
     for n in range(n_problems):
         number_bound = get_number_bound(cfg)
         numbers = rng.integers(0, number_bound, get_problem_size(size, target))
-        #print('numbers: ', numbers)
         problems[n] = numbers
-        #np.append(problems, numbers)
-    #problems = rng.geometric(1 / (size / 4), size=(n_problems, size)) * \
-    #           random.randint(0, size, (n_problems, size)) + \
-    #           random.randint(0, size, (n_problems, size))
-    #problems = np.array(problems)
-    #print('problems: ', problems)
     return problems
-    #return problems.astype(int)
 
 
 def get_problem_size(size: tuple[int, int],

@@ -1,5 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
+# Abstract class defining the necessary methods for a model
+
 
 class LearningModel:
     __metaclass__ = ABCMeta

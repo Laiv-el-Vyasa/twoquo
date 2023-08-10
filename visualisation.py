@@ -3,6 +3,12 @@ import matplotlib.lines as lines
 import numpy as np
 from config import load_cfg
 
+# *---------------------------------------------------------------------------------- * #
+#                                                                                       #
+#                        FILE DEPRECATED - CHECK EVOLUTION                              #
+#                                                                                       #
+# *---------------------------------------------------------------------------------- * #
+
 color_dict = {
     'NP': 'green',
     "MC": "blue",

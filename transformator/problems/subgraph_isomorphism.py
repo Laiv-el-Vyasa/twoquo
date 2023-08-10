@@ -15,6 +15,7 @@ def get_random_node_number(size: list[int, int]) -> int:
     return rng.integers(size[0], size[1] + 1)
 
 
+# Calculate critical value for phase transition
 def get_critical_value(n1: int, n2: int, e2: float) -> float:
     # <Sol> = t_ * e2 ^ (e1 * (n1 over 2)) -> <Sol> = 1
     # e1 = log_e2(1 / t_) * (1 / (n1 over 2)

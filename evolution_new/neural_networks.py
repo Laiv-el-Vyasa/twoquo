@@ -4,6 +4,9 @@ import torch.nn.functional as F
 import torch_geometric.nn as geo_nn
 cuda = torch.device('cuda')
 
+# Network configuration file
+# Defines the ANN structures used in the training process
+
 
 class Network(nn.Module):
     def __init__(self, qubo_size):

@@ -8,26 +8,26 @@ from evolution_new.evolution_utils import get_small_qubo, remove_hard_constraits
     get_min_of_tsp_qubo_line_normalized_onehot, get_number_of_edges_for_gc
 from new_visualisation import qubo_heatmap
 
+# Special model variant for handling problems with one-hot encoding and similar values on the diagonal
+
 
 class CombinedOneHotFeatureModel(CombinedFeatureModel):
 
+    # Mirroring method from parent class, calling different methods to construct the QUBO used for approximation
     def get_edge_index_and_node_features(self, qubo: list, problem: dict) -> tuple[list[list, list], list]:
         if 'tsp' in problem or 'n_colors' in problem:
-            #calc_qubo = get_small_qubo(qubo, len(problem['cities']))
             calc_qubo = remove_hard_constraits_from_qubo(qubo, problem, False)
         else:
             calc_qubo = qubo
 
-        # qubo_heatmap(calc_qubo)
         edge_index, edge_weights = get_edge_data(calc_qubo)
         node_model, node_features = self.get_node_model_and_features(problem, qubo, calc_qubo)
-        # print('Node features before: ', node_features)
         node_features = node_model.forward(get_tensor_of_structure(node_features),
                                            get_tensor_of_structure(edge_index).long(),
                                            get_tensor_of_structure(edge_weights)).detach()
-        # print('Node features after: ', node_features)
         return edge_index, node_features
 
+    # Overriding method from parent class, calculating varying node-features for GC and TSP
     def get_node_model_and_features(self, problem: dict, qubo: list, calc_qubo) -> tuple[nn.Module, list]:
         return_node_model = self.node_model
         return_node_features = get_diagonal_of_qubo(calc_qubo)
@@ -38,6 +38,7 @@ class CombinedOneHotFeatureModel(CombinedFeatureModel):
             return_node_features = get_number_of_edges_for_gc(qubo, problem['n_colors'])
         return return_node_model, return_node_features
 
+    # Overriding method from parent class, simpler derivation of approx mask, as hard constraints already removed
     def get_approx_mask(self, edge_index: list[list, list], node_mean_tensor_list: list,
                         qubo: list, problem: dict) -> list:
         approx_mask = np.ones((len(qubo), len(qubo)))

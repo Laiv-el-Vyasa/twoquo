@@ -4,6 +4,9 @@ from evolution_new.combined_model_features_onehot import CombinedOneHotFeatureMo
 from evolution_new.combined_scale_model import CombinedScaleModel
 from evolution_utils import construct_standard_fitness_function, construct_scale_fitness_function
 
+# Config file for the training process
+# Defines the necessary parameters for the training process
+
 training_config = {
     'combined_m3sat':
         {

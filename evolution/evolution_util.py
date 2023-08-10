@@ -8,6 +8,12 @@ from config import load_cfg
 from pipeline_util import QUBOGenerator
 from recommendation import RecommendationEngine
 
+# *---------------------------------------------------------------------------------- * #
+#                                                                                       #
+#                       FILES DEPRECATED - CHECK NEW EVOLUTION                          #
+#                                                                                       #
+# *---------------------------------------------------------------------------------- * #
+
 cuda = torch.device('cuda')
 
 cfg = load_cfg(cfg_id='test_evol_gc_small')

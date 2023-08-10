@@ -2,8 +2,11 @@ import numpy as np
 
 from combined_model import CombinedModel
 
+# Special class used to train a model, capable of approximating roughly a given percentage of entries (scale parameter)
+
 
 class CombinedScaleModel(CombinedModel):
+    # Method overridden from parent class, calling the new method to get the approximated QUBO
     def get_approximation(self, problem_dict: dict) -> dict:
         problem_list, qubo_list, scale_list = problem_dict['problem_list'], problem_dict['qubo_list'], \
                                               problem_dict['scale_list']
@@ -16,6 +19,8 @@ class CombinedScaleModel(CombinedModel):
         problem_dict['approxed_qubo_list'] = approxed_qubo_list
         return problem_dict
 
+    # Method mirroring the approximation method from th parent class
+    # Adding the scale parameter to the node-features, so the edge-decision model can include its value
     def get_scaled_approxed_qubo(self, qubo: list, problem: dict, scale: float, index: int) -> tuple[list, int]:
         edge_index, node_features = self.get_edge_index_and_node_features(qubo, problem)
         # print('Scale: ', scale)

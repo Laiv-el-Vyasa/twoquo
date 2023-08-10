@@ -15,6 +15,8 @@ from evolution_utils import get_edge_data, get_diagonal_of_qubo, get_tensor_of_s
 from learning_model import LearningModel
 from neural_networks import CombinedNodeFeaturesUwu, CombinedEdgeDecisionUwu, CombinedScaleEdgeDecisionUwu
 
+# Combined approximation model implementing the abstract methods from learning_model
+
 combined_model_list = {
     'combinedModelUwU': [
         CombinedNodeFeaturesUwu,
@@ -39,10 +41,12 @@ class CombinedModel(LearningModel):
     def get_training_dataset(self, config: dict) -> dict:
         return get_training_dataset(config)
 
+    # Adds the list of approximated QUBOs to the dict
     def get_approximation(self, problem_dict: dict) -> dict:
         problem_list, qubo_list = problem_dict['problem_list'], problem_dict['qubo_list']
         # print(problem_list)
         approxed_qubo_list = []
+        # If more than 100 problems are considered, multiprocessing results in a significant speedup
         if len(qubo_list) > 100:
             approxed_qubo_list = self.get_approximation_multiprocessing(qubo_list, problem_list)
         else:
@@ -52,6 +56,7 @@ class CombinedModel(LearningModel):
         problem_dict['approxed_qubo_list'] = approxed_qubo_list
         return problem_dict
 
+    # Get the approximated QUBOs by multiprocessing
     def get_approximation_multiprocessing(self, qubo_list: list, problem_list: list) -> list:
         approxed_qubo_list = [None for _ in qubo_list]
         with Pool() as pool:
@@ -61,6 +66,7 @@ class CombinedModel(LearningModel):
                 approxed_qubo_list[index] = approxed_qubo
         return approxed_qubo_list
 
+    # Perform the pruning process on a single QUBO by deriving a approx mask
     def get_approxed_qubo(self, qubo: list, problem: dict, index: int) -> tuple[list, int]:
         edge_index, node_features = self.get_edge_index_and_node_features(qubo, problem)
         # print(f'Problem {index}, node_features: {node_features}')
@@ -73,6 +79,7 @@ class CombinedModel(LearningModel):
         approx_mask = self.get_approx_mask(edge_index, node_mean_tensor_list, qubo, problem)
         return np.multiply(qubo, approx_mask), index
 
+    # Get node-features from the node-model together with a list of eligible edges
     def get_edge_index_and_node_features(self, qubo: list, problem: dict) -> tuple[list[list, list], list]:
         if 'n_colors' in problem:
             calc_qubo = get_small_qubo(qubo, problem['n_colors'])
@@ -90,6 +97,7 @@ class CombinedModel(LearningModel):
         # print('Node features after: ', node_features)
         return edge_index, node_features
 
+    # Loops through all edges to produce the mask used for approximation
     def get_approx_mask(self, edge_index: list[list, list], node_mean_tensor_list: list,
                         qubo: list, problem: dict) -> list:
         approx_mask = np.ones((len(qubo), len(qubo)))
@@ -118,6 +126,7 @@ class CombinedModel(LearningModel):
         #qubo_heatmap(approx_mask)
         return approx_mask
 
+    # Node model (normalized for TSP) and node features are determined according to problem type
     def get_node_model_and_features(self, problem: dict, qubo: list, calc_qubo: list) -> tuple[nn.Module, list]:
         return_node_model = self.node_model
         return_node_features = get_diagonal_of_qubo(calc_qubo)
@@ -139,6 +148,7 @@ class CombinedModel(LearningModel):
         torch.save(node_weights, f'best_models/{model_name}_node')
         torch.save(edge_weights, f'best_models/{model_name}_edge')
 
+    # Try to load the models from the respective file and apply the weights to the network, return false otherwise
     def load_best_model(self, model_name: str) -> bool:
         loading_successfull = True
         try:
@@ -150,6 +160,7 @@ class CombinedModel(LearningModel):
             loading_successfull = False
         return loading_successfull
 
+    # Get a weight dict from a pygad chromosome (edge_node_cutoff marks the transition between both model types
     def get_model_weight_dicts(self, pygad_chromosome: list) -> tuple[dict, dict]:
         model_weights_dict_node = torchga.model_weights_as_dict(model=self.node_model,
                                                                 weights_vector=pygad_chromosome[:self.node_edge_cutoff])

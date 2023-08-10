@@ -6,6 +6,9 @@ from config import load_cfg
 import itertools
 
 
+# Collection of methods for visualisation
+
+# Plot the results together with the baseline
 def visualisation_pipeline(evaluation_dict: dict):
     fig, ax = pyplot.subplots()
     legend_lines = []
@@ -14,14 +17,16 @@ def visualisation_pipeline(evaluation_dict: dict):
             ax, legend_lines = add_baseline(ax, baseline_data, legend_lines)
 
     ax, legend_lines = plot_points(ax, evaluation_dict['evaluation_results'], legend_lines)
-    ax.legend(handles=legend_lines)
+    ax.legend(handles=legend_lines, prop={'size': 16})
     if 'scale_axis' in evaluation_dict:
         ax.set_xlim([0, 1])
         ax.set_ylim([0, 1])
-    ax.set_ylabel(evaluation_dict['y_label'])
-    ax.set_xlabel(evaluation_dict['x_label'])
-    ax.set_title(evaluation_dict['title'], fontsize=12)
-    matplotlib.pyplot.subplots_adjust(left=0.04, bottom=0.07, right=0.96, top=0.93, wspace=None, hspace=None)
+    ax.set_ylabel(evaluation_dict['y_label'], fontsize=16)
+    ax.set_xlabel(evaluation_dict['x_label'], fontsize=16)
+    ax.set_title(evaluation_dict['title'], fontsize=24)
+    pyplot.xticks(fontsize=14)
+    pyplot.yticks(fontsize=14)
+    matplotlib.pyplot.subplots_adjust(left=0.05, bottom=0.075, right=0.95, top=0.925, wspace=None, hspace=None)
     pyplot.show()
 
 
@@ -49,7 +54,14 @@ def plot_points(ax: matplotlib.axes.Axes, evaluation_results: dict, legend_lines
             alpha = 1
         if 'evol_x_err' in evol_result:
             print(evol_result)
-            for x, y, x_err in zip(evol_result['evol_x'], evol_result['evol_y'], evol_result['evol_x_err']):
+            for x, y, x_err in zip(evol_result['evol_x'], evol_result['evol_y'], evol_result['evol_x_err'],):
+                if y in y_list:
+                    y -= 0.01
+                ax.errorbar(x, y, xerr=x_err, capsize=6, color=color, marker=(marker, 2), markersize=12, alpha=alpha)
+                y_list.append(y)
+        elif 'std_dev' in evol_result:
+            print(evol_result)
+            for x, y, x_err in zip(evol_result['evol_x'], evol_result['evol_y'], evol_result['std_dev'],):
                 if y in y_list:
                     y -= 0.01
                 ax.errorbar(x, y, xerr=x_err, capsize=6, color=color, marker=(marker, 2), markersize=12, alpha=alpha)
@@ -62,8 +74,11 @@ def plot_points(ax: matplotlib.axes.Axes, evaluation_results: dict, legend_lines
     return ax, legend_lines
 
 
+# Compare the results of different approaches using boxplots for min and mean solution quality
+# The results for multiple evaluated models can be displayed side by side
 def visualize_boxplot_comparison(boxplot_data_list: list[dict]):
     fig, axes = pyplot.subplots(ncols=2)
+    extreme_values = [[], []]
     for i in range(2):
         boxplot_data = boxplot_data_list[i]
         ax = axes[i]
@@ -72,6 +87,10 @@ def visualize_boxplot_comparison(boxplot_data_list: list[dict]):
         color_dict_keys = list(color_dict)
         tick_labels = []
         for i, data in enumerate(data_list):
+            extreme_values[0].append(np.max(data[color_dict_keys[0]]))
+            extreme_values[1].append(np.min(data[color_dict_keys[0]]))
+            extreme_values[0].append(np.max(data[color_dict_keys[1]]))
+            extreme_values[1].append(np.min(data[color_dict_keys[1]]))
             bxplt = ax.boxplot(data[color_dict_keys[0]], positions=[i * 2 - 0.3], widths=0.4)
             set_box_color(bxplt, color_dict[color_dict_keys[0]])
             bxplt = ax.boxplot(data[color_dict_keys[1]], positions=[i * 2 + 0.3], widths=0.4)
@@ -80,22 +99,32 @@ def visualize_boxplot_comparison(boxplot_data_list: list[dict]):
 
         for analysis_name in color_dict:
             ax.plot([], c=color_dict[analysis_name], label=analysis_name)
-        ax.legend()
+        ax.legend(prop={'size': 16})
 
-        ax.set_xticks(range(0, len(tick_labels) * 2, 2), tick_labels)
+        ax.set_xticks(range(0, len(tick_labels) * 2, 2), tick_labels, fontsize=16)
         ax.set_xlim(-1, len(tick_labels)*2 - 1)
-        ax.set_ylabel(boxplot_data['y_label'])
-        #ax.set_ylim(-0.03, 0.75)
+        ax.set_ylabel(boxplot_data['y_label'], fontsize=16)
         if 'embedding' in boxplot_data:
             ax.yaxis.label.set_color(color_dict['relative embedding size'])
             secax = ax.secondary_yaxis('right')
-            secax.set_ylabel(boxplot_data['y_label_2'])
+            secax.set_ylabel(boxplot_data['y_label_2'], fontsize=16)
             secax.yaxis.label.set_color(color_dict['avg chain length'])
-        ax.set_title(boxplot_data['title'])
-    matplotlib.pyplot.subplots_adjust(left=0.04, bottom=0.08, right=0.96, top=0.92, wspace=None, hspace=None)
+            secax.tick_params(labelsize=14)
+        ax.set_title(boxplot_data['title'], fontsize=24)
+        pyplot.yticks(fontsize=30)
+    for j in range(2):
+        ax = axes[j]
+        ax.set_ylim(np.min(extreme_values[1]) - 0.01, np.max(extreme_values[0]) + 0.01)
+        #a = ax.flatten()
+        ax.tick_params(axis='y', which='major', labelsize=14)
+        ax.tick_params(axis='y', which='minor', labelsize=14)
+        #ax.yticks(fontsize=14)
+    matplotlib.pyplot.subplots_adjust(left=0.065, bottom=0.05, right=0.935, top=0.84, wspace=0.29, hspace=None)
+
     pyplot.show()
 
 
+# Similar to the method above, designed to compare the embedding parameters
 def visualize_boxplot_comparison_quantum(boxplot_data_list: list[list[dict], list[dict]]):
     fig, axes = pyplot.subplots(ncols=2, nrows=2)
     for i in range(2):
@@ -134,6 +163,7 @@ def visualize_boxplot_comparison_quantum(boxplot_data_list: list[list[dict], lis
     pyplot.show()
 
 
+# Deprecated method, compare different approaches as above, but without the mean solution quality
 def visualize_boxplot_comparison_multiple_models(boxplot_data: dict):
     label_dict = {
         'model': 'Approximated QUBO',
@@ -220,18 +250,47 @@ def plot_average_fitness(avg_fitness_list):
     pyplot.show()
 
 
-def qubo_heatmap(qubo_matrix):
+# Plot the original QUBO together with the derived mask
+def compare_qubo_to_mask(qubo: np.array, qubo_mask: np.array, title: str):
+    fig, axes = pyplot.subplots(ncols=2)
+    qubo_list = [qubo, qubo_mask]
+    #for i in range(2):
+    work_qubo = qubo_list[0]
+    work_ax = axes[0]
+    mesh = work_ax.pcolormesh(work_qubo, cmap="plasma")
+    work_ax.set_xticks([i for i in range(work_qubo.shape[0])], minor=True)
+    work_ax.set_yticks([i for i in range(work_qubo.shape[0])], minor=True)
+    work_ax.grid(True, color="black", which="both", linewidth=0.1, linestyle="-")
+    work_ax.set_title(f'QUBO heatmap for {title}')
+    fig.colorbar(mesh, ax=work_ax)
+    work_ax.invert_yaxis()
+
+    work_qubo = qubo_list[1]
+    work_ax = axes[1]
+    mesh = work_ax.pcolormesh(work_qubo, cmap="plasma")
+    work_ax.set_xticks([i for i in range(work_qubo.shape[0])], minor=True)
+    work_ax.set_yticks([i for i in range(work_qubo.shape[0])], minor=True)
+    work_ax.grid(True, color="black", which="both", linewidth=0.1, linestyle="-")
+    work_ax.set_title(f'QUBO approximation mask for {title}')
+    fig.colorbar(mesh, ax=work_ax)
+    work_ax.invert_yaxis()
+    pyplot.show()
+
+
+# Heatmap to visualize a QUBO
+def qubo_heatmap(qubo_matrix: np.array, title="QUBO Heatmap"):
     fig, ax = pyplot.subplots()
     mesh = ax.pcolormesh(qubo_matrix, cmap="plasma")
     ax.set_xticks([i for i in range(qubo_matrix.shape[0])], minor=True)
     ax.set_yticks([i for i in range(qubo_matrix.shape[0])], minor=True)
     ax.grid(True, color="black", which="both", linewidth=0.1, linestyle="-")
-    ax.set_title("QUBO Heatmap")
+    ax.set_title(title)
     fig.colorbar(mesh, ax=ax)
     pyplot.gca().invert_yaxis()
     pyplot.show()
 
 
+# Methods to plot and validate the results of a TSP problem instance
 def get_best_solution(solutions: list[list[int]], dist_matrix: list[list[float]]):
     n = len(dist_matrix)
     paths = [[0 for i in range(n)] for sol in solutions]

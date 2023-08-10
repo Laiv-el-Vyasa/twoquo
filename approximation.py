@@ -1,9 +1,11 @@
 import copy
 import random
-
 import numpy as np
 
+# Methods to apply the stepwise approximation strategy to a QUBO
 
+
+# Returns a dict, where for every step the approximated QUBO is supplied
 def get_approximated_qubos(qubo, single_entry_approx, fixed, approximation_steps,
                            sorted_approx=True, break_at=np.inf) -> tuple[dict, list]:
     approx_qubos = {}
@@ -42,6 +44,7 @@ def get_approximated_qubos(qubo, single_entry_approx, fixed, approximation_steps
     return approx_qubos, percentage_steps
 
 
+# Remove a fixed number of entries from the QUBO
 def approx_fixed_number(qubo, percentage_bound, last_approx_number, size, qubodict):
     #print('Ceil_number: ', percentage_bound * size)
     #print('Percentage bound: ', percentage_bound)
@@ -61,6 +64,8 @@ def approx_fixed_number(qubo, percentage_bound, last_approx_number, size, qubodi
     return qubo, last_approx_number, number_of_approx
 
 
+# Remove all entries with an absolute value below the threshold (percentage of highest value present)
+# from the QUBO matrix
 def approx_fixed_values(qubo, percentage_bound, last_approx_number, size, qubodict):
     lower_bound = percentage_bound * qubodict[size - 1][0]
     #print('Lower bound: ' + str(lower_bound))
@@ -78,6 +83,7 @@ def approx_fixed_values(qubo, percentage_bound, last_approx_number, size, qubodi
     return qubo, last_approx_number, number_of_approx
 
 
+# Get a sorted list of QUBO entries with their positions in the original QUBO
 def get_sorted_qubodict(qubo, sorted_approx):
     dict_list = []
     shape = len(qubo)

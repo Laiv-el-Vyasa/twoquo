@@ -243,7 +243,7 @@
       "dataset_id": "test_evol_mc",
       "problems": {
         "qubo_size": 16,
-        "n_problems": 1,
+        "n_problems": 10,
         "MC": {
           "size": [16, 17],
           "edge_node_factor": 0.5
@@ -395,7 +395,7 @@
       "dataset_id": "test_evol_m3sat",
       "problems": {
         "qubo_size": 256,
-        "n_problems": 10,
+        "n_problems": 100,
         "M3SAT": {
           "size": [16, 128],
           "size_vars": [16, 32],
@@ -501,7 +501,7 @@
       "dataset_id": "test_evol_ec",
       "problems": {
         "qubo_size": 192,
-        "n_problems": 100,
+        "n_problems": 50,
         "EC": {
           "size": [16, 65],
           "target": 0.62,
@@ -517,7 +517,7 @@
       "dataset_id": "test_evol_ec_big",
       "problems": {
         "qubo_size": 384,
-        "n_problems": 100,
+        "n_problems": 50,
         "EC": {
           "size": [64, 129],
           "target": 0.62,
@@ -535,9 +535,9 @@
         "qubo_size": 16,
         "n_problems": 10,
         "EC": {
-          "size": [16, 17],
-          "target": 1,
-          "target_boundary": [0.95, 1.00]
+          "size": [8, 9],
+          "target": 0.5,
+          "target_boundary": [0.48, 0.50]
         },
         "problems": [
           "EC"

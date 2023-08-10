@@ -9,6 +9,12 @@ from pipeline import get_max_solution_quality
 from recommendation import RecommendationEngine
 
 
+# *---------------------------------------------------------------------------------- * #
+#                                                                                       #
+#                       FILES DEPRECATED - CHECK EVOLUTION                              #
+#                                                                                       #
+# *---------------------------------------------------------------------------------- * #
+
 def get_optimal_approx(approx_dict, approx_steps, solver, lower_bound, percent_bool: bool):
     optimization_array = np.ones(approx_steps)
     for step in range(approx_steps):

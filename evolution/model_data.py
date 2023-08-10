@@ -3,6 +3,14 @@ from evolution.networks import CombinedNodeFeatures, CombinedEdgeDecision, Combi
     GcnDeep, Network, AutoEnc, SqrtAutoEnc
 from evolution_util import qubo_size
 
+
+# *---------------------------------------------------------------------------------- * #
+#                                                                                       #
+#                       FILES DEPRECATED - CHECK NEW EVOLUTION                          #
+#                                                                                       #
+# *---------------------------------------------------------------------------------- * #
+
+
 node_feature_number = 8
 
 

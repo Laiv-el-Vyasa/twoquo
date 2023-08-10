@@ -8,13 +8,17 @@ from evolution_new.evolution_utils import get_quality_of_approxed_qubo, get_qubo
     remove_hard_constraits_from_qubo, delete_data, get_approximation_count, get_analysis_results_file_name, \
     matrix_to_qubo
 from evolution_new.pygad_learning import PygadLearner
-from new_visualisation import qubo_heatmap
+from new_visualisation import qubo_heatmap, compare_qubo_to_mask
 from combined_model_features_onehot import CombinedOneHotFeatureModel
 from dwave.system.samplers import DWaveSampler
 from dwave.system.composites import EmbeddingComposite
 from minorminer import find_embedding
 
+# Class analyzing a model and storing the results as well as all necessary training parameters
 
+
+# QPU only gives solutions for qubits with constraints
+# Fill them in the solution and add random assignments for the remaining qubits
 def map_qpu_results_to_solutions(results: np.ndarray, variables: list, size: int) \
         -> tuple[list[list[int]], list[float]]:
     rng = np.random.default_rng()
@@ -34,6 +38,7 @@ def map_qpu_results_to_solutions(results: np.ndarray, variables: list, size: int
     return solutions, energies
 
 
+# Gives the relative size of the embedding and the average chain length
 def analyze_embedding(embedding: dict[int, list[int]], logical_qubits: int) -> tuple[float, float]:
     physical_qubits = 0
     chain_length_list = []
@@ -64,6 +69,7 @@ class ModelAnalysis:
             self.pygad_learner.save_best_model()
             self.model.load_best_model(learning_parameters['training_name'])
 
+    # Get the desired configs from the analysis-config, changing some parameters for the analysis process
     def get_config_list(self, config_name_list: list) -> list:
         config_list = []
         for idx, config_name in enumerate(config_name_list):
@@ -98,6 +104,7 @@ class ModelAnalysis:
                     'baseline': analysis_baseline
                 })
 
+    # Load dict or start new analysis
     def get_quantum_analysis_dict(self, config: dict) -> dict:
         filename = get_analysis_results_file_name(self.analysis_parameters['analysis_name'] + '_quantum',
                                                   load_cfg(cfg_id=self.learning_parameters['config_name']),
@@ -116,6 +123,7 @@ class ModelAnalysis:
             print('Analysis quantum results saved')
         return quantum_approximation_dict
 
+    # Get a collection of results on QPU
     def get_quantum_approximation_quality(self, config: dict, return_dict: dict) -> dict:
         if not return_dict:
             return_dict = {
@@ -208,6 +216,7 @@ class ModelAnalysis:
                 'energies': energies,
                 'embedding': embedding_dict}
 
+    # Load dict or start new analysis
     def get_model_approximation_dict(self, config: dict) -> dict:
         filename = get_analysis_results_file_name(self.analysis_parameters['analysis_name'],
                                                   load_cfg(cfg_id=self.learning_parameters['config_name']),
@@ -223,6 +232,7 @@ class ModelAnalysis:
         # print(approximation_dict)
         return approximation_dict
 
+    # Get a collection of results using simulated annealing
     def get_model_approximation_quality(self, config: dict) -> dict:
         return_dict = {
             'solution_quality_list': [],
@@ -256,8 +266,11 @@ class ModelAnalysis:
                                                                           solutions_list, problem_list)):
             print(f'Approximating problem {idx} via model')
             if idx < self.analysis_parameters['show_qubo_mask']:
-                qubo_heatmap(qubo)
-                qubo_heatmap(get_qubo_approx_mask(approx_qubo, qubo))
+                compare_qubo_to_mask(np.triu(qubo),
+                                     np.triu(get_qubo_approx_mask(approx_qubo, qubo)),
+                                     config['pipeline']["problems"]["problems"][0])
+                # qubo_heatmap(qubo)
+                # qubo_heatmap(get_qubo_approx_mask(approx_qubo, qubo))
             min_solution_quality, _, approx_percent, mean_solution_quality, min_mean_sol_qual, mean_mean_sol_qual, \
                 absolute_approx_count = get_quality_of_approxed_qubo(qubo, approx_qubo, solutions, config)
             if self.model.__class__.__name__ == CombinedOneHotFeatureModel.__name__:
@@ -326,6 +339,7 @@ class ModelAnalysis:
                 return_dict['stepwise_approx_mean_solution_quality'].append(stepwise_mean_solution_quality)
         return return_dict
 
+    # Load the baseline or get a new one
     def get_analysis_baseline(self, config) -> list[list, list, list, list, list, list, list]:
         analysis_name = get_file_name(self.analysis_parameters['analysis_name'], config,
                                       self.learning_parameters['fitness_parameters'], analysis=True,
@@ -387,6 +401,7 @@ class ModelAnalysis:
                self.rotate_solution_quality_list(random_min_solution_quality_list), \
                self.rotate_solution_quality_list(random_mean_solution_quality_list)
 
+    # Use the stepwise pruning strategy to get baseline results for a QUBO
     def get_stepwise_approx_quality_for_qubo(self, qubo: np.array, solutions: list, config: dict, problem: dict,
                                              sorted_approx: bool) -> tuple[list, list, list]:
         stepwise_approx_quality = [1.]

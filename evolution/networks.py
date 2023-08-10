@@ -5,6 +5,13 @@ import torch_geometric.nn as geo_nn
 cuda = torch.device('cuda')
 
 
+# *---------------------------------------------------------------------------------- * #
+#                                                                                       #
+#                       FILES DEPRECATED - CHECK NEW EVOLUTION                          #
+#                                                                                       #
+# *---------------------------------------------------------------------------------- * #
+
+
 class Network(nn.Module):
     def __init__(self, qubo_size):
         super(Network, self).__init__()

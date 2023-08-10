@@ -8,6 +8,8 @@ from evolution_new.new_visualisation import qubo_heatmap
 from transformator.problems.problem import Problem
 
 
+# Nüßlein n + m QUBO formulation for M3SAT
+
 def get_random_var_number(cfg: dict) -> int:
     size = cfg["problems"]["M3SAT"].get("size_vars", [16, 32])
     rng = np_random.default_rng()
@@ -24,6 +26,7 @@ def gen_random_clause_number(cfg: dict, n_vars: int) -> int:
     return int(np.round(desity * n_vars))
 
 
+# Random clause
 def get_clause(var_list: list[int]) -> tuple[tuple[int, bool], tuple[int, bool], tuple[int, bool]]:
     random.shuffle(var_list)
     clause_list = [(var_list[0], bool(random.getrandbits(1))), (var_list[1], bool(random.getrandbits(1))),
@@ -32,6 +35,7 @@ def get_clause(var_list: list[int]) -> tuple[tuple[int, bool], tuple[int, bool],
     return clause_list[0], clause_list[1], clause_list[2]
 
 
+# Get clause pattern (according to Nüßlein) and string to identify clauses
 def analyze_clause(clause: tuple[tuple[int, bool], tuple[int, bool], tuple[int, bool]]) -> tuple[list[int], str]:
     pattern = [1, 1, 1]
     for i in range(3):

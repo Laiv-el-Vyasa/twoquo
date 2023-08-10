@@ -101,9 +101,10 @@ class ExactCover(Problem):
         # print('subsets: ',  self.subset_matrix)
         n = self.subset_matrix.shape[1]
         Q = np.zeros((n, n))
-
+        # print(self.subset_matrix)
+        # Use the minimal number of subsets
         for i in range(n):
-            Q[i][i] -= self.A
+            Q[i][i] -= self.A * np.sum(self.subset_matrix[:, i])
 
         # From Lucas 2014: The second term, to find the minimum exact cover:
         for i in range(n):

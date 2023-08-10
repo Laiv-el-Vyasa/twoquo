@@ -1,9 +1,13 @@
+# Config file for analysis process
+# Defines the necessary parameters and the pipelines
+# Pipeline defines which analysis is conducted for which trained model
+
 analysis_parameters = {
     'steps': 100,
     'analysis_name': 'combined_analysis',
     'boxplot': True,
     'sorted': True,
-    'show_qubo_mask': 0,
+    'show_qubo_mask': 10,
     'size_analysis': False,
     'compare_different_approaches': True,
     'solver': 'qbsolv_simulated_annealing'
@@ -21,7 +25,7 @@ analysis_parameters_quantum = {
     'quantum': {
         'qpu_name': 'Advantage_system5.4',
         'embedding_structure': 'pegasus',
-        'add_results': True
+        'add_results': False
     }
 }
 
@@ -30,7 +34,7 @@ analysis_parameters_features_onehot = {
     'analysis_name': 'combined_feature_onehot_analysis',
     'boxplot': True,
     'sorted': True,
-    'show_qubo_mask': 0,
+    'show_qubo_mask': 10,
     'size_analysis': False,
     'compare_different_approaches': True,
     'solver': 'qbsolv_simulated_annealing'
@@ -175,7 +179,7 @@ analysis_pipeline_mc_quantum = {
             'analysis_parameters': analysis_parameters_quantum,
             'analysis_name': 'combined_analysis',
             'configs': [
-                'test_evol_mc_big'
+                'test_evol_mc', 'test_evol_mc_big'
             ]
         }
     },
@@ -184,7 +188,9 @@ analysis_pipeline_mc_quantum = {
             'type': 'boxplot_quantum',
             'model': 'combined_mc',
             'model_name': 'Combined model\ntrained on MC, 128',
-            'config': 0
+            'config_list': [
+                0, 1
+            ]
         }
     ]
 }
@@ -217,7 +223,7 @@ analysis_pipeline_m3sat_quantum = {
             'analysis_parameters': analysis_parameters_quantum,
             'analysis_name': 'combined_analysis',
             'configs': [
-                'test_evol_m3sat'
+                'test_evol_m3sat', 'test_evol_m3sat_big'
             ]
         }
     },
@@ -227,7 +233,7 @@ analysis_pipeline_m3sat_quantum = {
             'model': 'combined_m3sat',
             'model_name': 'Combined model\ntrained on M3SAT, 256',
             'config_list': [
-                0
+                0, 1
             ]
         }
     ]
@@ -240,7 +246,51 @@ analysis_pipeline_m3sat = {
             'analysis_parameters': analysis_parameters,
             'analysis_name': 'combined_analysis',
             'configs': [
-                'test_evol_m3sat', 'test_evol_m3sat_big'
+                'test_evol_m3sat_small'
+            ]
+        }
+    },
+    'analysis': [
+        {
+            'type': 'boxplot_one',
+            'model': 'combined_m3sat',
+            'model_name': 'Combined model\ntrained on M3SAT, 128',
+            'config_list': [
+                0
+            ]
+        }
+    ]
+}
+
+analysis_pipeline_mc = {
+    'models': {
+        'combined_mc': {
+            'analysis_parameters': analysis_parameters,
+            'analysis_name': 'combined_analysis',
+            'configs': [
+                'test_evol_mc_small'
+            ]
+        }
+    },
+    'analysis': [
+        {
+            'type': 'boxplot_one',
+            'model': 'combined_mc',
+            'model_name': 'Combined model\ntrained on MC, 128',
+            'config_list': [
+                0
+            ]
+        }
+    ]
+}
+
+analysis_pipeline_ec = {
+    'models': {
+        'combined_ec': {
+            'analysis_parameters': analysis_parameters,
+            'analysis_name': 'combined_analysis',
+            'configs': [
+                'test_evol_ec_small'
             ]
         }
     },
@@ -249,8 +299,8 @@ analysis_pipeline_m3sat = {
             'type': 'baseline_correct_mean',
             'compare': False,
             'models': {
-                'combined_m3sat': {
-                    'model_name': 'Combined model\ntrained on M3SAT, 128',
+                'combined_ec': {
+                    'model_name': 'Combined model\ntrained on EC, 128',
                     'configs': [
                         0
                     ],
@@ -265,28 +315,12 @@ analysis_pipeline_m3sat = {
         },
         {
             'type': 'boxplot_one',
-            'model': 'combined_m3sat',
-            'model_name': 'Combined model\ntrained on M3SAT, 128',
-            'config': 0
-        },
-        {
-            'type': 'boxplot_one',
-            'model': 'combined_m3sat',
-            'model_name': 'Combined model\ntrained on M3SAT, 128',
-            'config': 1
-        },
-        {
-            'type': 'boxplot_multiple',
-            'models': {
-                'combined_m3sat': {
-                    'model_name': 'Combined model\ntrained on M3SAT, 128',
-                    'configs': [
-                        0, 1
-                    ]
-                }
-            }
-        },
-
+            'model': 'combined_ec',
+            'model_name': 'Combined model\ntrained on EC, 128',
+            'config_list': [
+                0, 0
+            ]
+        }
     ]
 }
 
@@ -303,27 +337,32 @@ analysis_pipeline_tsp = {
     },
     'analysis': [
         {
-            'type': 'baseline_correct_mean',
-            'compare': False,
-            'models': {
-                'combined_tsp_features_onehot': {
-                    'model_name': 'Combined model\ntrained on TSP, 121',
-                    'configs': [
-                        0
-                    ],
-                    'colors': [
-                        "black"
-                    ],
-                    'baseline_colors': [
-                        "black"
-                    ]
-                }
-            }
-        },
-        {
             'type': 'boxplot_one',
             'model': 'combined_tsp_features_onehot',
             'model_name': 'Combined model\ntrained on TSP, 121',
+            'config_list': [
+                0
+            ]
+        }
+    ]
+}
+
+
+analysis_pipeline_gc = {
+    'models': {
+        'combined_gc_features_onehot': {
+            'analysis_parameters': analysis_parameters_features_onehot,
+            'analysis_name': 'combined_feature_onehot_analysis',
+            'configs': [
+                'test_evol_gc_small'
+            ]
+        }
+    },
+    'analysis': [
+        {
+            'type': 'boxplot_one',
+            'model': 'combined_gc_features_onehot',
+            'model_name': 'Combined model\ntrained on GC, 121',
             'config': 0
         }
     ]

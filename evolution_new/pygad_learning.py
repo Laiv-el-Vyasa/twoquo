@@ -9,6 +9,7 @@ from evolution_utils import delete_data, get_file_name
 from new_visualisation import plot_average_fitness
 
 
+# Class to manage the training process of the modes using a GA
 class PygadLearner:
     def __init__(self,
                  model: LearningModel,
@@ -28,6 +29,7 @@ class PygadLearner:
         self.get_fitness_value = fitness_function
         self.ga_instance = self.initialize_ga_instance()
 
+    # Loading a saved GA-Instance or creating a new one
     def initialize_ga_instance(self) -> pygad.GA:
         try:
             ga_instance = pygad.load(f'pygad_trainings/{self.training_name}')
@@ -78,6 +80,7 @@ class PygadLearner:
 
         return fitness_function
 
+    # Tasks between generations
     def callback_generation(self, ga_instance: pygad.GA):
         print("Generation   = {generation}".format(generation=ga_instance.generations_completed))
         # print("Fitness      = {fitness}".format(fitness=ga_instance.best_solution()[1]))

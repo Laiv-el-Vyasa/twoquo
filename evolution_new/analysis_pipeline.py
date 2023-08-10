@@ -4,7 +4,10 @@ from evolution_new.new_visualisation import visualisation_pipeline, visualize_bo
     visualize_boxplot_comparison_multiple_models, visualize_boxplot_comparison_quantum
 from model_analysis import ModelAnalysis
 
+# Executing the analysis given in an analysis-dict
 
+
+# Get all analysis-results for the supplied models and collect them in a dict
 def get_models_dict(models_dict: dict) -> dict:
     model_analysis_dict = {}
     for training_cfg_name in models_dict:
@@ -15,6 +18,7 @@ def get_models_dict(models_dict: dict) -> dict:
     return model_analysis_dict
 
 
+# Create a dict for baseline visualisation
 def create_baseline_data_dict(baseline_data: list[list, list, list, list, list, list, list], steps,
                               model_analysis: ModelAnalysis, config_nr: int,
                               sorted_approx=True, data_index=0, dotted=False, color='black') -> dict:
@@ -36,6 +40,7 @@ def create_baseline_data_dict(baseline_data: list[list, list, list, list, list, 
     }
 
 
+# Title for the plots
 def get_visualisation_title(evaluation_type, config, solver, models=False):
     problems = config["pipeline"]["problems"]["problems"]
     title = f'{evaluation_type},\nevaluation on problem{"s" if len(problems) > 1 else ""}: '
@@ -46,6 +51,7 @@ def get_visualisation_title(evaluation_type, config, solver, models=False):
     return title
 
 
+# Description of the models
 def get_model_config_description(model_name: str, model_analysis: ModelAnalysis, config_nr: int, kind: str) ->str:
     descr = model_name
     config = model_analysis.config_list[config_nr]
@@ -59,6 +65,9 @@ def get_model_config_description(model_name: str, model_analysis: ModelAnalysis,
     return descr + kind
 
 
+# Derive the error-bars for the respective visualisation
+# Calculate the standard deviation for alle entries above and below the mean respectively
+# (Else we can get error-bars extending beyond 0 and 1)
 def create_upper_lower_errorbars(approx_percent_list: list) -> list[list, list]:
     mean = np.mean(approx_percent_list)
     list_above = [x - mean for x in approx_percent_list if x > mean]
@@ -89,6 +98,7 @@ class AnalysisPipeline:
             elif analysis['type'] == 'boxplot_quantum':
                 self.visualize_quantum_boxplots(analysis)
 
+    # Compare the percentage of correct solutions between models and with teh respective baselines
     def visualize_baseline_correct_mean(self, analysis_dict: dict):
         visualisation_dict = {
             'baseline_data': [],
@@ -163,6 +173,8 @@ class AnalysisPipeline:
                     )
         visualisation_pipeline(visualisation_dict)
 
+    # Add all solutions with their approximation percentage as a point, 0 for incorrect, 1 for correct solutions
+    # Baseline is present
     def visualize_baseline_correct_incorrect(self, analysis_dict: dict):
         model_analysis = self.models_dict[analysis_dict['model']]
         model_analyis_results = model_analysis.model_result_list[analysis_dict['config']]
@@ -193,6 +205,8 @@ class AnalysisPipeline:
             'y_label': '1 = correct solution found, 0 = correct solution not found'
         })
 
+    # Add points for min and mean solution quality on the y-axis and the approx percentage on the x-axis
+    # Together with baseline
     def visualize_relative_quality_with_mean(self, analysis_dict: dict):
         model_analysis = self.models_dict[analysis_dict['model']]
         model_analyis_results = model_analysis.model_result_list[analysis_dict['config']]
@@ -240,6 +254,7 @@ class AnalysisPipeline:
             'y_label': 'solution quality (min energy - energy) / min energy'
         })
 
+    # Name misleading, boxplot comparison of different approaches, comparison of different models possible
     def visualize_boxplot_one_problem(self, analysis_dict: dict):
         model_analysis = self.models_dict[analysis_dict['model']]
         analysis_list = []
@@ -256,7 +271,7 @@ class AnalysisPipeline:
                         {
                             'min': model_analyis_results['approximation_quality_dict']['min_solution_quality_list'],
                             'mean': model_analyis_results['approximation_quality_dict']['mean_solution_quality_list'],
-                            'tick_name': f'Approximated\nQUBO'
+                            'tick_name': f'Model\napprox'
                                          #f',\n{analysis_dict["model_name"]}'
                         },
                         {
@@ -264,7 +279,7 @@ class AnalysisPipeline:
                                                         ['stepwise_approx_min_solution_quality'],
                             'mean': model_analyis_results['approximation_quality_dict']
                                                          ['stepwise_approx_mean_solution_quality'],
-                            'tick_name': f'Approximated QUBO,\nstepwise, same\npercent as model'
+                            'tick_name': f'Stepwise\napprox'
                         },
                         {
                             'min': model_analyis_results['approximation_quality_dict']['classical_min_solution_quality'],
@@ -289,6 +304,7 @@ class AnalysisPipeline:
             })
         visualize_boxplot_comparison(analysis_list)
 
+    # Boxplot comparison of different approaches, no longer in use
     def visualize_boxplot_multiple_problems(self, analysis_dict: dict):
         data_list = []
         for model_name in analysis_dict['models']:
@@ -319,6 +335,7 @@ class AnalysisPipeline:
                      f'{"models / " if len(analysis_dict["models"]) > 1 else ""}evaluations'
         })
 
+    # Quantum visualisation,including a comparison of solution quality and embedding size
     def visualize_quantum_boxplots(self, analysis_dict: dict):
         model_analysis = self.models_dict[analysis_dict['model']]
         config_list = analysis_dict['config_list']
@@ -332,12 +349,12 @@ class AnalysisPipeline:
                         {
                             'min': model_analyis_results['quantum_quality_dict']['min_solution_quality_list_original'],
                             'mean': model_analyis_results['quantum_quality_dict']['mean_solution_quality_list_original'],
-                            'tick_name': f'Original QUBO,\n{analysis_dict["model_name"]}'
+                            'tick_name': f'Original QUBO'
                         },
                         {
                             'min': model_analyis_results['quantum_quality_dict']['min_solution_quality_list_approx'],
                             'mean': model_analyis_results['quantum_quality_dict']['mean_solution_quality_list_approx'],
-                            'tick_name': f'Approximated QUBO,\n{analysis_dict["model_name"]}'
+                            'tick_name': f'Approximated QUBO'
                         },
                     ],
                 'colors':
@@ -346,7 +363,7 @@ class AnalysisPipeline:
                         'mean': '#2C7BB6'
                     },
                 'y_label': 'solution quality (min energy - energy) / min energy',
-                'title': get_visualisation_title(f'Comparison of solution quality on '
+                'title': get_visualisation_title(f'Comparison of solution quality\non '
                                                  f'{model_analysis.analysis_parameters["quantum"]["qpu_name"]}',
                                                  model_analysis.config_list[config_nr],
                                                  '')
@@ -360,14 +377,14 @@ class AnalysisPipeline:
                                                         ['embedding_size_list_original'],
                             'avg chain length': model_analyis_results['quantum_quality_dict']
                                                          ['embedding_avg_chain_list_original'],
-                            'tick_name': f'Original QUBO,\n{analysis_dict["model_name"]}'
+                            'tick_name': f'Original QUBO'
                         },
                         {
                             'relative embedding size': model_analyis_results['quantum_quality_dict']
                                                         ['embedding_size_list_approx'],
                             'avg chain length': model_analyis_results['quantum_quality_dict']
                                                          ['embedding_avg_chain_list_approx'],
-                            'tick_name': f'Approximated QUBO,\n{analysis_dict["model_name"]}'
+                            'tick_name': f'Approximated QUBO'
                         },
                     ],
                 'colors':
@@ -376,10 +393,10 @@ class AnalysisPipeline:
                         'avg chain length': '#2C7BB6'
                     },
                 'embedding': True,
-                'y_label': 'relative embedding size: physical qubits / logical qubits',
+                'y_label': 'relative embedding size:\nphysical qubits / logical qubits',
                 'y_label_2': 'average chain length',
-                'title': get_visualisation_title(f'Comparison of embedding parameters on '
-                                                 f'{model_analysis.analysis_parameters["quantum"]["qpu_name"]} '
+                'title': get_visualisation_title(f'Comparison of embedding parameters\non '
+                                                 f'{model_analysis.analysis_parameters["quantum"]["qpu_name"]}\n'
                                                  f'with '
                                                  f'{model_analysis.analysis_parameters["quantum"]["embedding_structure"]} '
                                                  f'embedding',

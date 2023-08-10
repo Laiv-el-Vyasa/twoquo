@@ -5,6 +5,8 @@ import numpy as np
 from numpy import random as np_random
 from transformator.problems.problem import Problem
 
+# Old version, using a unusual QUBO formulation
+
 
 def gen_random_clause_number(cfg, size):
     target = cfg["problems"]["M3SAT"].get("target_density", 4)

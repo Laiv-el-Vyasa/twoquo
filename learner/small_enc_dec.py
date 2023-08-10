@@ -7,6 +7,12 @@ from config import load_cfg
 from dataset_setup import DatabaseSetup, Data
 from sklearn.model_selection import train_test_split
 
+# *---------------------------------------------------------------------------------- * #
+#                                                                                       #
+#                       FILES DEPRECATED - CHECK EVOLUTION                              #
+#                                                                                       #
+# *---------------------------------------------------------------------------------- * #
+
 solver = 'qbsolv_simulated_annealing'
 min_solution_quality = 0.999
 learning_rate = .01

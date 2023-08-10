@@ -5,19 +5,23 @@ import numpy as np
 from visualisation import qubo_heatmap, visualize_evol_results, plot_average_fitness
 from pipeline import pipeline_run
 
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
-
 from pygad.torchga import torchga
 from torch import torch, nn
-print('Torch: ', torch.__version__)
-print('Cuda: ', torch.version.cuda)
-
 from config import load_cfg
 import pygad.torchga
 
 from evolution.evolution_util import get_training_dataset, get_fitness_value, apply_approximation_to_qubo, \
     get_quality_of_approxed_qubo, get_qubo_approx_mask, aggregate_saved_problems, solver, \
     check_model_config_fit, cfg
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
+print('Cuda: ', torch.version.cuda)
+print('Torch: ', torch.__version__)
+
+# *---------------------------------------------------------------------------------- * #
+#                                                                                       #
+#                       FILES DEPRECATED - CHECK NEW EVOLUTION                          #
+#                                                                                       #
+# *---------------------------------------------------------------------------------- * #
 
 run_bool = False
 restart_bool = False

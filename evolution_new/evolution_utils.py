@@ -22,13 +22,18 @@ cuda = torch.device('cuda')
 
 cfg = load_cfg(cfg_id='test_evol_m3sat')
 qubo_size = cfg['pipeline']['problems']['qubo_size']
-problem = cfg['pipeline']['problems']['problems'][0]
+problem_overall = cfg['pipeline']['problems']['problems'][0]
 
 solver = 'qbsolv_simulated_annealing'
 
 check_tsp = False
 
 
+# Collection of useful methods used in the approximation process
+
+
+# Deletes the lmdb-databases, as the fundamental pipeline still uses the recommendation engine
+# The engine initializes a database for every config, which take up too much disk-space
 def delete_data():
     try:
         os.chdir('../data/')
@@ -40,6 +45,7 @@ def delete_data():
         print("Error: %s" % e.strerror)
 
 
+# Derive a unique file name for each trained model, including the problems, their sizes and the fitness parameters
 def get_file_name(base_name: str, config: dict, fitness_params: dict, analysis=False, steps=100) -> str:
     name = base_name
     problems = config['pipeline']['problems']['problems']
@@ -53,6 +59,7 @@ def get_file_name(base_name: str, config: dict, fitness_params: dict, analysis=F
     return name
 
 
+# Get a file name for the results of the analysis
 def get_analysis_results_file_name(base_name: str, training_config: dict, config: dict, fitness_params: dict) -> str:
     name = base_name
     problems_train = training_config['pipeline']['problems']['problems']
@@ -81,6 +88,7 @@ def fitness_param_to_string(param: float) -> str:
     return param_string
 
 
+# Deprecated: Check if the solutions obtained from the QUBO match the optimal solution
 def check_tsp_solutions(qubo_list: list, problem_list: list, solutions_list: list):
     for i in range(len(problem_list)):
         dist1, best_path1 = bruteforce_verification(problem_list[i]['cities'], problem_list[i]['dist_matrix'])
@@ -96,6 +104,7 @@ def check_tsp_solutions(qubo_list: list, problem_list: list, solutions_list: lis
             qubo_heatmap(qubo_list[i])
 
 
+# Generate the training dataset: problems, QUBOs, their solutions and their optimal energies
 def get_training_dataset(config: dict) -> dict:
     qubo_list, problem_list = get_problem_qubos(config)
     solutions_list, energy_list = get_qubo_solutions(qubo_list, config)
@@ -115,6 +124,7 @@ def get_training_dataset(config: dict) -> dict:
     return problem_dict
 
 
+# Get a list of random scale parameters
 def get_random_scale_list(config: dict) -> list[float]:
     min_sc, max_sc = config['pipeline']['problems']['scale']['min'], config['pipeline']['problems']['scale']['max']
     n_problems = config['pipeline']['problems']['n_problems']
@@ -154,43 +164,22 @@ def get_quality_of_approxed_qubo(qubo: np.array, approxed_qubo: np.array, soluti
     min_solution_quality, best_solution_approx, mean_solution_quality, min_mean_sol_qual, mean_mean_sol_qual \
         = get_min_solution_quality(best_solutions_approx, qubo, solutions)
     return min_solution_quality, best_solution_approx, relative_approx_count, mean_solution_quality, \
-           min_mean_sol_qual, mean_mean_sol_qual, absolute_approx_count
+        min_mean_sol_qual, mean_mean_sol_qual, absolute_approx_count
 
 
+# Calculates the percentage of removed entries by the pruning process, including the diagonal
+# Commented out block exclued the diagonal from the calculation
+# -> more realistic, as diagonal does not contribute to the size of the embedding
 def get_approximation_count(qubo: np.array, approxed_qubo: np.array) -> tuple[int, float]:
     approxed_entries = get_nonzero_count(np.subtract(np.triu(qubo), np.triu(approxed_qubo)))
     return approxed_entries, approxed_entries / get_nonzero_count(np.triu(qubo))
-    #approxed_entries = get_nonzero_count(np.subtract(np.subtract(np.triu(qubo), np.diag(np.diag(qubo))),
+    # approxed_entries = get_nonzero_count(np.subtract(np.subtract(np.triu(qubo), np.diag(np.diag(qubo))),
     #                                                 np.subtract(np.triu(approxed_qubo),
     #                                                             np.diag(np.diag(approxed_qubo)))))
-    #return approxed_entries, approxed_entries / get_nonzero_count(np.subtract(np.triu(qubo), np.diag(np.diag(qubo))))
+    # return approxed_entries, approxed_entries / get_nonzero_count(np.subtract(np.triu(qubo), np.diag(np.diag(qubo))))
 
 
-def linearize_qubo(qubo):
-    linearized_qubo = []
-    for i in range(len(qubo)):
-        for j in range(i + 1):
-            linearized_qubo.append(qubo[i][j])
-    return linearized_qubo
-
-
-def apply_approximation_to_qubo(linearized_approx, qubo):
-    approxed_qubo = np.zeros((len(qubo), len(qubo)))
-    linear_index = 0
-    number_of_true_approx = 0
-    for i in range(len(qubo)):
-        for j in range(i + 1):
-            if linearized_approx[linear_index] > 0:
-                approxed_qubo[i][j] = qubo[i][j]
-                if not i == j:
-                    approxed_qubo[j][i] = qubo[j][i]
-            else:
-                if not qubo[i][j] == 0:
-                    number_of_true_approx += 1
-            linear_index += 1
-    return approxed_qubo, number_of_true_approx
-
-
+# Get a mask from the approxed QUBO and the original QUBO for visualisation
 def get_qubo_approx_mask(approxed_qubo: list, qubo: list) -> list:
     qubo_mask = np.zeros((len(qubo), len(qubo)))
     for i in range(len(qubo)):
@@ -202,6 +191,9 @@ def get_qubo_approx_mask(approxed_qubo: list, qubo: list) -> list:
     return qubo_mask
 
 
+# Reduce the size of a QUBO for a one-hot encoded problem, by merging all one-hot qubits into one single qubit
+# This is possible, as they would all result in the same node-features and thus in the same edge decision
+# Allows us to consider larger problem instances
 def get_small_qubo(qubo: list, n_colors: int) -> list:
     if len(qubo) % n_colors != 0:
         print('QUBO not reducabe!')
@@ -214,6 +206,7 @@ def get_small_qubo(qubo: list, n_colors: int) -> list:
     return small_qubo
 
 
+# Get the size of the one-hot encoding (n_colors for GC, number of cites for TSP)
 def get_reducability_number(prob: dict) -> int:
     n = 0
     if 'n_colors' in prob:
@@ -223,6 +216,8 @@ def get_reducability_number(prob: dict) -> int:
     return n
 
 
+# Removes diagonal & triangle above it for GC
+# Additionally removes the sub diagonal in each quadrant belonging to two cities for TSP
 def remove_hard_constraits_from_qubo(qubo: list, problem: dict, remove_diagonal: bool) -> list:
     return_qubo = np.zeros((len(qubo), len(qubo)))
     return_qubo += qubo
@@ -255,6 +250,7 @@ def remove_hard_constraits_from_qubo(qubo: list, problem: dict, remove_diagonal:
     return return_qubo
 
 
+# Covert the adjacency matrix given by the QUBO in a list of edges
 def get_edge_data(qubo: list, include_loops=True) -> tuple[list[list, list], list]:
     edge_index = [[], []]
     edge_weight = []
@@ -272,16 +268,6 @@ def get_edge_data(qubo: list, include_loops=True) -> tuple[list[list, list], lis
     return edge_index, edge_weight
 
 
-def get_adjacency_matrix_of_qubo(qubo):
-    adj_matrix = np.zeros(np.shape(qubo))
-    for i in range(len(qubo)):
-        for j in range(i):
-            if not qubo[i][j] == 0:
-                adj_matrix[i][j] = 1
-                adj_matrix[j][i] = 1
-    return adj_matrix
-
-
 def get_diagonal_of_qubo(qubo: list) -> list:
     diagonal = []
     for i in range(len(qubo)):
@@ -290,20 +276,8 @@ def get_diagonal_of_qubo(qubo: list) -> list:
     return diagonal
 
 
-def get_mean_of_qubo_line(qubo):
-    mean_list = []
-    qubo_line_mean_list = []
-    for i in range(len(qubo)):
-        qubo_line_mean_list.append([])
-        line_mean = np.mean(qubo[i])
-        qubo_line_mean_list[i].append(line_mean)
-        mean_list.append(line_mean)
-    mean_of_lines = np.mean(mean_list)
-    for i in range(len(qubo)):
-        qubo_line_mean_list[i][0] -= mean_of_lines
-    return qubo_line_mean_list
-
-
+# Get the minimal distance of each city to all other cites
+# Normalized, such that the shortest distance is 1
 def get_min_of_tsp_qubo_line_normalized(qubo: list, n: int) -> list:
     min_distance_list = [[] for _ in range(n)]
     distance_collection_list = [[] for _ in range(n)]
@@ -330,6 +304,7 @@ def get_min_of_tsp_qubo_line_normalized(qubo: list, n: int) -> list:
     return min_distance_list
 
 
+# Same method as above, able to cope with one-hot encodes QUBOs
 def get_min_of_tsp_qubo_line_normalized_onehot(qubo: list, n: int) -> list:
     min_distance_list = [[] for _ in range(len(qubo))]
     distance_collection_list = [[] for _ in range(len(qubo))]
@@ -439,6 +414,7 @@ def get_min_solution_quality(approx_solutions: np.array, qubo: np.array, solutio
            np.mean(solution_quality_array), np.min(mean_solution_quality_array), np.mean(mean_solution_quality_array)
 
 
+# Get the solution quality: (min_energy - energy) / min_energy
 def get_solution_quality(energy, min_energy):  # 0: perfect result, 1: worst result
     solution_quality = 1  # Fallback for the worst result
     if min_energy < 0:  # Minimal energy should be negative, else the qubo does not make sense
@@ -526,6 +502,7 @@ def get_relative_size_of_approxed_entries(approxed_qubo: list, qubo: list) -> fl
         return 0
 
 
+# Get the n entries with the highest absolute values
 def get_n_extreme_entries(n: int, qubo: list, ascending: bool) -> list:
     abs_qubo = np.abs(qubo)
     flat_qubo = abs_qubo.flatten()
@@ -545,6 +522,7 @@ def get_sum_of_array(array: np.ndarray) -> float:
 #                     Algorithms to generate approximate solutions                              #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
+# Get solution qualities (min & mean) for classical solutions (heuristic algorithm & random solutions)
 def get_classical_solution_qualities(solutions: list, qubo: np.array, problem: dict, reads: int,
                                      random_solutions: bool) -> tuple[float, float]:
     classical_solutions = get_classical_solutions(problem, reads, random_solutions)
@@ -646,6 +624,7 @@ def get_random_differencing_solution(problem: dict) -> list:
     return get_solution_from_sorted_numbers(sorted_numbers)
 
 
+# Construct the partition from the backtracking_list of applied differences
 def backtracking(backtracking_list: list, sorted_numbers: list[list, list]) -> list[list, list]:
     while len(backtracking_list) > 0:
         backtracking_item = backtracking_list.pop()
@@ -713,6 +692,7 @@ def get_dlx_solution_ec(problem: dict) -> list:
     return solution
 
 
+# Recursive part of the dlx-algorithm selecting the next subset the reducing the problem
 def dlx_algorithm(subset_matrix: list[list], selected_subsets: list, subset_mapping: dict) -> list:
     rng = np_random.default_rng()
     subset = rng.integers(len(subset_matrix[0]))
@@ -723,6 +703,7 @@ def dlx_algorithm(subset_matrix: list[list], selected_subsets: list, subset_mapp
     return selected_subsets
 
 
+# Reduce the subset matrix by removing all information belonging to the previously removed subset
 def reduce_subset_matrix(subset_matrix: list[list], selected_subset: int, subset_mapping: dict) -> list[list]:
     selected_elements = set()
     for element in range(len(subset_matrix)):
@@ -762,6 +743,7 @@ def get_d_satur_algorithm_solution(problem: dict) -> list:
     return node_color_list_to_solution(node_color_list, n_colors)
 
 
+# Check which node has the fewest possible colors left
 def process_next_urgent_node(node_open_color_list: list[tuple[int, int, set[int]]],
                              node_color_list: list[int], n_colors: int, graph: networkx.Graph) \
         -> tuple[list[tuple[int, int, set[int]]], list[int]]:
@@ -783,6 +765,7 @@ def process_next_urgent_node(node_open_color_list: list[tuple[int, int, set[int]
     return new_open_node_color_list, node_color_list
 
 
+# One-hot encoded solution from node-color-list
 def node_color_list_to_solution(node_color_list: list, n_colors: int) -> list:
     solution = np.zeros(len(node_color_list * n_colors))
     for node, color in enumerate(node_color_list):
@@ -790,6 +773,7 @@ def node_color_list_to_solution(node_color_list: list, n_colors: int) -> list:
     return solution
 
 
+# Select a random color of the remaining possible colors or a random color if all colors are already taken
 def get_color(open_colors: set[int], n_colors: int) -> int:
     rng = np_random.default_rng()
     if not open_colors:
@@ -820,6 +804,7 @@ def get_wsat_solution_m3sat(problem: dict, max_walks=5, max_flips=10, flip_prob=
     return get_new_qubo_solution_for_m3sat(n_vars, clause_list, solution)
 
 
+# Calculate the best possible variable to flip
 def get_best_flip(current_solution: list[bool], clause_list: list[list[tuple[int, bool]]]) -> tuple[list[bool], int]:
     current_best = 0
     current_best_solution = []
@@ -834,6 +819,7 @@ def get_best_flip(current_solution: list[bool], clause_list: list[list[tuple[int
     return current_best_solution, current_best
 
 
+# Choose a random clause and a random literal, which is then used to satisfy the clause
 def satisfy_one_random_clause(solution: list[bool], clause_list: list[list[tuple[int, bool]]]):
     rng = np_random.default_rng()
     unsatisfied_clauses = []
@@ -847,13 +833,14 @@ def satisfy_one_random_clause(solution: list[bool], clause_list: list[list[tuple
 
     random.shuffle(unsatisfied_clauses)
     chosen_clause = unsatisfied_clauses[0]
-    #random.shuffle(chosen_clause)
+    # random.shuffle(chosen_clause)
     random_literal = rng.integers(0, 3)
     chosen_variable, _ = chosen_clause[random_literal]
     solution[chosen_variable] = not solution[chosen_variable]
     return solution
 
 
+# Random list of True/False values
 def get_random_variable_assignment(n_vars: int) -> list[bool]:
     rng = np_random.default_rng()
     solution = []
@@ -865,6 +852,7 @@ def get_random_variable_assignment(n_vars: int) -> list[bool]:
     return solution
 
 
+# Gives the number of satisfied clauses
 def check_m3sat_solution(clause_list: list[list[tuple[int, bool]]], solution: list[bool]) -> int:
     correct_clauses = 0
     for clause in clause_list:
@@ -873,6 +861,7 @@ def check_m3sat_solution(clause_list: list[list[tuple[int, bool]]], solution: li
     return correct_clauses
 
 
+# Checks if clause is satisfied
 def check_m3sat_clause(clause: list[tuple[int, bool]], solution: list[bool]) -> bool:
     clause_value = False
     for variable, sign in clause:
@@ -882,7 +871,8 @@ def check_m3sat_clause(clause: list[tuple[int, bool]], solution: list[bool]) -> 
 
 # Transform the True/False solution into a possible solution from a qubo (first the variables, then each clause)
 def get_new_qubo_solution_for_m3sat(n_vars: int, clause_list: list[tuple[tuple[int, bool], tuple[int, bool],
-                                                                   tuple[int, bool]]], solution: list[bool]) -> list:
+                                                                         tuple[int, bool]]],
+                                    solution: list[bool]) -> list:
     qubo_solution = np.zeros(n_vars + len(clause_list))
     for i in range(n_vars):
         if solution[i]:
@@ -903,6 +893,7 @@ def get_new_qubo_solution_for_m3sat(n_vars: int, clause_list: list[tuple[tuple[i
     return qubo_solution
 
 
+# Get the value of the Nüßlein pattern for a given clause
 def get_pattern_solution(clause: tuple[tuple[int, bool], tuple[int, bool], tuple[int, bool]],
                          clause_pattern: list[int, int, int], solution: list[bool]) -> int:
     return_int = 0
@@ -946,6 +937,7 @@ def get_clause_sum(clause: list[tuple[int, bool]]) -> float:
     return clause_sum
 
 
+# Get a SGI solution from a dict of node-pairs
 def node_pairs_to_solution(node_pairs: dict, graph1_order: int, graph2_order: int) -> list[int]:
     solution = np.zeros(graph1_order * graph2_order)
     for node_1 in node_pairs:
@@ -954,6 +946,7 @@ def node_pairs_to_solution(node_pairs: dict, graph1_order: int, graph2_order: in
     return solution
 
 
+# Heuristic for SGI: bruteforce solution after a number of random steps
 def get_subgraph_iso_solution(problem: dict, max_bruteforce_steps: int) -> list[int]:
     graph1 = problem['graph1']
     graph2 = problem['graph2']
@@ -971,6 +964,7 @@ def get_subgraph_iso_solution(problem: dict, max_bruteforce_steps: int) -> list[
     return node_pairs_to_solution(matched_nodes, graph1.order(), graph2.order())
 
 
+# Get a dict of possible matching-nodes for every node (target order >= pattern order)
 def get_first_suitable_nodes_for_sgi(graph1: networkx.Graph, graph2: networkx.Graph) -> dict[int, set[int]]:
     suitable_nodes = {}
     node_order_dict_1 = get_node_order_dict_for_graph(graph1)
@@ -997,6 +991,7 @@ def get_node_order_dict_for_graph(graph: networkx.Graph) -> dict:
     return node_order_dict
 
 
+# Recursive step for SGI heuristic, depending on the number of brute-force steps choose a random or a bruteforce step
 def get_subgraph_iso_step(graph1: networkx.Graph, graph2: networkx.Graph, found_subgraph: networkx.Graph,
                           matched_nodes: dict, open_nodes: dict[int, set[int]], steps_random: int) \
         -> tuple[networkx.Graph, int, dict[int, int]]:
@@ -1015,6 +1010,7 @@ def get_subgraph_iso_step(graph1: networkx.Graph, graph2: networkx.Graph, found_
     return found_subgraph, get_quality_of_subgraph(found_subgraph), matched_nodes
 
 
+# Select a node-pair from the list of possible matches
 def get_random_subgraph_iso_step(graph1: networkx.Graph, graph2: networkx.Graph, found_subgraph: networkx.Graph,
                                  matched_nodes: dict, open_nodes: dict[int, set[int]], steps_random: int,
                                  next_node_list: list[tuple[int, set[int]]]) -> tuple[networkx.Graph, int,
@@ -1033,6 +1029,7 @@ def get_random_subgraph_iso_step(graph1: networkx.Graph, graph2: networkx.Graph,
         return found_subgraph, get_quality_of_subgraph(found_subgraph), matched_nodes
 
 
+# Check all remaining combinations to find the best isomorphism
 def get_bruteforce_subgraph_iso_step(graph1: networkx.Graph, graph2: networkx.Graph, found_subgraph: networkx.Graph,
                                      matched_nodes: dict, open_nodes: dict[int, set[int]], steps_random: int,
                                      next_node_list: list[tuple[int, set[int]]]) -> tuple[networkx.Graph, int,
@@ -1059,6 +1056,7 @@ def get_bruteforce_subgraph_iso_step(graph1: networkx.Graph, graph2: networkx.Gr
     return best_subgraph, best_quality, best_matched_nodes
 
 
+# Update the remaining open nodes with the new already found subgraph
 def get_nodes_to_continue(graph1: networkx.Graph, graph2: networkx.Graph, matched_nodes: dict,
                           found_subgraph: networkx.Graph, open_nodes: dict[int, set[int]]) -> \
         list[tuple[int, set[int]]]:
@@ -1072,6 +1070,7 @@ def get_nodes_to_continue(graph1: networkx.Graph, graph2: networkx.Graph, matche
     return open_node_list
 
 
+# Get all possible matches from the target graph for a chosen node from the pattern graph
 def get_suitable_nodes(graph1: networkx.Graph, graph2: networkx.Graph, matched_nodes: dict[int, int],
                        found_subgraph: networkx.Graph, choosen_node: int, open_nodes_2: set[int]) -> set[int]:
     possible_nodes = set()
@@ -1089,6 +1088,7 @@ def get_suitable_nodes(graph1: networkx.Graph, graph2: networkx.Graph, matched_n
     return possible_nodes
 
 
+# Extend the subgraph with the chosen node
 def extend_subgraph_with_node(graph1: networkx.Graph, subgraph: networkx.Graph, node: int) -> networkx.Graph:
     new_subgraph = networkx.Graph()
     for node_old in subgraph.nodes:
@@ -1100,6 +1100,7 @@ def extend_subgraph_with_node(graph1: networkx.Graph, subgraph: networkx.Graph, 
     return new_subgraph
 
 
+# Extend the dict collection the partnered nodes
 def create_new_matched_nodes_dict(matched_nodes: dict[int, int], node1: int, node2: int) -> dict[int, int]:
     new_dict = {}
     for node in matched_nodes:
@@ -1108,6 +1109,7 @@ def create_new_matched_nodes_dict(matched_nodes: dict[int, int], node1: int, nod
     return new_dict
 
 
+# Get all remaining open nodes
 def get_new_open_nodes(open_nodes: dict[int, set[int]], node_1: int, node_2: int) -> dict[int, set[int]]:
     new_dict = {}
     for node in open_nodes:
@@ -1305,7 +1307,7 @@ def check_model_config_fit(model_descr, independence):
     #                  get_param_value(parameter_list[4]),
     #                  get_param_value(parameter_list[5]),
     #                  get_param_value(parameter_list[6]))
-    return (model_problem == problem or independence) and (model_size == qubo_size or independence)  # , fitness_params
+    return (model_problem == problem_overall or independence) and (model_size == qubo_size or independence)  # , fitness_params
 
 
 def get_param_value(param_string):

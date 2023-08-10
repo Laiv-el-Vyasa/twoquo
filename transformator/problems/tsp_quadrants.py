@@ -12,18 +12,20 @@ critical_disorder = 1.07
 scaling_parameter = 0.43
 
 
+# Get number of cities
 def get_random_node_number(size: tuple[int, int]) -> int:
     rng = random.default_rng()
     return rng.integers(size[0], size[1] + 1)
 
 
+# Get cities on circly and apply disorder
 def get_cities(N: int) -> list[list[float, float]]:
     random_disorder = get_random_disorder_parameter(N)
     # random_disorder = 0
     return [apply_disorder_to_city(random_disorder, city) for city in get_cities_on_circle(N)]
-    #return [[0., 0.], [1., 1.], [2., -1.], [3., 0.], [4., -1.]]
 
 
+# Place N cities on a cirlce with uniform distances between them
 def get_cities_on_circle(N: int) -> list[list[float, float]]:
     city_coordinates = []
     radius = N / (2 * np.pi)
@@ -36,6 +38,7 @@ def get_cities_on_circle(N: int) -> list[list[float, float]]:
     return city_coordinates
 
 
+# Randomly move a city within the disorder radius
 def apply_disorder_to_city(disorder_parameter: float, city_coordinates: list[float, float]) -> list[float, float]:
     rng = random.default_rng()
     random_radius = rng.uniform(0, disorder_parameter)
@@ -44,6 +47,7 @@ def apply_disorder_to_city(disorder_parameter: float, city_coordinates: list[flo
     return np.add(city_coordinates, city_disorder)
 
 
+# Get a random disorder parameter
 def get_random_disorder_parameter(N: int) -> float:
     min_value = (0 - critical_disorder) * np.power(N, scaling_parameter)
     max_value = 40

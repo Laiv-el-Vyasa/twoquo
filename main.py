@@ -12,6 +12,12 @@ from visualisation import qubo_heatmap, approx_quality_graphs
 from operator import add
 
 
+# *---------------------------------------------------------------------------------- * #
+#                                                                                       #
+#                        FILE DEPRECATED - CHECK EVOLUTION                              #
+#                                                                                       #
+# *---------------------------------------------------------------------------------- * #
+
 def get_problem_score(problem_name, problem, solution=None):
     if problem_name == 'NP':
         score = get_np_problem_score(problem, solution)

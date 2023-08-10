@@ -18,6 +18,7 @@ critical_connectivities = {
 }
 
 
+# Number of colors set to 4, as model can not distinguish between the number of colors present
 def get_random_coloring() -> int:
     rng = random.default_rng()
     return 4  # rng.integers(3, 6)
